@@ -1,0 +1,45 @@
+{
+  "name": "gest",
+  "version": "1.0.0",
+  "main": "./dist/esm/user-land/index.mjs",
+  "types": "./dist/types/user-land/index.d.ts",
+  "bin": "./bin/gest.sh",
+  "packageManager": "yarn@3.4.1",
+  "keywords": [],
+  "repository": {
+    "url": ""
+  },
+  "description": "",
+  "license": "MIT",
+  "author": {
+    "name": "Szymon Bretner",
+    "email": ""
+  },
+  "scripts": {
+    "fix:lint": "eslint --fix .",
+    "fix:prettier": "prettier -w ./src .",
+    "test:lint": "eslint .",
+    "test:prettier": "prettier -c ./src && prettier -c ./__tests__",
+    "test:tsc": "tsc --noEmit",
+    "build": "node ./scripts/build.cjs"
+  },
+  "devDependencies": {
+    "@ncpa0cpl/nodepack": "latest",
+    "@swc/core": "^1.3.37",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "eslint": "^8.35.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "ncpa0cpl": "ncpa0cpl/git-hook-tasks",
+    "prettier": "^2.8.4",
+    "prettier-plugin-jsdoc": "^0.4.2",
+    "rimraf": "^4.1.2",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "esbuild": "^0.17.10",
+    "termx-markup": "^1.1.0"
+  }
+}
