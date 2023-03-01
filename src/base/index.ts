@@ -160,7 +160,7 @@ async function main() {
 }
 
 try {
-  setCwd(new Command("pwd").runSync());
+  setCwd(new Command("pwd").runSync().trim());
 
   Output.setDefaultPrintMethod(print);
   MarkupFormatter.defineColor("customBlack", "#1b1c26");

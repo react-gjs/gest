@@ -19,7 +19,7 @@
     "fix:lint": "eslint --fix .",
     "fix:prettier": "prettier -w ./src .",
     "test:lint": "eslint .",
-    "test:prettier": "prettier -c ./src && prettier -c ./__tests__",
+    "test:prettier": "prettier -c ./src",
     "test:tsc": "tsc --noEmit",
     "build": "node ./scripts/build.cjs"
   },

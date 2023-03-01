@@ -1,3 +1,5 @@
+#!/bin/sh
+
 HERE="$0"
 HERE_DIR=$(dirname -- "$HERE")
 
@@ -14,4 +16,4 @@ done
 HERE=$(dirname -- "$HERE")
 HERE="$HERE_DIR/$HERE"
 
-gjs -m "$HERE"/dist/esm/base/index.mjs "$@"
+gjs -m "$HERE"/../dist/esm/base/index.mjs "$@"
