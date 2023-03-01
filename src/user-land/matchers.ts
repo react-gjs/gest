@@ -113,6 +113,9 @@ export type MatcherResult =
   | {
       failed: true;
       reason: string;
+      expected: string;
+      received: string;
+      diff?: string;
     };
 
 export type Matcher = (
@@ -261,11 +264,40 @@ function matchValues(a: any, b: any): boolean {
   return keys.every((k) => deepEqual(a[k], b[k], matchValues));
 }
 
+function getPresentationForValue(v: unknown): string {
+  switch (typeof v) {
+    case "string":
+      return `"${v}"`;
+    case "number":
+    case "boolean":
+    case "bigint":
+    case "undefined":
+      return String(v);
+    case "symbol":
+      return v.toString();
+    case "function":
+      return v.name ? `[Function: ${v.name}]` : "[Function]";
+    case "object":
+      if (v === null) {
+        return "null";
+      }
+      if (Array.isArray(v)) {
+        return "Array<...>";
+      }
+      if (Object.getPrototypeOf(v) !== Object.prototype) {
+        return `[Object: ${v.constructor.name}]`;
+      }
+      return "Object";
+  }
+}
+
 Matchers.add("toBe", (testedValue, [expectedValue]) => {
   if (testedValue !== expectedValue) {
     return {
       failed: true,
-      reason: `Equality test has failed.\n\nExpected: ${testedValue}\nReceived: ${expectedValue}`,
+      reason: "Equality test has failed.",
+      received: getPresentationForValue(testedValue),
+      expected: getPresentationForValue(expectedValue),
     };
   }
 
@@ -278,7 +310,9 @@ Matchers.add("toEqual", (testedValue, [expectedValue]) => {
   if (!deepEqual(testedValue, expectedValue)) {
     return {
       failed: true,
-      reason: `Deep equality test has failed.\n\nExpected: ${testedValue}\nReceived: ${expectedValue}`,
+      reason: "Deep equality test has failed.",
+      received: getPresentationForValue(testedValue),
+      expected: getPresentationForValue(expectedValue),
     };
   }
 
@@ -291,7 +325,9 @@ Matchers.add("toBeUndefined", (testedValue) => {
   if (testedValue != null) {
     return {
       failed: true,
-      reason: `Expected value to be undefined, but received ${testedValue}`,
+      reason: "Expected value to be undefined.",
+      received: getPresentationForValue(testedValue),
+      expected: getPresentationForValue(undefined),
     };
   }
 
@@ -304,7 +340,9 @@ Matchers.add("toBeDefined", (testedValue) => {
   if (testedValue == null) {
     return {
       failed: true,
-      reason: `Expected value to be defined, but received ${testedValue}`,
+      reason: "Expected value to be defined.",
+      received: getPresentationForValue(testedValue),
+      expected: "Any",
     };
   }
 
@@ -317,7 +355,9 @@ Matchers.add("toBeOfType", (testedValue, [expectedType]) => {
   if (typeof testedValue !== expectedType) {
     return {
       failed: true,
-      reason: `Expected value to be of type ${expectedType}, but received ${testedValue}`,
+      reason: "Expected value to be of different type.",
+      received: getPresentationForValue(testedValue),
+      expected: "typeof " + getPresentationForValue(expectedType),
     };
   }
 
@@ -330,14 +370,18 @@ Matchers.add("toMatchRegex", (testedValue, [regex]) => {
   if (typeof testedValue !== "string") {
     return {
       failed: true,
-      reason: `Expected value to be a string, but received ${typeof testedValue}`,
+      reason: "Expected value to be a string.",
+      received: getPresentationForValue(testedValue),
+      expected: "String",
     };
   }
 
   if (!regex.test(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to match regex ${regex}, but received ${testedValue}`,
+      reason: "Expected value to match regex.",
+      received: getPresentationForValue(testedValue),
+      expected: regex.toString(),
     };
   }
 
@@ -350,7 +394,9 @@ Matchers.add("toMatch", (testedValue, [expectedValue]) => {
   if (!matchValues(testedValue, expectedValue)) {
     return {
       failed: true,
-      reason: `Expected value to match object ${expectedValue}, but received ${testedValue}`,
+      reason: "Expected value to match.",
+      received: getPresentationForValue(testedValue),
+      expected: getPresentationForValue(expectedValue),
     };
   }
 
@@ -363,7 +409,9 @@ Matchers.add("toContain", (testedValue, values) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -371,7 +419,9 @@ Matchers.add("toContain", (testedValue, values) => {
     if (!testedValue.includes(value)) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}, but received ${testedValue}`,
+        reason: "Expected array to contain a certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -385,7 +435,9 @@ Matchers.add("toContainEqual", (testedValue, values) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -393,7 +445,9 @@ Matchers.add("toContainEqual", (testedValue, values) => {
     if (!testedValue.some((v) => deepEqual(v, value))) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}, but received ${testedValue}`,
+        reason: "Expected array to contain a certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -407,7 +461,9 @@ Matchers.add("toContainMatch", (testedValue, values) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -415,7 +471,9 @@ Matchers.add("toContainMatch", (testedValue, values) => {
     if (!testedValue.some((v) => matchValues(v, value))) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}, but received ${testedValue}`,
+        reason: "Expected array to contain certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -429,7 +487,9 @@ Matchers.add("toContainOnly", (testedValue, expectedValues) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -437,7 +497,9 @@ Matchers.add("toContainOnly", (testedValue, expectedValues) => {
     if (!testedValue.includes(value)) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}`,
+        reason: "Expected array to contain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -446,7 +508,9 @@ Matchers.add("toContainOnly", (testedValue, expectedValues) => {
     if (!expectedValues.some((v) => value === v)) {
       return {
         failed: true,
-        reason: `Expected array to contain matching values but received ${value}`,
+        reason: "Expected array to not contain anything but a certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -460,7 +524,9 @@ Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -468,7 +534,9 @@ Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
     if (!testedValue.some((v) => deepEqual(v, value))) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}`,
+        reason: "Expected array to contain certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -477,7 +545,9 @@ Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
     if (!expectedValues.some((v) => deepEqual(value, v))) {
       return {
         failed: true,
-        reason: `Expected array to contain matching values but received ${value}`,
+        reason: "Expected array to contain only certain values.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -487,11 +557,13 @@ Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
   };
 });
 
-Matchers.add("toContainOnlyMatch", (testedValue, expectedValues) => {
+Matchers.add("toContainOnlyMatch", (testedValue, expectedValues: any[]) => {
   if (!Array.isArray(testedValue)) {
     return {
       failed: true,
-      reason: `Expected value to be an array, but received ${typeof testedValue}`,
+      reason: "Expected value to be an array.",
+      received: getPresentationForValue(testedValue),
+      expected: "Array",
     };
   }
 
@@ -499,7 +571,9 @@ Matchers.add("toContainOnlyMatch", (testedValue, expectedValues) => {
     if (!testedValue.some((v) => matchValues(v, value))) {
       return {
         failed: true,
-        reason: `Expected array to contain value ${value}`,
+        reason: "Expected array to contain certain value.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -508,7 +582,9 @@ Matchers.add("toContainOnlyMatch", (testedValue, expectedValues) => {
     if (!expectedValues.some((v) => matchValues(value, v))) {
       return {
         failed: true,
-        reason: `Expected array to contain matching values but received ${value}`,
+        reason: "Expected array to contain only certain values.",
+        received: getPresentationForValue(testedValue),
+        expected: getPresentationForValue(value),
       };
     }
   }
@@ -522,21 +598,24 @@ Matchers.add("toThrow", (fn, [toBeThrown]) => {
   if (typeof fn !== "function") {
     return {
       failed: true,
-      reason: `Expected value to be a function, but received ${typeof fn}`,
+      reason: "Expected value to be a function.",
+      received: getPresentationForValue(fn),
+      expected: "Function",
     };
   }
 
   const onErr = (e: any) => {
     if (toBeThrown === undefined) {
       return {
-        failed: true,
-        reason: `Expected function to throw ${toBeThrown}, but received ${e}`,
+        failed: false,
       };
     }
     if (e !== toBeThrown) {
       return {
         failed: true,
-        reason: `Expected function to throw ${toBeThrown}, but received ${e}`,
+        reason: "Expected function to throw a specific value.",
+        received: getPresentationForValue(e),
+        expected: getPresentationForValue(toBeThrown),
       };
     }
   };
@@ -559,7 +638,9 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
   if (fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
       failed: true,
-      reason: `Expected value to be a promise, but received ${typeof fn}`,
+      reason: "Expected value to be a promise.",
+      received: getPresentationForValue(fn),
+      expected: "Promise",
     };
   }
 
@@ -568,14 +649,15 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
   } catch (e) {
     if (toBeThrown === undefined) {
       return {
-        failed: true,
-        reason: `Expected promise to reject ${toBeThrown}, but received ${e}`,
+        failed: false,
       };
     }
     if (e !== toBeThrown) {
       return {
         failed: true,
-        reason: `Expected promise to reject ${toBeThrown}, but received ${e}`,
+        reason: "Expected promise to reject a certain value.",
+        received: getPresentationForValue(e),
+        expected: getPresentationForValue(toBeThrown),
       };
     }
   }

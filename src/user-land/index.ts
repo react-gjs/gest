@@ -72,7 +72,13 @@ export class ExpectError extends Error {
   line: number;
   column: number;
 
-  constructor(message: string, calledFrom: CalledFrom) {
+  constructor(
+    message: string,
+    public readonly expected: string | undefined,
+    public readonly received: string | undefined,
+    public readonly diff: string | undefined,
+    calledFrom: CalledFrom
+  ) {
     super(message);
     this.name = "ExpectError";
     this.line = calledFrom.line;
@@ -82,6 +88,7 @@ export class ExpectError extends Error {
 
   private detectUnhandled() {
     this.timeoutId = setTimeout(() => {
+      // TODO: communicate with the monitor
       console.error(
         `An expect error was not handled. This is most likely due to an async matcher not being awaited.\n\nError: ${this.message}`
       );
@@ -97,10 +104,19 @@ export const expect = (value: any) => {
   const handlers: MatcherResultHandlers = {
     sync(result, negate, calledFrom) {
       if (result.failed && !negate) {
-        throw new ExpectError(result.reason, calledFrom);
+        throw new ExpectError(
+          result.reason,
+          result.expected,
+          result.received,
+          result.diff,
+          calledFrom
+        );
       } else if (!result.failed && negate) {
         throw new ExpectError(
           "Matcher was expected to fail, but it passed.",
+          undefined,
+          undefined,
+          undefined,
           calledFrom
         );
       }

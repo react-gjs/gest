@@ -39,11 +39,12 @@ async function main() {
     }
 
     await esbuild.build({
+      target: "es2022",
       entryPoints: [inputFile],
       bundle: true,
       define: {
-        __dirname: JSON.stringify(path.dirname(inputFile)),
-        __filename: JSON.stringify(inputFile),
+        console: "__gest_console",
+        print: "__gest_console.print",
       },
       outfile: outputFile,
       format: "esm",

@@ -1,20 +1,17 @@
-import { html, OutputBuffer, raw } from "termx-markup";
+import GLib from "gi://GLib";
+import { OutputBuffer } from "termx-markup";
 import type { It, Test, TestHook } from "../user-land/test-collector";
 import { _buildFile } from "./builder/build-file";
-import { SourceMapReader } from "./sourcemaps/reader";
+import { Global } from "./globals";
+import type { ProgressTracker } from "./progress/progress";
 import { _async } from "./utils/async";
 import { getCwd } from "./utils/cwd";
-import {
-  _getErrorMessage,
-  _getErrorStack,
-  _isExpectError,
-} from "./utils/error-handling";
-import { _deleteFile, _readFile } from "./utils/filesystem";
-import { _leftPad } from "./utils/left-pad";
+import { _isExpectError } from "./utils/error-handling";
+import { GestError } from "./utils/gest-error";
 import { NoLogError } from "./utils/no-log-err";
 import path from "./utils/path";
 
-export type TestUnit = {
+export type TestSuite = {
   dirname: string;
   basename: string;
   filename: string;
@@ -43,30 +40,188 @@ function _isTest(t: any): t is Test {
   return t && typeof t === "object" && t.name && t.line !== undefined;
 }
 
-export class TestRunner {
-  private options: TestRunnerOptions = {};
+class SuiteRunner {
+  constructor(
+    private readonly options: TestRunnerOptions,
+    private readonly tracker: ProgressTracker,
+    private readonly suiteID: symbol
+  ) {}
 
-  private get verbose() {
-    return this.options.verbose ?? false;
+  private async measureRun(action: () => void): Promise<number> {
+    const start = GLib.DateTime.new_now_local()!.get_microsecond();
+    await action();
+    const end = GLib.DateTime.new_now_local()!.get_microsecond();
+
+    return end - start;
   }
 
+  private testNameMatches(unitName: string[]) {
+    const testableName = unitName.join(" > ");
+    const { testNamePattern } = this.options;
+    if (!testNamePattern) return true;
+    return testableName.match(testNamePattern) !== null;
+  }
+
+  private markAsSkipped(units: It[], parentName: string[]) {
+    for (const unit of units) {
+      const unitName = [...parentName, unit.name];
+      this.tracker.unitProgress({
+        suite: this.suiteID,
+        unitName,
+        skipped: true,
+        unit,
+      });
+    }
+  }
+
+  private async runHook(hook: TestHook, unitName: string[]) {
+    try {
+      await hook.callback();
+    } catch (e) {
+      this.tracker.suiteProgress({
+        suite: this.suiteID,
+        parentUnitName: unitName,
+        error: {
+          origin: "lifecycleHook",
+          thrown: e,
+          hook,
+        },
+      });
+
+      throw new NoLogError(e, "Hook error");
+    }
+  }
+
+  private async runUnit(unit: It, parentName: string[]) {
+    const unitName = [...parentName, unit.name];
+
+    try {
+      if (!this.testNameMatches(unitName)) {
+        this.tracker.unitProgress({
+          suite: this.suiteID,
+          skipped: true,
+          unitName,
+          unit,
+        });
+
+        return true;
+      }
+
+      const duration = await this.measureRun(() => unit.callback());
+
+      this.tracker.unitProgress({
+        suite: this.suiteID,
+        unitName,
+        duration,
+        unit,
+      });
+
+      return true;
+    } catch (e) {
+      this.tracker.unitProgress({
+        suite: this.suiteID,
+        unitName,
+        error: {
+          origin: "test",
+          thrown: e,
+        },
+        unit,
+      });
+
+      if (_isExpectError(e)) {
+        e.handle();
+      }
+
+      return false;
+    }
+  }
+
+  async runSuite(test: Test, parentName: string[] = []): Promise<boolean> {
+    let passed = true;
+
+    const unitName = [...parentName, test.name];
+    try {
+      for (const hook of test.beforeAll) {
+        try {
+          await this.runHook(hook, unitName);
+        } catch (e) {
+          // All tests that cannot be ran because of a beforeAll hook
+          // error should be marked as skipped
+          this.markAsSkipped(test.its, unitName);
+          throw e;
+        }
+      }
+
+      $: for (const [index, unitTest] of test.its.entries()) {
+        for (const hook of test.beforeEach) {
+          try {
+            await this.runHook(hook, unitName);
+          } catch (e) {
+            // All tests that cannot be ran because of a beforeAll hook
+            // error should be marked as skipped
+            this.markAsSkipped(test.its.slice(index, index + 1), unitName);
+            continue $;
+          }
+        }
+
+        const result = await this.runUnit(unitTest, unitName);
+
+        passed &&= result;
+
+        for (const hook of test.afterEach) {
+          await this.runHook(hook, unitName);
+        }
+      }
+
+      for (const subTest of test.subTests) {
+        const result = await this.runSuite(
+          {
+            ...subTest,
+            beforeEach: [...test.beforeEach, ...subTest.beforeEach],
+            afterEach: [...test.afterEach, ...subTest.afterEach],
+          },
+          unitName
+        );
+        passed &&= result;
+      }
+
+      for (const hook of test.afterAll) {
+        await this.runHook(hook, unitName);
+      }
+    } catch (e) {
+      if (NoLogError.isError(e) && e instanceof NoLogError) {
+        return false;
+      }
+
+      this.tracker.suiteProgress({
+        suite: this.suiteID,
+        parentUnitName: unitName,
+        error: {
+          origin: "test",
+          thrown: e,
+        },
+      });
+
+      return false;
+    }
+
+    return passed;
+  }
+}
+
+export class TestRunner {
   success = true;
   mainOutput = new OutputBuffer();
   testErrorOutputs: OutputBuffer[] = [];
 
-  constructor(private testFileQueue: TestUnit[], private mainSetup?: string) {}
+  tmpFiles: string[] = [];
 
-  makePath(parentList: string[]) {
-    return parentList
-      .map((n) => `"${n}"`)
-      .join(html`<pre bold color="white">${" > "}</pre>`);
-  }
-
-  private testNameMatches(name: string) {
-    const { testNamePattern } = this.options;
-    if (!testNamePattern) return true;
-    return name.match(testNamePattern) !== null;
-  }
+  constructor(
+    private testFileQueue: TestSuite[],
+    private tracker: ProgressTracker,
+    private mainSetup?: string,
+    private options: TestRunnerOptions = {}
+  ) {}
 
   private testFileMatches(name: string) {
     const { testFilePattern } = this.options;
@@ -74,224 +229,36 @@ export class TestRunner {
     return name.match(testFilePattern) !== null;
   }
 
-  private async getSourceMapFileContent(filePath: string) {
-    try {
-      const fileContent = await _readFile(filePath);
-      return JSON.parse(fileContent);
-    } catch {
-      return undefined;
-    }
-  }
-
-  async getLocationFromMap(info: TestUnitInfo, line: number, column: number) {
-    try {
-      const fileContent = await _readFile(info.mapFile);
-      const map = JSON.parse(fileContent);
-      const sourceReader = new SourceMapReader(map);
-      return sourceReader.getOriginalPosition(line, column);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async runHook(hook: TestHook, info: TestUnitInfo, output: RunnerTestOutputs) {
-    try {
-      await hook.callback();
-    } catch (e) {
-      const location = await this.getLocationFromMap(
-        info,
-        hook.line,
-        hook.column
-      );
-      const link =
-        info.sourceFile +
-        (location ? `:${location?.line}:${location?.column}` : "");
-
-      // prettier-ignore
-      output.err.println(html`
-        <line bold bg="customBlack" color="red">An error occurred when running a lifecycle hook:</line>
-        <pre>${_getErrorMessage(e)}</pre><br />
-        <span color="#FFFFFF">${link}</span>`
-      );
-
-      throw new NoLogError(e, "Hook error");
-    }
-  }
-
-  async runTestCase(
-    testCase: It,
-    info: TestUnitInfo,
-    parentList: string[],
-    output: RunnerTestOutputs
-  ) {
-    const testPath = this.makePath([...parentList, testCase.name]);
-    try {
-      if (!this.testNameMatches(testPath)) {
-        if (this.verbose) {
-          output.info.println(
-            html`<pre>    [-] <span color="yellow">${raw(
-              testPath
-            )}</span></pre>`
-          );
-        }
-        return true;
-      }
-      await testCase.callback();
-      output.info.print(
-        html`<pre>    [✓] <span color="green">${raw(testPath)}</span></pre>`
-      );
-      return true;
-    } catch (e) {
-      output.info.print(
-        html`<pre>    [✘] <span color="lightRed">${raw(testPath)}</span></pre>`
-      );
-      if (_isExpectError(e)) {
-        e.handle();
-        const location = await this.getLocationFromMap(info, e.line, e.column);
-        const link =
-          info.sourceFile +
-          (location ? `:${location?.line}:${location?.column}` : "");
-
-        // prettier-ignore
-        output.err.print(html`
-          <line bold bg="customBlack" color="red">${raw(testPath)}</line>
-          <pre>${_leftPad(e.message, 4)}</pre><br />
-          <span color="#FFFFFF">${link}</span>
-        `);
-
-        this.success = false;
-      } else {
-        const location = await this.getLocationFromMap(
-          info,
-          testCase.line,
-          testCase.column
-        );
-        const link =
-          info.sourceFile +
-          (location ? `:${location?.line}:${location?.column}` : "");
-
-        output.err.println(
-          html`
-            <line bold bg="customBlack" color="red">${raw(testPath)}</line>
-            <pre>${_leftPad(_getErrorMessage(e), 4)}</pre>
-            <br />
-            <pre>
-              ${_leftPad(
-                _getErrorStack(
-                  e,
-                  await this.getSourceMapFileContent(info.mapFile)
-                ),
-                6
-              )}
-            </pre
-            >
-            <br />
-            <span color="#FFFFFF">${link}</span>
-          `
-        );
-
-        this.success = false;
-      }
-      return false;
-    }
-  }
-
-  async runTest(
-    test: Test,
-    info: TestUnitInfo,
-    parentList: string[] = [],
-    output: RunnerTestOutputs
-  ): Promise<boolean> {
-    let passed = true;
-
-    try {
-      for (const hook of test.beforeAll) {
-        await this.runHook(hook, info, output);
-      }
-
-      for (const testCase of test.its) {
-        for (const hook of test.beforeEach) {
-          await this.runHook(hook, info, output);
-        }
-
-        const result = await this.runTestCase(
-          testCase,
-          info,
-          parentList.concat(test.name),
-          output
-        );
-
-        passed &&= result;
-
-        for (const hook of test.afterEach) {
-          await this.runHook(hook, info, output);
-        }
-      }
-
-      for (const subTest of test.subTests) {
-        const result = await this.runTest(
-          {
-            ...subTest,
-            beforeEach: [...test.beforeEach, ...subTest.beforeEach],
-            afterEach: [...test.afterEach, ...subTest.afterEach],
-          },
-          info,
-          parentList.concat(test.name),
-          output
-        );
-        passed &&= result;
-      }
-
-      for (const hook of test.afterAll) {
-        await this.runHook(hook, info, output);
-      }
-    } catch (e) {
-      this.success = false;
-
-      if (NoLogError.isError(e) && e instanceof NoLogError) {
-        return false;
-      }
-
-      const testPath = this.makePath(parentList.concat(test.name));
-
-      // prettier-ignore
-      output.err.println(html`
-        <line bold color="green">${raw(testPath)}</line>
-        <line color="red">Test failed due to an error:</line>
-        <pre color="rgb(180, 180, 180)">${_leftPad(_getErrorMessage(e), 4)}</pre>
-      `);
-
-      return false;
-    }
-
-    return passed;
-  }
-
-  async nextUnit() {
+  async nextSuite() {
     if (this.testFileQueue.length === 0) return false;
 
-    const testUnit = this.testFileQueue.pop() as TestUnit;
-    const outputFile = testUnit.testFile + ".bundled.js";
+    const testUnit = this.testFileQueue.pop()!;
 
+    const outputFile =
+      path.resolve(
+        Global.getTmpDir(),
+        path.relative(getCwd(), testUnit.testFile)
+      ) + ".bundled.js";
     const mapFile = outputFile + ".map";
     const isOutputAbsolute = outputFile.startsWith("/");
     const importPath =
       "file://" +
       (isOutputAbsolute ? outputFile : path.resolve(getCwd(), outputFile));
 
-    const relativePath =
-      "." +
-      importPath
-        .replace("file://" + getCwd(), "")
-        .replace(/\.bundled\.js$/, "");
+    const suiteID = this.tracker.createSuiteTracker({
+      filepath: testUnit.testFile,
+      bundle: outputFile,
+      map: mapFile,
+    });
 
     try {
       if (!this.testFileMatches(testUnit.testFile)) {
-        if (this.verbose) {
-          this.mainOutput.println(
-            html`<pre>  [-] <span bold color="yellow">${relativePath}</span><span bold color="white" bg="lightYellow">SKIPPED</span></pre>`
-          );
-        }
+        this.tracker.suiteProgress({
+          suite: suiteID,
+          skipped: true,
+        });
+        this.tracker.finish(suiteID);
+
         return true;
       }
 
@@ -302,81 +269,65 @@ export class TestRunner {
         mainSetup: this.mainSetup,
       });
 
+      this.tmpFiles.push(outputFile, mapFile);
+
       await _async((p) => {
         import(importPath)
           .then(async (module) => {
             const test = module.default;
 
             if (_isTest(test)) {
-              const errTestOutput = new OutputBuffer();
-              const infoTestOutput = new OutputBuffer();
-
-              this.testErrorOutputs.push(errTestOutput);
-
-              const passed = await this.runTest(
-                test,
-                {
-                  sourceFile: testUnit.testFile,
-                  bundleFile: outputFile,
-                  mapFile: mapFile,
-                },
-                undefined,
-                {
-                  err: errTestOutput,
-                  info: infoTestOutput,
-                }
+              const suiteRunner = new SuiteRunner(
+                this.options,
+                this.tracker,
+                suiteID
               );
 
-              await _deleteFile(outputFile);
-              await _deleteFile(mapFile);
+              const passed = await suiteRunner.runSuite(test);
 
-              if (passed) {
-                this.mainOutput.print(
-                  // prettier-ignore
-                  html`<pre>[✓] <pre bold color="green">${relativePath} </pre><span bold color="white" bg="lightGreen">PASSED</span></pre>`
-                );
-              } else {
-                this.mainOutput.print(
-                  // prettier-ignore
-                  html`<pre>[✘] <pre bold color="red">${relativePath} </pre><span bold color="white" bg="lightRed">FAILED</span></pre>`
-                );
-              }
+              if (!passed) this.success = false;
 
-              if (this.verbose) infoTestOutput.pipe(this.mainOutput);
+              this.tracker.finish(suiteID);
 
               p.resolve();
             } else {
-              await _deleteFile(outputFile);
-              await _deleteFile(mapFile);
+              const err = new GestError(`Not a test: ${testUnit.testFile}`);
 
-              p.reject(new Error(`Not a test: ${testUnit.testFile}`));
+              this.tracker.suiteProgress({
+                suite: suiteID,
+                error: {
+                  origin: "gest",
+                  thrown: err,
+                },
+              });
+              this.tracker.finish(suiteID);
+
+              p.reject(err);
             }
           })
           .catch(p.reject);
       });
     } catch (e) {
       this.success = false;
-      // prettier-ignore
-      this.mainOutput.println(html`
-          <line color="red">Failed to start a test:</line>
-          <span>"${testUnit.testFile}"</span>
-      `);
-      this.mainOutput.println(html`<pre>${_getErrorMessage(e)}</pre>`);
-    } finally {
-      this.mainOutput.flush();
+
+      if (!GestError.isGestError(e)) {
+        this.tracker.suiteProgress({
+          suite: suiteID,
+          error: {
+            origin: "test",
+            thrown: e,
+          },
+        });
+        this.tracker.finish(suiteID);
+      }
     }
 
     return true;
   }
 
   async start() {
-    while (await this.nextUnit()) {
+    while (await this.nextSuite()) {
       //
     }
-  }
-
-  setOptions(options: TestRunnerOptions) {
-    Object.assign(this.options, options);
-    return this;
   }
 }
