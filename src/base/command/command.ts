@@ -45,14 +45,9 @@ export class Command {
     });
   }
 
-  private uint8ArrayToString(bytes: Uint8Array): string {
-    let result = "";
-
-    for (let i = 0; i < bytes.byteLength; i++) {
-      result += String.fromCharCode(bytes[i]!);
-    }
-
-    return result;
+  private bytesToString(bytes: Uint8Array): string {
+    if (!bytes || bytes.length === 0) return "";
+    return new TextDecoder().decode(bytes);
   }
 
   private getFullCommand() {
@@ -65,10 +60,10 @@ export class Command {
     );
 
     if (status !== 0) {
-      throw new Error(stderr ? this.uint8ArrayToString(stderr) : "");
+      throw new Error(stderr ? this.bytesToString(stderr) : "");
     }
 
-    return stdout ? this.uint8ArrayToString(stdout) : "";
+    return stdout ? this.bytesToString(stdout) : "";
   }
 
   public async run() {
