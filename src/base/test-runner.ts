@@ -361,7 +361,7 @@ export class TestRunner {
           <line color="red">Failed to start a test:</line>
           <span>"${testUnit.testFile}"</span>
       `);
-      this.mainOutput.println(_getErrorMessage(e));
+      this.mainOutput.println(html`<pre>${_getErrorMessage(e)}</pre>`);
     } finally {
       this.mainOutput.flush();
     }

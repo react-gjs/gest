@@ -62,7 +62,7 @@ async function main() {
 
             build.onResolve({ filter: /^gest$/ }, (args) => {
               return {
-                path: path.resolve(__dirname, "gest/user-land/index.js"),
+                path: path.resolve(__dirname, "../../user-land/index.mjs"),
               };
             });
 

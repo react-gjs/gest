@@ -152,7 +152,7 @@ async function main() {
       );
     }
   } catch (e) {
-    Output.print(html`<span color="red">${_getErrorMessage(e)}</span>`);
+    Output.print(html`<pre color="red">${_getErrorMessage(e)}</p>`);
     exitCode = 1;
   } finally {
     Gtk.main_quit();

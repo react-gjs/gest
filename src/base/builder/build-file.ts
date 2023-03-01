@@ -11,7 +11,7 @@ export async function _buildFile(params: {
   const { input, output, mainSetup, fileSetup } = params;
 
   const args = [
-    path.join(getDirname(import.meta.url), "test-builder.mjs"),
+    path.join(getDirname(import.meta.url), "esbuild-script.mjs"),
     input,
     output,
   ];
