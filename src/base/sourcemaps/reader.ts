@@ -1,3 +1,5 @@
+import { _readFile } from "../utils/filesystem";
+import path from "../utils/path";
 import { Base64VLQ } from "./vlq";
 
 export type SourceMap = {
@@ -8,10 +10,36 @@ export type SourceMap = {
   names: string[];
 };
 
+export type FileLocation = {
+  file: string | undefined;
+  line: number;
+  column: number;
+};
+
 export class SourceMapReader {
+  static async newFromMapFile(mapFilepath: string) {
+    try {
+      const fileContent = await _readFile(mapFilepath);
+      const map = JSON.parse(fileContent);
+      return new SourceMapReader(map, mapFilepath);
+    } catch (err) {
+      return undefined;
+    }
+  }
+
   private converter = new Base64VLQ();
 
-  constructor(private map: SourceMap) {}
+  private constructor(private map: SourceMap, private mapFilepath: string) {}
+
+  protected getFile(file?: number) {
+    if (file === undefined) return undefined;
+
+    const rel = this.map.sources[file];
+
+    if (!rel) return undefined;
+
+    return path.join(path.dirname(this.mapFilepath), rel);
+  }
 
   protected getLineN(text: string, n: number) {
     let line = 0;
@@ -35,7 +63,7 @@ export class SourceMapReader {
     return text.slice(lineStart, lineEnd);
   }
 
-  getOriginalPosition(outLine: number, outColumn: number) {
+  getOriginalPosition(outLine: number, outColumn: number): FileLocation | null {
     // SourceMap is 0 based, error stack is 1 based
     outLine -= 1;
     outColumn -= 1;
@@ -46,10 +74,12 @@ export class SourceMapReader {
 
     if (vlqs.length <= outLine) return null;
 
-    for (const [index, line] of vlqs.entries()) {
+    for (let index = 0; index < vlqs.length; index++) {
+      const line = vlqs[index]!;
       state[0] = 0;
 
-      for (const [_, segment] of line.entries()) {
+      for (let i = 0; i < line.length; i++) {
+        const segment = line[i];
         if (!segment) continue;
         const segmentCords = this.converter.decode(segment);
 
@@ -66,7 +96,7 @@ export class SourceMapReader {
           if (index === outLine) {
             if (prevState[0] < outColumn && outColumn <= state[0]) {
               return {
-                file: this.map.sources[state[1]],
+                file: this.getFile(state[1]),
                 line: state[2] + 1,
                 column: outColumn + state[3] - state[0] + 1,
               };
@@ -77,7 +107,7 @@ export class SourceMapReader {
 
       if (index === outLine) {
         return {
-          file: this.map.sources[state[1]],
+          file: this.getFile(state[1]),
           line: state[2] + 1, // back to 1 based
           column: 1,
         };

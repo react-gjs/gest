@@ -1,13 +1,13 @@
 export class Base64VLQ {
-  char_to_integer: Record<string, number> = {};
-  integer_to_char: Record<number, string> = {};
+  charToInteger: Map<string, number> = new Map();
+  integerToChar: Map<number, string> = new Map();
 
   constructor() {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
       .split("")
       .forEach((char, i) => {
-        this.char_to_integer[char] = i;
-        this.integer_to_char[i] = char;
+        this.charToInteger.set(char, i);
+        this.integerToChar.set(i, char);
       });
   }
 
@@ -19,7 +19,7 @@ export class Base64VLQ {
 
     for (let i = 0; i < string.length; i += 1) {
       const char = string[i]!;
-      let integer = this.char_to_integer[char];
+      let integer = this.charToInteger.get(char);
 
       if (integer === undefined) {
         throw new Error(`Invalid character (${string[i]})`);
@@ -52,19 +52,19 @@ export class Base64VLQ {
 
   encode(value: number | number[]) {
     if (typeof value === "number") {
-      return this.encode_integer(value);
+      return this.encodeInteger(value);
     }
 
     let result = "";
     for (let i = 0; i < value.length; i += 1) {
       const char = value[i]!;
-      result += this.encode_integer(char);
+      result += this.encodeInteger(char);
     }
 
     return result;
   }
 
-  encode_integer(num: number) {
+  encodeInteger(num: number) {
     let result = "";
 
     if (num < 0) {
@@ -81,7 +81,7 @@ export class Base64VLQ {
         clamped |= 32;
       }
 
-      result += this.integer_to_char[clamped];
+      result += this.integerToChar.get(clamped)!;
     } while (num > 0);
 
     return result;

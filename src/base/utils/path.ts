@@ -28,6 +28,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import GLib from "gi://GLib";
 
 namespace path {
   type PathObject = {
@@ -137,7 +138,7 @@ namespace path {
       let path;
       if (i >= 0) path = args[i];
       else {
-        if (cwd === undefined) cwd = process.cwd();
+        if (cwd === undefined) cwd = GLib.get_current_dir();
         path = cwd;
       }
 

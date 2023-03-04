@@ -13,7 +13,6 @@ while [ "$STOP" -ne 1 ]; do
     fi
 done
 
-HERE=$(dirname -- "$HERE")
-HERE="$HERE_DIR/$HERE"
+THIS_DIR=$(dirname -- "$HERE")
 
-gjs -m "$HERE"/../dist/esm/base/index.mjs "$@"
+gjs -m "$THIS_DIR"/../dist/esm/base/index.mjs "$@"

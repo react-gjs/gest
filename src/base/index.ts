@@ -1,13 +1,18 @@
+import GLib from "gi://GLib";
 import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
 import { html, MarkupFormatter, Output } from "termx-markup";
-import { Command } from "./command/command";
-import type { TestRunnerOptions, TestUnit } from "./test-runner";
+import { Global } from "./globals";
+import { ProgressMonitor } from "./progress/monitor";
+import { ProgressTracker } from "./progress/progress";
+import type { TestRunnerOptions, TestSuite } from "./test-runner";
 import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
+import { ConsoleInterceptor } from "./utils/console-interceptor";
 import { getCwd, setCwd } from "./utils/cwd";
-import { _getErrorMessage } from "./utils/error-handling";
-import { _readdir, _readFile, _walkFiles } from "./utils/filesystem";
+import { _getErrorMessage, _getErrorStack } from "./utils/error-handling";
+import { _mkdir, _readdir, _readFile, _walkFiles } from "./utils/filesystem";
+import { getDirname } from "./utils/get-dirname";
 import { _hasProperties } from "./utils/has-properties";
 import path from "./utils/path";
 
@@ -92,6 +97,15 @@ async function main() {
       testFilePattern,
     };
 
+    const tmpDir = path.join(getDirname(import.meta.url), "_tmp");
+    Global.setTmpDir(tmpDir);
+
+    try {
+      await _mkdir(tmpDir);
+    } catch {
+      //
+    }
+
     const config = await loadConfig();
 
     const testsDir = config?.testDirectory ?? "./__tests__";
@@ -100,7 +114,7 @@ async function main() {
     const testFileMatcher = /.*\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/;
     const setupFileMatcher = /.*\.setup\.(m|c){0,1}js$/;
 
-    const testFiles: TestUnit[] = [];
+    const testFiles: TestSuite[] = [];
 
     await _walkFiles(testsDir, (root, name) => {
       if (testFileMatcher.test(name)) {
@@ -129,30 +143,41 @@ async function main() {
       }
     });
 
-    const testRunners = Array.from({ length: parallel }, () =>
-      new TestRunner(testFiles, config?.setup).setOptions(options)
+    const consoleInterceptor = ConsoleInterceptor.init();
+
+    const progressTracker = new ProgressTracker();
+
+    const monitor = new ProgressMonitor(progressTracker, !!options.verbose);
+
+    const testRunners = Array.from(
+      { length: parallel },
+      () => new TestRunner(testFiles, progressTracker, config?.setup, options)
     );
 
     await Promise.all(testRunners.map((runner) => runner.start()));
 
+    await progressTracker.flush();
+
+    monitor.flushErrorBuffer();
+
     if (testRunners.some((runner) => !runner.success)) {
       exitCode = 1;
-      print("");
-
-      for (const runner of testRunners) {
-        for (const errOutput of runner.testErrorOutputs) {
-          errOutput.flush();
-        }
-      }
-
-      Output.println(html`<br /><span color="red">Tests have failed.</span>`);
+      Output.println(
+        html`<br /><br /><span color="red">Tests have failed.</span>`
+      );
     } else {
       Output.println(
-        html`<br /><span color="green">All tests have passed.</span>`
+        html`<br /><br /><span color="green">All tests have passed.</span>`
       );
     }
+
+    print(consoleInterceptor.toString());
   } catch (e) {
-    Output.print(html`<pre color="red">${_getErrorMessage(e)}</p>`);
+    Output.print(
+      html`<pre color="red">${_getErrorMessage(e)}</pre>
+        <br /><br />
+        <pre>${_getErrorStack(e)}</pre>`
+    );
     exitCode = 1;
   } finally {
     Gtk.main_quit();
@@ -160,10 +185,11 @@ async function main() {
 }
 
 try {
-  setCwd(new Command("pwd").runSync().trim());
+  setCwd(GLib.get_current_dir());
 
   Output.setDefaultPrintMethod(print);
   MarkupFormatter.defineColor("customBlack", "#1b1c26");
+  MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
   setTimeout(() => main());
 
