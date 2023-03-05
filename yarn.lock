@@ -1445,6 +1445,7 @@ clify.js@ncpa0cpl/clify.js:
     eslint: ^8.35.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-prettier: ^4.2.1
+    gjs-esm-types: ncpa0cpl/gjs-esm-types
     husky: ^8.0.3
     ncpa0cpl: ncpa0cpl/git-hook-tasks
     prettier: ^2.8.4
@@ -1475,6 +1476,13 @@ clify.js@ncpa0cpl/clify.js:
     call-bind: ^1.0.2
     get-intrinsic: ^1.1.1
   checksum: 9ceff8fe968f9270a37a1f73bf3f1f7bda69ca80f4f80850670e0e7b9444ff99323f7ac52f96567f8b5f5fbe7ac717a0d81d3407c7313e82810c6199446a5247
+  languageName: node
+  linkType: hard
+
+gjs-esm-types@ncpa0cpl/gjs-esm-types:
+  version: 1.0.0
+  resolution: "gjs-esm-types@https://github.com/ncpa0cpl/gjs-esm-types.git#commit=80e8e2e192486f4f039fd98a23726f9eedea5529"
+  checksum: be4738570e35d9fd05e9365abc9c25152cf651cde44a216b3c26dd7c93f9193e6266bb8f2cd3e5fda2eed83cd349f85c5d6db3e3eeecdd9b9f9cf8c061aa908f
   languageName: node
   linkType: hard
 

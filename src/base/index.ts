@@ -1,4 +1,4 @@
-import GLib from "gi://GLib";
+import GLib from "gi://GLib?version=2.0";
 import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
 import { html, MarkupFormatter, Output } from "termx-markup";
@@ -8,8 +8,7 @@ import { ProgressTracker } from "./progress/progress";
 import type { TestRunnerOptions, TestSuite } from "./test-runner";
 import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
-import { ConsoleInterceptor } from "./utils/console-interceptor";
-import { getCwd, setCwd } from "./utils/cwd";
+import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
 import { _getErrorMessage, _getErrorStack } from "./utils/error-handling";
 import { _mkdir, _readdir, _readFile, _walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
@@ -29,10 +28,12 @@ type GestConfig = {
 let exitCode = 0;
 
 async function loadConfig() {
-  const files = await _readdir(getCwd());
+  const files = await _readdir(Global.getCwd());
 
   if (files.includes("gest.config.json")) {
-    const configText = await _readFile(path.join(getCwd(), "gest.config.json"));
+    const configText = await _readFile(
+      path.join(Global.getCwd(), "gest.config.json")
+    );
     const config = JSON.parse(configText);
 
     let isValid = false;
@@ -158,6 +159,8 @@ async function main() {
 
     await progressTracker.flush();
 
+    ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
+
     monitor.flushErrorBuffer();
 
     if (testRunners.some((runner) => !runner.success)) {
@@ -170,8 +173,6 @@ async function main() {
         html`<br /><br /><span color="green">All tests have passed.</span>`
       );
     }
-
-    print(consoleInterceptor.toString());
   } catch (e) {
     Output.print(
       html`<pre color="red">${_getErrorMessage(e)}</pre>
@@ -185,7 +186,7 @@ async function main() {
 }
 
 try {
-  setCwd(GLib.get_current_dir());
+  Global.setCwd(GLib.get_current_dir());
 
   Output.setDefaultPrintMethod(print);
   MarkupFormatter.defineColor("customBlack", "#1b1c26");

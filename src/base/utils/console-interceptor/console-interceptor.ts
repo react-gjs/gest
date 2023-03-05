@@ -1,4 +1,5 @@
-import GLib from "gi://GLib";
+import GLib from "gi://GLib?version=2.0";
+import { printInterceptedLogs } from "./printer";
 
 type Console = Omit<typeof console, "Console">;
 
@@ -9,12 +10,17 @@ class Log {
 
   constructor(
     private parent: ConsoleInterceptor,
-    private type: keyof Console | "print",
-    private data: any[]
+    readonly type: keyof Console | "print",
+    readonly data: ReadonlyArray<any>,
+    readonly stack?: string
   ) {
     const log = this.parent["_logs"];
 
     this.index = log.push(this) - 1;
+  }
+
+  getTime() {
+    return Math.round(this.timestamp / 1000);
   }
 
   public toString() {
@@ -24,6 +30,8 @@ class Log {
   }
 }
 
+export type { Log };
+
 export class ConsoleInterceptor implements Console {
   static init() {
     const interceptor = new ConsoleInterceptor();
@@ -32,6 +40,10 @@ export class ConsoleInterceptor implements Console {
     globalThis.__gest_console = interceptor;
 
     return interceptor;
+  }
+
+  static printCollectedLogs(ci: ConsoleInterceptor) {
+    printInterceptedLogs(ci._logs);
   }
 
   private constructor() {}
@@ -62,8 +74,8 @@ export class ConsoleInterceptor implements Console {
     new Log(this, "debug", data);
   };
 
-  public table = (tabularData?: any, properties?: string[]) => {
-    new Log(this, "table", [tabularData, properties]);
+  public table = (...data: any[]) => {
+    new Log(this, "table", data);
   };
 
   public clear = () => {
@@ -71,7 +83,7 @@ export class ConsoleInterceptor implements Console {
   };
 
   public assert = (...data: any[]) => {
-    new Log(this, "assert", data);
+    new Log(this, "assert", data, new Error().stack);
   };
 
   public count = (label: string) => {
@@ -90,12 +102,12 @@ export class ConsoleInterceptor implements Console {
     new Log(this, "dirxml", data);
   };
 
-  public group = (...data: any[]) => {
-    new Log(this, "group", data);
+  public group = (label: string) => {
+    new Log(this, "group", [label]);
   };
 
-  public groupCollapsed = (...data: any[]) => {
-    new Log(this, "groupCollapsed", data);
+  public groupCollapsed = (label: string) => {
+    new Log(this, "groupCollapsed", [label]);
   };
 
   public groupEnd = () => {
@@ -111,11 +123,11 @@ export class ConsoleInterceptor implements Console {
   };
 
   public timeLog = (label: string, ...data: any[]) => {
-    new Log(this, "timeLog", [label, data]);
+    new Log(this, "timeLog", [label, ...data]);
   };
 
   public trace = (...data: any[]) => {
-    new Log(this, "trace", data);
+    new Log(this, "trace", data, new Error().stack);
   };
 
   public profile = (label: string) => {
@@ -129,8 +141,4 @@ export class ConsoleInterceptor implements Console {
   public timeStamp = (label: string) => {
     // no-op
   };
-
-  public toString() {
-    return this._logs.map((l) => l.toString()).join("\n");
-  }
 }

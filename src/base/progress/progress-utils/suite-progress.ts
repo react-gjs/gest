@@ -1,6 +1,6 @@
 import type { TestHook } from "../../../user-land/test-collector";
+import { Global } from "../../globals";
 import { SourceMapReader } from "../../sourcemaps/reader";
-import { getCwd } from "../../utils/cwd";
 import { Emitter } from "../../utils/emitter";
 import { _getErrorMessage, _getErrorStack } from "../../utils/error-handling";
 import path from "../../utils/path";
@@ -90,10 +90,10 @@ export class SuiteProgress {
 
   getSuiteFilepath(relative = true) {
     if (relative) {
-      return "./" + path.relative(getCwd(), this.filepath);
+      return "./" + path.relative(Global.getCwd(), this.filepath);
     }
 
-    return path.join(getCwd(), this.filepath);
+    return path.join(Global.getCwd(), this.filepath);
   }
 
   addUnitUpdate(progressUpdate: UnitProgressInitParams) {

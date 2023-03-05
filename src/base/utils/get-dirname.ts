@@ -1,4 +1,4 @@
-import GLib from "gi://GLib";
+import GLib from "gi://GLib?version=2.0";
 import path from "./path";
 
 export const getDirname = (metaUri: string) => {

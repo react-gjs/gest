@@ -1,11 +1,10 @@
-import GLib from "gi://GLib";
+import GLib from "gi://GLib?version=2.0";
 import { OutputBuffer } from "termx-markup";
 import type { It, Test, TestHook } from "../user-land/test-collector";
 import { _buildFile } from "./builder/build-file";
 import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
 import { _async } from "./utils/async";
-import { getCwd } from "./utils/cwd";
 import { _isExpectError } from "./utils/error-handling";
 import { GestError } from "./utils/gest-error";
 import { NoLogError } from "./utils/no-log-err";
@@ -237,13 +236,15 @@ export class TestRunner {
     const outputFile =
       path.resolve(
         Global.getTmpDir(),
-        path.relative(getCwd(), testUnit.testFile)
+        path.relative(Global.getCwd(), testUnit.testFile)
       ) + ".bundled.js";
     const mapFile = outputFile + ".map";
     const isOutputAbsolute = outputFile.startsWith("/");
     const importPath =
       "file://" +
-      (isOutputAbsolute ? outputFile : path.resolve(getCwd(), outputFile));
+      (isOutputAbsolute
+        ? outputFile
+        : path.resolve(Global.getCwd(), outputFile));
 
     const suiteID = this.tracker.createSuiteTracker({
       filepath: testUnit.testFile,

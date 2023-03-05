@@ -1,5 +1,5 @@
-import type Gio from "gi://Gio";
-import GLib from "gi://GLib";
+import type Gio from "gi://Gio?version=2.0";
+import GLib from "gi://GLib?version=2.0";
 
 export class Command {
   private options: string[];
@@ -11,11 +11,11 @@ export class Command {
   }
 
   private readOutput(
-    stream: Gio.IDataInputStream,
+    stream: Gio.DataInputStream,
     lineBuffer: string[],
     reject: (reason: any) => void
   ) {
-    stream.read_line_async(0, null, (stream, res) => {
+    stream.read_line_async(0, null, (_, res) => {
       try {
         if (stream) {
           const line = stream.read_line_finish_utf8(res)[0];
