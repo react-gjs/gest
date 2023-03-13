@@ -4,20 +4,15 @@ import { printInterceptedLogs } from "./printer";
 type Console = Omit<typeof console, "Console">;
 
 class Log {
-  private index: number;
   private timestamp: number =
     GLib.DateTime.new_now_local()?.get_microsecond() ?? 0;
 
   constructor(
-    private parent: ConsoleInterceptor,
+    protected parent: ConsoleInterceptor,
     readonly type: keyof Console | "print",
     readonly data: ReadonlyArray<any>,
     readonly stack?: string
-  ) {
-    const log = this.parent["_logs"];
-
-    this.index = log.push(this) - 1;
-  }
+  ) {}
 
   getTime() {
     return Math.round(this.timestamp / 1000);

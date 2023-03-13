@@ -10,7 +10,7 @@ class Printer {
   private timers = new Map<any, Log>();
   private currentGroup: string[] = [];
 
-  constructor(private allLogs: Log[]) {}
+  constructor() {}
 
   private formatLogArgs(data: any[] | ReadonlyArray<any>) {
     const p: string[] = [];
@@ -281,7 +281,7 @@ export function printInterceptedLogs(logs: Log[]) {
 
   Output.print("");
 
-  const printer = new Printer(logs);
+  const printer = new Printer();
 
   const lastClear = findLastIndex(logs, (l) => l.type === "clear");
 

@@ -248,10 +248,7 @@ export class ProgressMonitor {
   private errorBuffer = new OutputBuffer();
   private hasErrors = false;
 
-  constructor(
-    private readonly tracker: ProgressTracker,
-    private readonly verbose: boolean
-  ) {
+  constructor(tracker: ProgressTracker, private readonly verbose: boolean) {
     tracker.on("suiteAdded", (suiteID) => {
       const suiteEmitter = tracker.suiteEmitter(suiteID);
 
