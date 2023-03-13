@@ -314,7 +314,7 @@ namespace path {
     return path.slice(0, end);
   }
 
-  export function basename(path: string, ext: string) {
+  export function basename(path: string, ext?: string) {
     if (ext !== undefined && typeof ext !== "string")
       throw new TypeError('"ext" argument must be a string');
     __assertPath(path);

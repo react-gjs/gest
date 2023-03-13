@@ -23,6 +23,10 @@
     "test:tsc": "tsc --noEmit",
     "build": "node ./scripts/build.cjs"
   },
+  "bundledDependencies": [
+    "dilswer",
+    "termx-markup"
+  ],
   "devDependencies": {
     "@ncpa0cpl/nodepack": "^2.1.1",
     "@types/node": "^18.14.5",
@@ -40,6 +44,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "dilswer": "^2.0.2",
     "esbuild": "^0.17.10",
     "termx-markup": "^1.1.0"
   }

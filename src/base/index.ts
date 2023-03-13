@@ -8,63 +8,18 @@ import { ProgressTracker } from "./progress/progress";
 import type { TestRunnerOptions, TestSuite } from "./test-runner";
 import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
+import { loadConfig } from "./utils/config";
 import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
 import { _getErrorMessage, _getErrorStack } from "./utils/error-handling";
-import { _mkdir, _readdir, _readFile, _walkFiles } from "./utils/filesystem";
+import { _mkdir, _walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
-import { _hasProperties } from "./utils/has-properties";
 import path from "./utils/path";
 
 declare global {
   function print(text: string): void;
 }
 
-type GestConfig = {
-  testDirectory: string;
-  parallel: number;
-  setup?: string;
-};
-
 let exitCode = 0;
-
-async function loadConfig() {
-  const files = await _readdir(Global.getCwd());
-
-  if (files.includes("gest.config.json")) {
-    const configText = await _readFile(
-      path.join(Global.getCwd(), "gest.config.json")
-    );
-    const config = JSON.parse(configText);
-
-    let isValid = false;
-
-    if (typeof config === "object") {
-      if (_hasProperties(config, "testDirectory", "parallel")) {
-        if (
-          typeof config.testDirectory === "string" &&
-          typeof config.parallel === "number"
-        ) {
-          isValid = true;
-        }
-      }
-
-      if (_hasProperties(config, "setup")) {
-        if (typeof config.setup !== "string") {
-          isValid = false;
-        }
-      }
-    }
-
-    if (isValid) {
-      return config as GestConfig;
-    } else {
-      Output.print(
-        // prettier-ignore
-        html`<span color="yellow">Invalid config file. Using default config instead.</span>`
-      );
-    }
-  }
-}
 
 async function main() {
   try {
@@ -80,15 +35,19 @@ async function main() {
         <line>Usage: gest [options]</line>
         <br />
         <line>Options:</line>
-        <line>  -h, --help</line>
-        <line>  -v, --verbose</line>
-        <line>  -t, --testNamePattern [regex]</line>
-        <line>  -p, --testPathPattern [regex]</line>
+        <pad size="2">
+          <line>-h, --help</line>
+          <line>-v, --verbose</line>
+          <line>-f, --file [path]</line>
+          <line>-t, --testNamePattern [regex]</line>
+          <line>-p, --testPathPattern [regex]</line>
+        </pad>
       `);
 
       return;
     }
 
+    const fileArg = _getArgValue(pargs, "-f", "--file");
     const testNamePattern = _getArgValue(pargs, "-t", "--testNamePattern");
     const testFilePattern = _getArgValue(pargs, "-p", "--testPathPattern");
 
@@ -109,24 +68,42 @@ async function main() {
 
     const config = await loadConfig();
 
-    const testsDir = config?.testDirectory ?? "./__tests__";
-    const parallel = config?.parallel ?? 4;
+    const testsDir = config.testDirectory;
+    const parallel = config.parallel;
 
     const testFileMatcher = /.*\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/;
     const setupFileMatcher = /.*\.setup\.(m|c){0,1}js$/;
 
     const testFiles: TestSuite[] = [];
 
-    await _walkFiles(testsDir, (root, name) => {
-      if (testFileMatcher.test(name)) {
+    if (fileArg) {
+      const fullPath = path.resolve(Global.getCwd(), fileArg);
+      const filename = path.basename(fullPath);
+      if (testFileMatcher.test(filename)) {
         testFiles.push({
-          dirname: root,
-          filename: name,
-          basename: name.replace(/\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/, ""),
-          testFile: path.join(root, name),
+          dirname: path.dirname(fullPath),
+          filename: filename,
+          basename: filename.replace(/\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/, ""),
+          testFile: fullPath,
         });
       }
-    });
+    } else {
+      await _walkFiles(testsDir, (root, name) => {
+        if (testFileMatcher.test(name)) {
+          testFiles.push({
+            dirname: root,
+            filename: name,
+            basename: name.replace(/\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/, ""),
+            testFile: path.join(root, name),
+          });
+        }
+      });
+    }
+
+    if (testFiles.length === 0) {
+      Output.print(html`<span color="yellow">No test files found.</span>`);
+      return;
+    }
 
     await _walkFiles(testsDir, (root, name) => {
       if (setupFileMatcher.test(name)) {

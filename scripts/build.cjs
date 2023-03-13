@@ -5,6 +5,8 @@ const p = (loc) => path.resolve(__dirname, "..", loc);
 
 async function main() {
   try {
+    const pkg = require(p("package.json"));
+
     await build({
       target: "ESNext",
       srcDir: p("src"),
@@ -13,7 +15,7 @@ async function main() {
       formats: ["esm"],
       declarations: true,
       exclude: /.*\.d\.ts$/,
-      compileVendors: ["termx-markup"],
+      compileVendors: pkg.bundledDependencies,
     });
   } catch (e) {
     console.error(e);

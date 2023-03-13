@@ -51,6 +51,7 @@ async function main() {
       minify: false,
       keepNames: true,
       sourcemap: true,
+      external: ["system"],
       plugins: [
         {
           name: "gest-import-replacer",
