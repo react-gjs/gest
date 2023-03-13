@@ -24,15 +24,14 @@
     "build": "node ./scripts/build.cjs"
   },
   "devDependencies": {
-    "@ncpa0cpl/nodepack": "latest",
-    "@swc/core": "^1.3.37",
+    "@ncpa0cpl/nodepack": "^2.1.1",
     "@types/node": "^18.14.5",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "gjs-esm-types": "ncpa0cpl/gjs-esm-types",
+    "gjs-esm-types": "ncpa0cpl/gjs-esm-types#master",
     "husky": "^8.0.3",
     "ncpa0cpl": "ncpa0cpl/git-hook-tasks",
     "prettier": "^2.8.4",
