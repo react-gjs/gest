@@ -294,7 +294,9 @@ export class TestRunner {
 
               p.resolve();
             } else {
-              const err = new GestError(`Not a test: ${testUnit.testFile}`);
+              const err = new GestError(
+                `Not a test: ${testUnit.testFile}\nMake sure the to add a default export to your test file.`
+              );
 
               this.tracker.suiteProgress({
                 suite: suiteID,

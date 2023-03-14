@@ -10,12 +10,17 @@ export interface ExpectMatchers {
   not: Omit<ExpectMatchers, "not">;
   /**
    * Compares the tested value to the expected value using strict
-   * equality.
+   * shallow equality (equivalent to `Object.is`).
    */
   toBe(expected: any): void;
   /**
-   * Compares the tested value to the expected value using deep
-   * equality.
+   * Check if the tested value is an instance of the specified
+   * class.
+   */
+  toBeInstanceOf(expected: any): void;
+  /**
+   * Compares the tested value to the expected value using strict
+   * deep equality.
    */
   toEqual(expected: any): void;
   /**
@@ -93,7 +98,7 @@ export interface ExpectMatchers {
    * If the tested fuinction is async, this matcher will return a
    * promise that should be awaited.
    */
-  toThrow(thorwn?: any): void | Promise<void>;
+  toThrow(toBeThrown?: any): void | Promise<void>;
   /**
    * Check if the tested value is a promise that rejects with the
    * specified value.
@@ -203,13 +208,59 @@ export class Matchers {
   }
 }
 
-function deepEqual(a: any, b: any): boolean {
+export function deepEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
   }
 
+  if (typeof a !== "object" || typeof b !== "object") {
+    return false;
+  }
+
+  if (a === null || b === null) {
+    return false;
+  }
+
   if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
+    return a.valueOf() === b.valueOf();
+  }
+
+  if (a instanceof Set && b instanceof Set) {
+    if (a.size !== b.size) {
+      return false;
+    }
+
+    for (const v of a) {
+      if (!b.has(v)) {
+        return false;
+      }
+    }
+
+    for (const v of b) {
+      if (!a.has(v)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (a instanceof Map && b instanceof Map) {
+    if (a.size !== b.size) {
+      return false;
+    }
+
+    for (const [k, v] of a) {
+      if (!b.has(k)) {
+        return false;
+      }
+
+      if (!deepEqual(v, b.get(k))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   if (!a || !b || (typeof a !== "object" && typeof b !== "object")) {
@@ -228,22 +279,58 @@ function deepEqual(a: any, b: any): boolean {
   return keys.every((k) => deepEqual(a[k], b[k]));
 }
 
-export abstract class CustomMatch {
-  static isCustomMatch(value: any): value is CustomMatch {
+export abstract class CustomMatcher {
+  static isCustomMatch(value: any): value is CustomMatcher {
     return (
       typeof value === "object" &&
       value !== null &&
-      value instanceof CustomMatch
+      value instanceof CustomMatcher
     );
   }
 
+  /** Check if the value matches this custom matcher. */
   abstract check(value: any): boolean;
 
-  abstract stringify(): string;
+  /**
+   * Should return a patch diff of the given value against this
+   * matcher. If the value matches this matcher, an empty object
+   * should be returned.
+   *
+   * @example
+   *   const diff = matcher.diffAgainst("foo", 123);
+   *   // diff = {
+   *   //   "+foo": "hello", <- this is the value that the matcher expects
+   *   //   "-foo": 123, <- this is the value that was received
+   *   // }
+   */
+  abstract diffAgainst(key: string, v: any): Record<string, any>;
 }
 
-function matchValues(a: any, b: any): boolean {
-  if (CustomMatch.isCustomMatch(b)) {
+const setHasMatch = (set: Set<any>, value: any) => {
+  if (CustomMatcher.isCustomMatch(value)) {
+    for (const v of set) {
+      if (value.check(v)) {
+        return true;
+      }
+    }
+    return false;
+  } else {
+    if (set.has(value)) {
+      return true;
+    }
+
+    for (const v of set) {
+      if (CustomMatcher.isCustomMatch(v) && v.check(value)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+};
+
+export function matchValues(a: any, b: any): boolean {
+  if (CustomMatcher.isCustomMatch(b)) {
     return b.check(a);
   }
 
@@ -251,8 +338,54 @@ function matchValues(a: any, b: any): boolean {
     return true;
   }
 
+  if (typeof a !== "object" || typeof b !== "object") {
+    return false;
+  }
+
+  if (a === null || b === null) {
+    return false;
+  }
+
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime();
+  }
+
+  if (a instanceof Set && b instanceof Set) {
+    if (a.size !== b.size) {
+      return false;
+    }
+
+    for (const v of a) {
+      if (!setHasMatch(b, v)) {
+        return false;
+      }
+    }
+
+    for (const v of b) {
+      if (!setHasMatch(a, v)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (a instanceof Map && b instanceof Map) {
+    if (a.size !== b.size) {
+      return false;
+    }
+
+    for (const [k, v] of a) {
+      if (!b.has(k)) {
+        return false;
+      }
+
+      if (!matchValues(v, b.get(k))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   if (!a || !b || (typeof a !== "object" && typeof b !== "object")) {
@@ -314,6 +447,38 @@ Matchers.add("toBe", (testedValue, [expectedValue]) => {
   };
 });
 
+Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
+  if (testedValue !== "object" || testedValue === null) {
+    return {
+      failed: true,
+      reason: "Expected value to be an object.",
+      received: getPresentationForValue(testedValue),
+      expected: `instanceof ${
+        expectedClassProto.name ??
+        expectedClassProto.constructor.name ??
+        "UnknownClass"
+      }`,
+    };
+  }
+
+  if (!(testedValue instanceof expectedClassProto)) {
+    return {
+      failed: true,
+      reason: "Expected value to be an instance of a class.",
+      received: getPresentationForValue(testedValue),
+      expected: `instanceof ${
+        expectedClassProto.name ??
+        expectedClassProto.constructor.name ??
+        "UnknownClass"
+      }`,
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
 Matchers.add("toEqual", (testedValue, [expectedValue]) => {
   if (!deepEqual(testedValue, expectedValue)) {
     return {
@@ -321,7 +486,7 @@ Matchers.add("toEqual", (testedValue, [expectedValue]) => {
       reason: "Deep equality test has failed.",
       received: getPresentationForValue(testedValue),
       expected: getPresentationForValue(expectedValue),
-      diff: diff(testedValue, expectedValue).stringify(),
+      diff: diff(testedValue, expectedValue, "equal").stringify(),
     };
   }
 
@@ -401,7 +566,7 @@ Matchers.add("toMatchRegex", (testedValue, [regex]) => {
 
 Matchers.add("toMatch", (testedValue, [expectedValue]) => {
   if (!matchValues(testedValue, expectedValue)) {
-    const d = diff(testedValue, expectedValue);
+    const d = diff(testedValue, expectedValue, "match");
     return {
       failed: true,
       reason: "Expected value to match.",
@@ -462,8 +627,8 @@ Matchers.add("toContainEqual", (testedValues, requiredValues) => {
         received: getPresentationForArray(testedValues),
         expected: getPresentationForValue(requiredValue),
         diff: testedValues
-          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
-          .join("\n\n"),
+          .map((v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`)
+          .join("\n"),
       };
     }
   }
@@ -493,8 +658,8 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
         received: getPresentationForArray(testedValues),
         expected: getPresentationForValue(requiredValue),
         diff: testedValues
-          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
-          .join("\n\n"),
+          .map((v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`)
+          .join("\n"),
       };
     }
   }
@@ -542,91 +707,101 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
   };
 });
 
-Matchers.add("toContainOnlyEqual", (testedValues, requiredValues) => {
-  if (!Array.isArray(testedValues)) {
+Matchers.add(
+  "toContainOnlyEqual",
+  (testedValues: any, requiredValues: any[]) => {
+    if (!Array.isArray(testedValues)) {
+      return {
+        failed: true,
+        reason: "Expected value to be an array.",
+        received: getPresentationForValue(testedValues),
+        expected: "Array",
+      };
+    }
+
+    for (const requiredValue of requiredValues) {
+      if (!testedValues.some((v) => deepEqual(v, requiredValue))) {
+        return {
+          failed: true,
+          reason: "Expected array to contain certain value.",
+          received: getPresentationForArray(testedValues),
+          expected: getPresentationForValue(requiredValue),
+          diff: testedValues
+            .map(
+              (v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`
+            )
+            .join("\n"),
+        };
+      }
+    }
+
+    for (const value of testedValues) {
+      if (!requiredValues.some((v) => deepEqual(value, v))) {
+        return {
+          failed: true,
+          reason: "Expected array to contain only certain values.",
+          received: getPresentationForValue(value),
+          expected: getPresentationForArray(requiredValues),
+          diff: requiredValues
+            .map((req, i) => `${i}: ${diff(value, req, "equal").stringify()}`)
+            .join("\n"),
+        };
+      }
+    }
+
     return {
-      failed: true,
-      reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValues),
-      expected: "Array",
+      failed: false,
     };
   }
+);
 
-  for (const requiredValue of requiredValues) {
-    if (!testedValues.some((v) => deepEqual(v, requiredValue))) {
+Matchers.add(
+  "toContainOnlyMatch",
+  (testedValues: any, requiredValues: any[]) => {
+    if (!Array.isArray(testedValues)) {
       return {
         failed: true,
-        reason: "Expected array to contain certain value.",
-        received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
-        diff: testedValues
-          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
-          .join("\n\n"),
+        reason: "Expected value to be an array.",
+        received: getPresentationForValue(testedValues),
+        expected: "Array",
       };
     }
-  }
 
-  for (const value of testedValues) {
-    if (!requiredValues.some((v) => deepEqual(value, v))) {
-      return {
-        failed: true,
-        reason: "Expected array to contain only certain values.",
-        received: getPresentationForValue(value),
-        expected: getPresentationForArray(requiredValues),
-        diff: requiredValues
-          .map((req, i) => `${i}:\n${diff(value, req).stringify()}`)
-          .join("\n\n"),
-      };
+    for (const requiredValue of requiredValues) {
+      if (!testedValues.some((v) => matchValues(v, requiredValue))) {
+        return {
+          failed: true,
+          reason: "Expected array to contain certain value.",
+          received: getPresentationForArray(testedValues),
+          expected: getPresentationForValue(requiredValue),
+          diff: testedValues
+            .map(
+              (v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`
+            )
+            .join("\n"),
+        };
+      }
     }
-  }
 
-  return {
-    failed: false,
-  };
-});
+    for (const value of testedValues) {
+      if (!requiredValues.some((v) => matchValues(value, v))) {
+        return {
+          failed: true,
+          reason: "Expected array to contain only certain values.",
+          received: getPresentationForValue(value),
+          expected: getPresentationForArray(requiredValues),
+          diff: requiredValues
+            .map((req, i) => `${i}: ${diff(value, req, "match").stringify()}`)
+            .join("\n"),
+        };
+      }
+    }
 
-Matchers.add("toContainOnlyMatch", (testedValues, requiredValues: any[]) => {
-  if (!Array.isArray(testedValues)) {
     return {
-      failed: true,
-      reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValues),
-      expected: "Array",
+      failed: false,
     };
   }
-
-  for (const requiredValue of requiredValues) {
-    if (!testedValues.some((v) => matchValues(v, requiredValue))) {
-      return {
-        failed: true,
-        reason: "Expected array to contain certain value.",
-        received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
-        diff: testedValues
-          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
-          .join("\n\n"),
-      };
-    }
-  }
-
-  for (const value of testedValues) {
-    if (!requiredValues.some((v) => matchValues(value, v))) {
-      return {
-        failed: true,
-        reason: "Expected array to contain only certain values.",
-        received: getPresentationForValue(value),
-        expected: getPresentationForArray(requiredValues),
-        diff: requiredValues
-          .map((req, i) => `${i}:\n${diff(value, req).stringify()}`)
-          .join("\n\n"),
-      };
-    }
-  }
-
-  return {
-    failed: false,
-  };
-});
+);
 
 Matchers.add("toThrow", (fn, [toBeThrown]) => {
   if (typeof fn !== "function") {
@@ -703,10 +878,18 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
 
 export const match = {
   /** Matches any non-nullish value. */
-  anything(): CustomMatch {
-    class AnythingMatcher extends CustomMatch {
+  anything(): CustomMatcher {
+    class AnythingMatcher extends CustomMatcher {
       check(value: any) {
         return value != null;
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        if (this.check(v)) return {};
+        return {
+          [`+${key}`]: this.stringify(),
+          [`-${key}`]: v,
+        };
       }
 
       stringify(): string {
@@ -717,10 +900,18 @@ export const match = {
     return new AnythingMatcher();
   },
   /** Matches any value of the specified type. */
-  type(expectedType: string): CustomMatch {
-    class TypeMatcher extends CustomMatch {
+  type(expectedType: string): CustomMatcher {
+    class TypeMatcher extends CustomMatcher {
       check(value: any) {
         return typeof value === expectedType;
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        if (this.check(v)) return {};
+        return {
+          [`+${key}`]: this.stringify(),
+          [`-${key}`]: v,
+        };
       }
 
       stringify(): string {
@@ -731,10 +922,23 @@ export const match = {
     return new TypeMatcher();
   },
   /** Matches any value that's an instance of the specified class. */
-  instanceOf(expectedClass: any): CustomMatch {
-    class InstanceOfMatcher extends CustomMatch {
+  instanceOf(expectedClass: any): CustomMatcher {
+    class InstanceOfMatcher extends CustomMatcher {
       check(value: any) {
-        return value instanceof expectedClass;
+        return (
+          typeof value === "object" &&
+          value != null &&
+          value instanceof expectedClass
+        );
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        if (this.check(v)) return {};
+
+        return {
+          [`+${key}`]: this.stringify(),
+          [`-${key}`]: v,
+        };
       }
 
       stringify(): string {
@@ -749,14 +953,22 @@ export const match = {
     return new InstanceOfMatcher();
   },
   /** Matches any string that contains the specified substring. */
-  stringContaining(expectedString: string): CustomMatch {
-    class StringContainingMatcher extends CustomMatch {
+  stringContaining(expectedString: string): CustomMatcher {
+    class StringContainingMatcher extends CustomMatcher {
       check(value: any) {
         return typeof value === "string" && value.includes(expectedString);
       }
 
+      diffAgainst(key: string, v: any): Record<string, any> {
+        if (this.check(v)) return {};
+        return {
+          [`+${key}`]: this.stringify(),
+          [`-${key}`]: v,
+        };
+      }
+
       stringify(): string {
-        return stringifyJson([expectedString]);
+        return stringifyJson(expectedString);
       }
     }
 
@@ -766,10 +978,18 @@ export const match = {
    * Matches any string that matches specified regular
    * expression.
    */
-  stringMatchingRegex(expectedRegex: RegExp): CustomMatch {
-    class StringMatchingRegexMatcher extends CustomMatch {
+  stringMatchingRegex(expectedRegex: RegExp): CustomMatcher {
+    class StringMatchingRegexMatcher extends CustomMatcher {
       check(value: any) {
         return typeof value === "string" && expectedRegex.test(value);
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        if (this.check(v)) return {};
+        return {
+          [`+${key}`]: this.stringify(),
+          [`-${key}`]: v,
+        };
       }
 
       stringify(): string {
@@ -783,14 +1003,14 @@ export const match = {
    * Matches any value that is strictly equal to the specified
    * value. (equivalent to `toBe()`)
    */
-  exactly(expectedValue: any): CustomMatch {
-    class ExactlyMatcher extends CustomMatch {
+  is(expectedValue: any): CustomMatcher {
+    class ExactlyMatcher extends CustomMatcher {
       check(value: any) {
         return value === expectedValue;
       }
 
-      stringify(): string {
-        return stringifyJson(expectedValue);
+      diffAgainst(key: string, v: any): Record<string, any> {
+        return diff({ [key]: v }, { [key]: expectedValue }, "match").diffStruct;
       }
     }
 
@@ -800,17 +1020,95 @@ export const match = {
    * Matches any value that is equal to the specified value,
    * using deep comparison. (equivalent to `toEqual()`)
    */
-  equal(expectedValue: any): CustomMatch {
-    class EqualToMatcher extends CustomMatch {
+  equal(expectedValue: any): CustomMatcher {
+    class EqualToMatcher extends CustomMatcher {
       check(value: any) {
         return deepEqual(value, expectedValue);
       }
 
-      stringify(): string {
-        return stringifyJson(expectedValue);
+      diffAgainst(key: string, v: any): Record<string, any> {
+        return diff({ [key]: v }, { [key]: expectedValue }, "equal").diffStruct;
       }
     }
 
     return new EqualToMatcher();
+  },
+  arrayContaining(requiredValues: any[]): CustomMatcher {
+    class ArrayContainingMatcher extends CustomMatcher {
+      check(value: any) {
+        if (!Array.isArray(value)) return false;
+        if (value.length < requiredValues.length) return false;
+        return requiredValues.every((v) => value.includes(v));
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        return diff({ [key]: v }, { [key]: requiredValues }, "equal")
+          .diffStruct;
+      }
+    }
+
+    return new ArrayContainingMatcher();
+  },
+  arrayContainingEqual(requiredValues: any[]): CustomMatcher {
+    class ArrayContainingEqualMatcher extends CustomMatcher {
+      check(value: any) {
+        if (!Array.isArray(value)) return false;
+        if (value.length < requiredValues.length) return false;
+        return requiredValues.every((v) => value.some((i) => deepEqual(i, v)));
+      }
+
+      diffAgainst(key: string, v: any): Record<string, any> {
+        return diff({ [key]: v }, { [key]: requiredValues }, "equal")
+          .diffStruct;
+      }
+    }
+
+    return new ArrayContainingEqualMatcher();
+  },
+  arrayContainingOnly(requiredValues: any[]): CustomMatcher {
+    class ArrayContainingOnlyMatcher extends CustomMatcher {
+      check(value: any) {
+        if (!Array.isArray(value)) return false;
+        if (value.length < requiredValues.length) return false;
+        return (
+          requiredValues.every((v) => value.includes(v)) &&
+          value.every((v) => requiredValues.includes(v))
+        );
+      }
+
+      diffAgainst(key: string, values: any): Record<string, any> {
+        if (this.check(values)) return {};
+
+        return {
+          [`+${key}`]: "...",
+          [`-${key}`]: values,
+        };
+      }
+    }
+
+    return new ArrayContainingOnlyMatcher();
+  },
+  arrayContainingOnlyEqual(requiredValues: any[]): CustomMatcher {
+    class ArrayContainingOnlyEqualMatcher extends CustomMatcher {
+      check(value: any) {
+        if (!Array.isArray(value)) return false;
+        if (value.length < requiredValues.length) return false;
+        return (
+          requiredValues.every((v) => value.some((i) => deepEqual(i, v))) &&
+          value.every((v) => requiredValues.some((i) => deepEqual(v, i)))
+        );
+      }
+
+      diffAgainst(key: string, values: any): Record<string, any> {
+        if (this.check(values)) return {};
+
+        return {
+          [`+${key}`]: "...",
+          [`-${key}`]: values,
+        };
+      }
+    }
+
+    return new ArrayContainingOnlyEqualMatcher();
   },
 };

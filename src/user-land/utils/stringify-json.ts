@@ -1,6 +1,3 @@
-import { CustomMatch } from "../matchers";
-import { padLeftLines } from "./pad-left-lines";
-
 type JsonStrigifyMiddleware = (
   key: string | number,
   parsedValue: string,
@@ -27,15 +24,12 @@ export function stringifyJson(
     case "undefined":
     case "bigint":
     case "symbol":
-    case "function":
       return JSON.stringify(value);
+    case "function":
+      return "Function";
     case "object": {
       if (value === null) {
         return "null";
-      }
-
-      if (CustomMatch.isCustomMatch(value)) {
-        return padLeftLines(value.stringify(), " ", currentIndent.length + 2);
       }
 
       if (Array.isArray(value)) {
@@ -72,6 +66,7 @@ export function stringifyJson(
           if (fk === null) {
             continue;
           }
+
           result += `${currentIndent}  ${fk}: ${fc},\n`;
         }
 

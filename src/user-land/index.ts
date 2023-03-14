@@ -136,5 +136,5 @@ export const defineMatcher = (matcherName: string, matcher: Matcher) => {
 
 // Default matchers
 
-export { match } from "./matchers";
+export { CustomMatcher as CustomMatch, match } from "./matchers";
 export type { ExpectMatchers } from "./matchers";
