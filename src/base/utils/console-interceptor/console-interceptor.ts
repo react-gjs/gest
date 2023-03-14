@@ -12,7 +12,9 @@ class Log {
     readonly type: keyof Console | "print",
     readonly data: ReadonlyArray<any>,
     readonly stack?: string
-  ) {}
+  ) {
+    parent["_logs"].push(this);
+  }
 
   getTime() {
     return Math.round(this.timestamp / 1000);

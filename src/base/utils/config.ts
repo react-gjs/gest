@@ -1,9 +1,9 @@
 import type { GetDataType } from "dilswer";
 import { assertDataType, OptionalField, Type, ValidationError } from "dilswer";
-import path from "path";
 import { html, Output } from "termx-markup";
 import { Global } from "../globals";
 import { _readdir, _readFile } from "./filesystem";
+import path from "./path";
 
 export const ConfigSchema = Type.RecordOf({
   testDirectory: OptionalField(Type.String),
@@ -15,7 +15,8 @@ export const ConfigSchema = Type.RecordOf({
       Type.Number,
       Type.Boolean,
       Type.String,
-      Type.RecordOf({ json: Type.String })
+      Type.ArrayOf(Type.Unknown),
+      Type.RecordOf({})
     )
   ),
 });
@@ -62,6 +63,8 @@ class ConfigFacade {
   }
 }
 
+export type { ConfigFacade };
+
 export async function loadConfig() {
   const files = await _readdir(Global.getCwd());
 
@@ -75,18 +78,22 @@ export async function loadConfig() {
       assertDataType(ConfigSchema, config);
       return new ConfigFacade(config);
     } catch (e) {
-      Output.print(
-        html`<span color="yellow">
-          Invalid config file. Using default config instead.
-        </span>`
-      );
+      Output.print(html`<span color="yellow"> Invalid config file. </span>`);
 
       if (ValidationError.isValidationError(e)) {
-        Output.print(html`<pre dim>  Invalid value at: ${e.fieldPath}</pre>`);
+        Output.print(html`<pre>  Invalid value at: ${e.fieldPath}</pre>`);
       }
 
-      return new ConfigFacade({});
+      Output.print("");
+
+      return null;
     }
   }
+
+  Output.print(
+    html`<span color="yellow">
+      Config file not found. Using default config instead.
+    </span>`
+  );
   return new ConfigFacade({});
 }

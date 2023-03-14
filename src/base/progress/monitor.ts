@@ -151,7 +151,8 @@ class MonitorMessages {
       link: string,
       errMessage: string,
       expected?: string,
-      received?: string
+      received?: string,
+      diff?: string
     ): string {
       const name = MonitorMessages.formatUnitName(unitName);
 
@@ -180,6 +181,14 @@ class MonitorMessages {
                     <pre color="lightRed"> ${received}</pre>
                   </pad>`
               )
+            : ""}
+          ${diff
+            ? raw(html`
+                <br />
+                <pad size="8">
+                  <pre>${diff}</pre>
+                </pad>
+              `)
             : ""}
         </span>
       `;
@@ -308,7 +317,8 @@ export class ProgressMonitor {
               update.error.expectLink ?? "",
               update.error.message,
               err.expected,
-              err.received
+              err.received,
+              err.diff
             )
           );
         } else {

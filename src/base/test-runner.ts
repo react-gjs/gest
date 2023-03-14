@@ -5,6 +5,7 @@ import { _buildFile } from "./builder/build-file";
 import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
 import { _async } from "./utils/async";
+import type { ConfigFacade } from "./utils/config";
 import { _isExpectError } from "./utils/error-handling";
 import { GestError } from "./utils/gest-error";
 import { NoLogError } from "./utils/no-log-err";
@@ -217,8 +218,8 @@ export class TestRunner {
 
   constructor(
     private testFileQueue: TestSuite[],
+    private config: ConfigFacade,
     private tracker: ProgressTracker,
-    private mainSetup?: string,
     private options: TestRunnerOptions = {}
   ) {}
 
@@ -267,7 +268,8 @@ export class TestRunner {
         input: testUnit.testFile,
         output: outputFile,
         fileSetup: testUnit.setupFile,
-        mainSetup: this.mainSetup,
+        mainSetup: this.config.setup,
+        globals: this.config.globals,
       });
 
       this.tmpFiles.push(outputFile, mapFile);

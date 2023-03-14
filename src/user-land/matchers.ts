@@ -1,4 +1,6 @@
+import { diff } from "./utils/json-diff";
 import { _getLineFromError } from "./utils/parse-error";
+import { stringifyJson } from "./utils/stringify-json";
 
 export interface ExpectMatchers {
   /**
@@ -226,7 +228,7 @@ function deepEqual(a: any, b: any): boolean {
   return keys.every((k) => deepEqual(a[k], b[k]));
 }
 
-abstract class CustomMatch {
+export abstract class CustomMatch {
   static isCustomMatch(value: any): value is CustomMatch {
     return (
       typeof value === "object" &&
@@ -236,6 +238,8 @@ abstract class CustomMatch {
   }
 
   abstract check(value: any): boolean;
+
+  abstract stringify(): string;
 }
 
 function matchValues(a: any, b: any): boolean {
@@ -291,6 +295,10 @@ function getPresentationForValue(v: unknown): string {
   }
 }
 
+function getPresentationForArray(v: any[]): string {
+  return `[${v.map((i) => getPresentationForValue(i)).join(", ")}]`;
+}
+
 Matchers.add("toBe", (testedValue, [expectedValue]) => {
   if (testedValue !== expectedValue) {
     return {
@@ -313,6 +321,7 @@ Matchers.add("toEqual", (testedValue, [expectedValue]) => {
       reason: "Deep equality test has failed.",
       received: getPresentationForValue(testedValue),
       expected: getPresentationForValue(expectedValue),
+      diff: diff(testedValue, expectedValue).stringify(),
     };
   }
 
@@ -392,11 +401,13 @@ Matchers.add("toMatchRegex", (testedValue, [regex]) => {
 
 Matchers.add("toMatch", (testedValue, [expectedValue]) => {
   if (!matchValues(testedValue, expectedValue)) {
+    const d = diff(testedValue, expectedValue);
     return {
       failed: true,
       reason: "Expected value to match.",
       received: getPresentationForValue(testedValue),
       expected: getPresentationForValue(expectedValue),
+      diff: d.stringify(),
     };
   }
 
@@ -405,23 +416,23 @@ Matchers.add("toMatch", (testedValue, [expectedValue]) => {
   };
 });
 
-Matchers.add("toContain", (testedValue, values) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContain", (testedValues, requiredValues) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of values) {
-    if (!testedValue.includes(value)) {
+  for (const requiredValue of requiredValues) {
+    if (!testedValues.includes(requiredValue)) {
       return {
         failed: true,
         reason: "Expected array to contain a certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
       };
     }
   }
@@ -431,23 +442,28 @@ Matchers.add("toContain", (testedValue, values) => {
   };
 });
 
-Matchers.add("toContainEqual", (testedValue, values) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContainEqual", (testedValues, requiredValues) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of values) {
-    if (!testedValue.some((v) => deepEqual(v, value))) {
+  for (const requiredValue of requiredValues) {
+    const match = testedValues.find((v) => deepEqual(v, requiredValue));
+
+    if (!match) {
       return {
         failed: true,
         reason: "Expected array to contain a certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
+        diff: testedValues
+          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
@@ -457,23 +473,28 @@ Matchers.add("toContainEqual", (testedValue, values) => {
   };
 });
 
-Matchers.add("toContainMatch", (testedValue, values) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContainMatch", (testedValues, requiredValues) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of values) {
-    if (!testedValue.some((v) => matchValues(v, value))) {
+  for (const requiredValue of requiredValues) {
+    const match = testedValues.find((v) => deepEqual(v, requiredValue));
+
+    if (!match) {
       return {
         failed: true,
-        reason: "Expected array to contain certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        reason: "Expected array to contain a certain value.",
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
+        diff: testedValues
+          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
@@ -483,34 +504,35 @@ Matchers.add("toContainMatch", (testedValue, values) => {
   };
 });
 
-Matchers.add("toContainOnly", (testedValue, expectedValues) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContainOnly", (testedValues, requiredValues) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of expectedValues) {
-    if (!testedValue.includes(value)) {
+  for (const requiredValue of requiredValues) {
+    if (!testedValues.includes(requiredValue)) {
       return {
         failed: true,
-        reason: "Expected array to contain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        reason: "Expected array to contain a certain value.",
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
       };
     }
   }
 
-  for (const value of testedValue) {
-    if (!expectedValues.some((v) => value === v)) {
+  for (const value of testedValues) {
+    const match = requiredValues.find((v) => v === value);
+    if (!match) {
       return {
         failed: true,
         reason: "Expected array to not contain anything but a certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForValue(value),
+        expected: getPresentationForArray(requiredValues),
       };
     }
   }
@@ -520,34 +542,40 @@ Matchers.add("toContainOnly", (testedValue, expectedValues) => {
   };
 });
 
-Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContainOnlyEqual", (testedValues, requiredValues) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of expectedValues) {
-    if (!testedValue.some((v) => deepEqual(v, value))) {
+  for (const requiredValue of requiredValues) {
+    if (!testedValues.some((v) => deepEqual(v, requiredValue))) {
       return {
         failed: true,
         reason: "Expected array to contain certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
+        diff: testedValues
+          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
 
-  for (const value of testedValue) {
-    if (!expectedValues.some((v) => deepEqual(value, v))) {
+  for (const value of testedValues) {
+    if (!requiredValues.some((v) => deepEqual(value, v))) {
       return {
         failed: true,
         reason: "Expected array to contain only certain values.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForValue(value),
+        expected: getPresentationForArray(requiredValues),
+        diff: requiredValues
+          .map((req, i) => `${i}:\n${diff(value, req).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
@@ -557,34 +585,40 @@ Matchers.add("toContainOnlyEqual", (testedValue, expectedValues) => {
   };
 });
 
-Matchers.add("toContainOnlyMatch", (testedValue, expectedValues: any[]) => {
-  if (!Array.isArray(testedValue)) {
+Matchers.add("toContainOnlyMatch", (testedValues, requiredValues: any[]) => {
+  if (!Array.isArray(testedValues)) {
     return {
       failed: true,
       reason: "Expected value to be an array.",
-      received: getPresentationForValue(testedValue),
+      received: getPresentationForValue(testedValues),
       expected: "Array",
     };
   }
 
-  for (const value of expectedValues) {
-    if (!testedValue.some((v) => matchValues(v, value))) {
+  for (const requiredValue of requiredValues) {
+    if (!testedValues.some((v) => matchValues(v, requiredValue))) {
       return {
         failed: true,
         reason: "Expected array to contain certain value.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForArray(testedValues),
+        expected: getPresentationForValue(requiredValue),
+        diff: testedValues
+          .map((v, i) => `${i}:\n${diff(v, requiredValue).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
 
-  for (const value of testedValue) {
-    if (!expectedValues.some((v) => matchValues(value, v))) {
+  for (const value of testedValues) {
+    if (!requiredValues.some((v) => matchValues(value, v))) {
       return {
         failed: true,
         reason: "Expected array to contain only certain values.",
-        received: getPresentationForValue(testedValue),
-        expected: getPresentationForValue(value),
+        received: getPresentationForValue(value),
+        expected: getPresentationForArray(requiredValues),
+        diff: requiredValues
+          .map((req, i) => `${i}:\n${diff(value, req).stringify()}`)
+          .join("\n\n"),
       };
     }
   }
@@ -674,6 +708,10 @@ export const match = {
       check(value: any) {
         return value != null;
       }
+
+      stringify(): string {
+        return "any";
+      }
     }
 
     return new AnythingMatcher();
@@ -683,6 +721,10 @@ export const match = {
     class TypeMatcher extends CustomMatch {
       check(value: any) {
         return typeof value === expectedType;
+      }
+
+      stringify(): string {
+        return `typeof ${expectedType}`;
       }
     }
 
@@ -694,6 +736,14 @@ export const match = {
       check(value: any) {
         return value instanceof expectedClass;
       }
+
+      stringify(): string {
+        return `instanceof ${
+          expectedClass?.name ??
+          expectedClass?.constructor?.name ??
+          "UnknownClass"
+        }`;
+      }
     }
 
     return new InstanceOfMatcher();
@@ -703,6 +753,10 @@ export const match = {
     class StringContainingMatcher extends CustomMatch {
       check(value: any) {
         return typeof value === "string" && value.includes(expectedString);
+      }
+
+      stringify(): string {
+        return stringifyJson([expectedString]);
       }
     }
 
@@ -717,6 +771,10 @@ export const match = {
       check(value: any) {
         return typeof value === "string" && expectedRegex.test(value);
       }
+
+      stringify(): string {
+        return stringifyJson(expectedRegex);
+      }
     }
 
     return new StringMatchingRegexMatcher();
@@ -730,6 +788,10 @@ export const match = {
       check(value: any) {
         return value === expectedValue;
       }
+
+      stringify(): string {
+        return stringifyJson(expectedValue);
+      }
     }
 
     return new ExactlyMatcher();
@@ -742,6 +804,10 @@ export const match = {
     class EqualToMatcher extends CustomMatch {
       check(value: any) {
         return deepEqual(value, expectedValue);
+      }
+
+      stringify(): string {
+        return stringifyJson(expectedValue);
       }
     }
 

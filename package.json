@@ -47,5 +47,8 @@
     "dilswer": "^2.0.2",
     "esbuild": "^0.17.10",
     "termx-markup": "^1.1.0"
+  },
+  "resolutions": {
+    "dilswer": "2.0.2"
   }
 }

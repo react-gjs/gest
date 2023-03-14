@@ -1,16 +1,36 @@
 import esbuild from "esbuild";
 import path from "path";
 import * as url from "url";
+import type { BuildScriptMessage } from "./build-script-message";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
+function getDefineForGlobals(
+  globals: Exclude<BuildScriptMessage["globals"], undefined>
+) {
+  const define: Record<string, any> = {};
+
+  for (const [key, globalDef] of Object.entries(globals)) {
+    if (globalDef.kind === "json") {
+      define[key] = globalDef.value.json;
+    } else if (globalDef.kind === "value") {
+      define[key] = JSON.stringify(globalDef.value);
+    } else {
+      define[key] = globalDef.value;
+    }
+  }
+
+  return define;
+}
+
 async function main() {
   try {
-    if (!process.argv[2]) throw new Error("No input file specified");
-    if (!process.argv[3]) throw new Error("No output file specified");
+    if (!process.argv[2])
+      throw new Error("Missing required argument for test building script.");
 
-    const inputFile = path.resolve(process.cwd(), process.argv[2]);
-    const outputFile = path.resolve(process.cwd(), process.argv[3]);
+    const encodedMsg = process.argv[2].trim();
+
+    const msg: BuildScriptMessage = JSON.parse(atob(encodedMsg).trim());
 
     const mockMap: Record<string, string> = {};
 
@@ -30,23 +50,20 @@ async function main() {
       }
     };
 
-    if (process.argv[4]) {
-      await loadSetup(process.argv[4]);
+    if (msg.setup.main) {
+      await loadSetup(msg.setup.main);
     }
 
-    if (process.argv[5]) {
-      await loadSetup(process.argv[5]);
+    if (msg.setup.secondary) {
+      await loadSetup(msg.setup.secondary);
     }
 
     await esbuild.build({
       target: "es2022",
-      entryPoints: [inputFile],
+      entryPoints: [msg.input],
       bundle: true,
-      define: {
-        console: "__gest_console",
-        print: "__gest_console.print",
-      },
-      outfile: outputFile,
+      define: getDefineForGlobals(msg.globals ?? {}),
+      outfile: msg.output,
       format: "esm",
       minify: false,
       keepNames: true,

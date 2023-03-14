@@ -68,6 +68,11 @@ async function main() {
 
     const config = await loadConfig();
 
+    if (!config) {
+      exitCode = 1;
+      return;
+    }
+
     const testsDir = config.testDirectory;
     const parallel = config.parallel;
 
@@ -129,7 +134,7 @@ async function main() {
 
     const testRunners = Array.from(
       { length: parallel },
-      () => new TestRunner(testFiles, progressTracker, config?.setup, options)
+      () => new TestRunner(testFiles, config, progressTracker, options)
     );
 
     await Promise.all(testRunners.map((runner) => runner.start()));
