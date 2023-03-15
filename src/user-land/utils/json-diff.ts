@@ -1,5 +1,6 @@
-import { CustomMatcher, deepEqual, matchValues } from "../matchers";
+import { CustomMatcher } from "../matchers";
 import { stringifyJson } from "./stringify-json";
+import { deepEqual, matchValues } from "./validators";
 
 const isObject = (value: any): value is object => {
   return typeof value === "object" && value !== null;
@@ -25,13 +26,13 @@ const diffSets = (a: Set<any>, b: Set<any>, mode: "equal" | "match") => {
       avalues.splice(index, 1);
       return elem;
     } else if (mode === "equal") {
-      const index = avalues.findIndex((av) => deepEqual(av, bval));
+      const index = avalues.findIndex((av) => deepEqual(av, bval).isEqual);
       if (index === -1) return;
       const elem = avalues[index];
       avalues.splice(index, 1);
       return elem;
     } else {
-      const index = avalues.findIndex((av) => matchValues(av, bval));
+      const index = avalues.findIndex((av) => matchValues(av, bval).isEqual);
       if (index === -1) return;
       const elem = avalues[index];
       avalues.splice(index, 1);
@@ -234,9 +235,9 @@ export const diff = (a: any, b: any, mode: "equal" | "match") => {
     }
   }
 
-  if (mode === "equal" && deepEqual(a, b)) {
+  if (mode === "equal" && deepEqual(a, b).isEqual) {
     return new Diff({});
-  } else if (matchValues(a, b)) {
+  } else if (matchValues(a, b).isEqual) {
     return new Diff({});
   } else {
     return new Diff({ "+$": b, "-$": a });
