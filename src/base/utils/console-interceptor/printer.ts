@@ -18,6 +18,17 @@ class Printer {
     for (const d of data) {
       if (typeof d === "string") {
         p.push(html`<pre>${d}</pre>`);
+      } else if (typeof d === "object" && d != null && d instanceof Error) {
+        p.push(
+          html`
+            <pre>${d.message}</pre>
+            <br />
+            <pad size="2">
+              <pre>${d.stack}</pre>
+            </pad>
+            <br />
+          `
+        );
       } else {
         p.push(html`<pre>${jsonToPresentation(d, 4)}</pre>`);
       }
@@ -152,7 +163,7 @@ class Printer {
   public printLog(log: Log) {
     Output.print(html`
       <span>
-        <span color="white">LOG:<s /><s /><s /></span>
+        <span color="lightCyan">LOG:<s /><s /><s /></span>
         ${this.formatLogArgs(log.data)}
       </span>
     `);
@@ -161,7 +172,7 @@ class Printer {
   public printPrint(log: Log) {
     Output.print(html`
       <span>
-        <span color="white">PRINT:<s /></span>
+        <span color="lightCyan">PRINT:<s /></span>
         ${this.formatLogArgs(log.data)}
       </span>
     `);
