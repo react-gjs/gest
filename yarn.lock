@@ -1336,9 +1336,9 @@ clify.js@ncpa0cpl/clify.js:
     eslint: ^8.35.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-prettier: ^4.2.1
-    gjs-esm-types: ^0.0.1
+    git-hook-tasks: ncpa0cpl/git-hook-tasks
+    gjs-esm-types: ^0.0.3
     husky: ^8.0.3
-    ncpa0cpl: ncpa0cpl/git-hook-tasks
     prettier: ^2.8.4
     prettier-plugin-jsdoc: ^0.4.2
     rimraf: ^4.1.2
@@ -1370,10 +1370,28 @@ clify.js@ncpa0cpl/clify.js:
   languageName: node
   linkType: hard
 
-"gjs-esm-types@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "gjs-esm-types@npm:0.0.1"
-  checksum: 83d00451eb9d3522df1b11a93132051640f6f1a02519f2466111386579e0f39a2fe6070f1ed912eda6c1bb113c601b92e0aa1635a5a0b9d2c9aeac2c260b054b
+git-hook-tasks@ncpa0cpl/git-hook-tasks:
+  version: 1.0.0
+  resolution: "git-hook-tasks@https://github.com/ncpa0cpl/git-hook-tasks.git#commit=475046a2550d299c6e807dad502a83dbbc25a0d6"
+  dependencies:
+    async-await-queue: ^1.2.1
+    chalk: ^4.0.0
+    clify.js: ncpa0cpl/clify.js
+    dilswer: ^1.2.0
+    node-os-walk: ^1.0.0
+    strip-ansi: ^6.0.1
+  peerDependencies:
+    husky: ^8.0.1
+  bin:
+    git-hook-tasks: dist/bin/bin.js
+  checksum: 126a7004a73673ed1d9bd98c968b2a05108484adcde62b3bdae1d42cb2cf9509ab922e2b1779ce99c2e4700c9afde86bcdd89883887c8aa820f0a275be19740b
+  languageName: node
+  linkType: hard
+
+"gjs-esm-types@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "gjs-esm-types@npm:0.0.3"
+  checksum: d76e99d3dba47132c1c74fc725c8778a62465f50301e3019035ec3c3a8f77d27241e67cba0bc84a3fcd69ee684ce381ac5d1e3c1c25cbaa3d254489cd3f2aa0a
   languageName: node
   linkType: hard
 
@@ -2187,24 +2205,6 @@ clify.js@ncpa0cpl/clify.js:
   version: 1.4.0
   resolution: "natural-compare@npm:1.4.0"
   checksum: 23ad088b08f898fc9b53011d7bb78ec48e79de7627e01ab5518e806033861bef68d5b0cd0e2205c2f36690ac9571ff6bcb05eb777ced2eeda8d4ac5b44592c3d
-  languageName: node
-  linkType: hard
-
-ncpa0cpl@ncpa0cpl/git-hook-tasks:
-  version: 1.0.0
-  resolution: "ncpa0cpl@https://github.com/ncpa0cpl/git-hook-tasks.git#commit=475046a2550d299c6e807dad502a83dbbc25a0d6"
-  dependencies:
-    async-await-queue: ^1.2.1
-    chalk: ^4.0.0
-    clify.js: ncpa0cpl/clify.js
-    dilswer: ^1.2.0
-    node-os-walk: ^1.0.0
-    strip-ansi: ^6.0.1
-  peerDependencies:
-    husky: ^8.0.1
-  bin:
-    git-hook-tasks: dist/bin/bin.js
-  checksum: d3b5ca7522bdc56ab9aa3bd48ab1c2ef2b90322a284a7b600e0f21e43a5dae2333fde655cc9a2e462ec754724fcf2d56c0687472a839c439095ad04523c6d2eb
   languageName: node
   linkType: hard
 

@@ -899,6 +899,11 @@ export const match = {
 
     return new EqualToMatcher();
   },
+  /**
+   * Matches any array that contains the specified values.
+   *
+   * Equivalent to expect's `toContain()`
+   */
   arrayContaining(requiredValues: any[]): CustomMatcher {
     class ArrayContainingMatcher extends CustomMatcher {
       check(value: any) {
@@ -919,6 +924,12 @@ export const match = {
 
     return new ArrayContainingMatcher();
   },
+  /**
+   * Matches any array that contains the specified values, using
+   * deep comparison.
+   *
+   * Equivalent to expect's `toContainEqual()`
+   */
   arrayContainingEqual(requiredValues: any[]): CustomMatcher {
     class ArrayContainingEqualMatcher extends CustomMatcher {
       check(value: any) {
@@ -941,6 +952,12 @@ export const match = {
 
     return new ArrayContainingEqualMatcher();
   },
+  /**
+   * Matches any array that contains only the exact specified
+   * values.
+   *
+   * Equivalent to expect's `toContainOnly()`
+   */
   arrayContainingOnly(requiredValues: any[]): CustomMatcher {
     class ArrayContainingOnlyMatcher extends CustomMatcher {
       check(value: any) {
@@ -968,6 +985,12 @@ export const match = {
 
     return new ArrayContainingOnlyMatcher();
   },
+  /**
+   * Matches any array that contains all the specified values,
+   * using deep comparison, and only those.
+   *
+   * Equivalent to expect's `toContainOnlyEqual()`
+   */
   arrayContainingOnlyEqual(requiredValues: any[]): CustomMatcher {
     class ArrayContainingOnlyEqualMatcher extends CustomMatcher {
       check(value: any) {
