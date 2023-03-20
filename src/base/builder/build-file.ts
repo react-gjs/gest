@@ -6,7 +6,7 @@ import path from "../utils/path";
 import type {
   BSMJsonValue,
   BSMValue,
-  BuildScriptMessage
+  BuildScriptMessage,
 } from "./build-script-message";
 
 export async function _buildFile(params: {

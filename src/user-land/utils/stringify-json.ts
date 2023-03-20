@@ -4,11 +4,15 @@ type JsonStrigifyMiddleware = (
   originalValue: any
 ) => [string | number, string] | [null, null];
 
+export const PresentableObjectIdentifier = Symbol(
+  "PresentableObjectIdentifier"
+);
+
 export function stringifyJson(
   value: any,
   middleware: JsonStrigifyMiddleware = (key, value) => [key, value],
   currentDepth = 0
-) {
+): string {
   const nextDepth = currentDepth + 1;
 
   let result = "";
@@ -30,6 +34,10 @@ export function stringifyJson(
     case "object": {
       if (value === null) {
         return "null";
+      }
+
+      if (PresentableObjectIdentifier in value && "_toPresentation" in value) {
+        return String(value._toPresentation());
       }
 
       if (Array.isArray(value)) {

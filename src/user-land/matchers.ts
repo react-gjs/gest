@@ -1,6 +1,9 @@
 import { diff } from "./utils/json-diff";
 import { _getLineFromError } from "./utils/parse-error";
-import { stringifyJson } from "./utils/stringify-json";
+import {
+  PresentableObjectIdentifier,
+  stringifyJson,
+} from "./utils/stringify-json";
 import { deepEqual, matchValues } from "./utils/validators";
 
 export interface ExpectMatchers {
@@ -453,7 +456,7 @@ Matchers.add("toContain", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
+        expected: "array containing: " + getPresentationForValue(requiredValue),
       };
     }
   }
@@ -481,7 +484,7 @@ Matchers.add("toContainEqual", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
+        expected: "array containing: " + getPresentationForValue(requiredValue),
         diff: testedValues
           .map((v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`)
           .join("\n"),
@@ -514,7 +517,7 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
+        expected: "array containing: " + getPresentationForValue(requiredValue),
         diff: testedValues
           .map((v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`)
           .join("\n"),
@@ -543,7 +546,7 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: getPresentationForValue(requiredValue),
+        expected: "array containing: " + getPresentationForValue(requiredValue),
       };
     }
   }
@@ -555,7 +558,7 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to not contain anything but a certain value.",
         received: getPresentationForValue(value),
-        expected: getPresentationForArray(requiredValues),
+        expected: "one of: " + getPresentationForArray(requiredValues),
       };
     }
   }
@@ -583,7 +586,8 @@ Matchers.add(
           failed: true,
           reason: "Expected array to contain certain value.",
           received: getPresentationForArray(testedValues),
-          expected: getPresentationForValue(requiredValue),
+          expected:
+            "array containing: " + getPresentationForValue(requiredValue),
           diff: testedValues
             .map(
               (v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`
@@ -599,7 +603,7 @@ Matchers.add(
           failed: true,
           reason: "Expected array to contain only certain values.",
           received: getPresentationForValue(value),
-          expected: getPresentationForArray(requiredValues),
+          expected: "one of: " + getPresentationForArray(requiredValues),
           diff: requiredValues
             .map((req, i) => `${i}: ${diff(value, req, "equal").stringify()}`)
             .join("\n"),
@@ -631,7 +635,8 @@ Matchers.add(
           failed: true,
           reason: "Expected array to contain certain value.",
           received: getPresentationForArray(testedValues),
-          expected: getPresentationForValue(requiredValue),
+          expected:
+            "array containing: " + getPresentationForValue(requiredValue),
           diff: testedValues
             .map(
               (v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`
@@ -647,7 +652,7 @@ Matchers.add(
           failed: true,
           reason: "Expected array to contain only certain values.",
           received: getPresentationForValue(value),
-          expected: getPresentationForArray(requiredValues),
+          expected: "one of: " + getPresentationForArray(requiredValues),
           diff: requiredValues
             .map((req, i) => `${i}: ${diff(value, req, "match").stringify()}`)
             .join("\n"),
@@ -734,6 +739,22 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
   };
 });
 
+/**
+ * Creates a special object that will be treated differently when
+ * parsing with `stringifyJson`.
+ *
+ * The value provided as the argument should end up being
+ * inserted into the JSON string without quotes like a regular
+ * value would.
+ */
+const withoutQuotes = (s: string) => ({
+  [PresentableObjectIdentifier]: true,
+  _toPresentation: () => s,
+  value: s,
+  notice:
+    "This is a internal Gest object. If you are seeing it in a diff patch of a test error, please report a bug here: https://github.com/ncpa0cpl/gest/issues",
+});
+
 export const match = {
   /** Matches any non-nullish value. */
   anything(): CustomMatcher {
@@ -745,7 +766,7 @@ export const match = {
       diffAgainst(key: string, v: any): Record<string, any> {
         if (this.check(v)) return {};
         return {
-          [`+${key}`]: this.toPresentation(),
+          [`+${key}`]: withoutQuotes(this.toPresentation()),
           [`-${key}`]: v,
         };
       }
@@ -767,7 +788,7 @@ export const match = {
       diffAgainst(key: string, v: any): Record<string, any> {
         if (this.check(v)) return {};
         return {
-          [`+${key}`]: this.toPresentation(),
+          [`+${key}`]: withoutQuotes(this.toPresentation()),
           [`-${key}`]: v,
         };
       }
@@ -794,7 +815,7 @@ export const match = {
         if (this.check(v)) return {};
 
         return {
-          [`+${key}`]: this.toPresentation(),
+          [`+${key}`]: withoutQuotes(this.toPresentation()),
           [`-${key}`]: v,
         };
       }
@@ -820,7 +841,7 @@ export const match = {
       diffAgainst(key: string, v: any): Record<string, any> {
         if (this.check(v)) return {};
         return {
-          [`+${key}`]: this.toPresentation(),
+          [`+${key}`]: withoutQuotes(this.toPresentation()),
           [`-${key}`]: v,
         };
       }
@@ -845,7 +866,7 @@ export const match = {
       diffAgainst(key: string, v: any): Record<string, any> {
         if (this.check(v)) return {};
         return {
-          [`+${key}`]: this.toPresentation(),
+          [`+${key}`]: withoutQuotes(this.toPresentation()),
           [`-${key}`]: v,
         };
       }
@@ -868,7 +889,7 @@ export const match = {
       }
 
       diffAgainst(key: string, v: any): Record<string, any> {
-        return diff({ [key]: v }, { [key]: expectedValue }, "match").diffStruct;
+        return diff({ [key]: v }, { [key]: expectedValue }, "equal").diffStruct;
       }
 
       toPresentation(): string {
@@ -1066,9 +1087,9 @@ export const match = {
     class AllOfMatcher extends CustomMatcher {
       private checkWith(m: any, value: any) {
         if (CustomMatcher.isCustomMatch(m)) {
-          if (!m.check(value)) return false;
+          return m.check(value);
         } else {
-          if (!matchValues(m, value)) return false;
+          return matchValues(value, m).isEqual;
         }
       }
 
@@ -1119,9 +1140,9 @@ export const match = {
     class OneOfMatcher extends CustomMatcher {
       private checkWith(m: any, value: any) {
         if (CustomMatcher.isCustomMatch(m)) {
-          if (m.check(value)) return true;
+          return m.check(value);
         } else {
-          if (matchValues(m, value)) return true;
+          return matchValues(value, m).isEqual;
         }
       }
 
@@ -1134,19 +1155,25 @@ export const match = {
       }
 
       diffAgainst(key: string, value: any): Record<string, any> {
-        // find first matcher that does not match
-        const mismatch = matchers.find((m) => !this.checkWith(m, value));
+        if (this.check(value)) return {};
 
-        if (mismatch) {
-          if (CustomMatcher.isCustomMatch(mismatch)) {
-            return mismatch.diffAgainst(key, value);
-          } else {
-            return diff({ [key]: value }, { [key]: mismatch }, "match")
-              .diffStruct;
+        const diffResults: Record<string, any> = {};
+
+        for (const [index, mismatch] of matchers.entries()) {
+          if (mismatch) {
+            if (CustomMatcher.isCustomMatch(mismatch)) {
+              diffResults[index] = mismatch.diffAgainst(key, value);
+            } else {
+              diffResults[index] = diff(
+                { [key]: value },
+                { [key]: mismatch },
+                "match"
+              ).diffStruct;
+            }
           }
         }
 
-        return {};
+        return diffResults;
       }
 
       toPresentation(): string {

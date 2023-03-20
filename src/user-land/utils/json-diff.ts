@@ -227,7 +227,11 @@ class Diff {
   }
 }
 
-export const diff = (a: any, b: any, mode: "equal" | "match") => {
+export const diff = (a: any, b: any, mode: "equal" | "match"): Diff => {
+  if (CustomMatcher.isCustomMatch(b)) {
+    return new Diff(b.diffAgainst("$", a));
+  }
+
   if (typeof a === "object" && typeof b === "object") {
     if (isObject(a) && isObject(b) && areOfSameInstance(a, b)) {
       const d = diffObj(a, b, mode);
