@@ -13,14 +13,77 @@ function getDefineForGlobals(
   for (const [key, globalDef] of Object.entries(globals)) {
     if (globalDef.kind === "json") {
       define[key] = globalDef.value.json;
+      define[`globalThis.${key}`] = globalDef.value.json;
     } else if (globalDef.kind === "value") {
       define[key] = JSON.stringify(globalDef.value);
+      define[`globalThis.${key}`] = JSON.stringify(globalDef.value);
     } else {
       define[key] = globalDef.value;
+      define[`globalThis.${key}`] = globalDef.value;
     }
   }
 
   return define;
+}
+
+class PluginHelpers {
+  static addIntrospectionImportHandlers(build: esbuild.PluginBuild) {
+    build.onResolve({ filter: /gi:.*/ }, (args) => {
+      return {
+        external: true,
+      };
+    });
+  }
+
+  static addMockImportHandlers(
+    build: esbuild.PluginBuild,
+    mockMap: Record<string, string>
+  ) {
+    if (Object.keys(mockMap).length > 0) {
+      build.onResolve({ filter: /.*/ }, (args) => {
+        if (mockMap![args.path]) {
+          return {
+            path: mockMap![args.path],
+          };
+        }
+      });
+    }
+  }
+
+  static addSystemImportHandlers(
+    build: esbuild.PluginBuild,
+    msg: BuildScriptMessage
+  ) {
+    build.onResolve({ filter: /system/ }, (args) => {
+      return {};
+    });
+
+    build.onLoad({ filter: /system/ }, (args) => {
+      return {
+        contents: /* js */ `
+          export const version = imports.system.version;
+          export const programArgs = [];
+          export const programInvocationName = ${JSON.stringify(msg.output)};
+          export const programPath = ${JSON.stringify(msg.output)};
+
+          export const exit = (code: number) => {
+            console.warn("You cannot exit the program from within a test.")
+            throw new Error("App Exit with code "+ String(code));
+          };
+
+          const _system = {
+            version,
+            programArgs,
+            programInvocationName,
+            programPath,
+            exit,
+          };
+
+          export default _system;
+        `,
+      };
+    });
+  }
 }
 
 async function main() {
@@ -68,32 +131,19 @@ async function main() {
       minify: false,
       keepNames: true,
       sourcemap: true,
-      external: ["system"],
       plugins: [
         {
           name: "gest-import-replacer",
           setup(build) {
-            build.onResolve({ filter: /gi:.*/ }, (args) => {
-              return {
-                external: true,
-              };
-            });
-
             build.onResolve({ filter: /^gest$/ }, (args) => {
               return {
                 path: path.resolve(__dirname, "../../user-land/index.mjs"),
               };
             });
 
-            if (Object.keys(mockMap).length > 0) {
-              build.onResolve({ filter: /.*/ }, (args) => {
-                if (mockMap![args.path]) {
-                  return {
-                    path: mockMap![args.path],
-                  };
-                }
-              });
-            }
+            PluginHelpers.addIntrospectionImportHandlers(build);
+            PluginHelpers.addMockImportHandlers(build, mockMap);
+            PluginHelpers.addSystemImportHandlers(build, msg);
           },
         },
       ],

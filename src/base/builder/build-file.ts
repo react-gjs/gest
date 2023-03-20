@@ -6,7 +6,7 @@ import path from "../utils/path";
 import type {
   BSMJsonValue,
   BSMValue,
-  BuildScriptMessage,
+  BuildScriptMessage
 } from "./build-script-message";
 
 export async function _buildFile(params: {
@@ -43,6 +43,22 @@ export async function _buildFile(params: {
       print: {
         kind: "identifier",
         value: "__gest_console.print",
+      },
+      printerr: {
+        kind: "identifier",
+        value: "__gest_console.error",
+      },
+      log: {
+        kind: "identifier",
+        value: "__gest_console.log",
+      },
+      logError: {
+        kind: "identifier",
+        value: "__gest_console.error",
+      },
+      imports: {
+        kind: "identifier",
+        value: "__gest_.imports",
       },
     },
     setup: {

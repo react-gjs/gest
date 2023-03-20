@@ -19,6 +19,15 @@ declare global {
   function print(text: string): void;
 }
 
+// @ts-ignore
+globalThis.__gest_ = {
+  get imports() {
+    throw new Error(
+      "Usage of `imports` in tests is not allowed, please use ECMAScript modules import instead."
+    );
+  },
+};
+
 let exitCode = 0;
 
 async function main() {
