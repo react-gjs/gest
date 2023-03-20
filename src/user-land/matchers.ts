@@ -1022,4 +1022,138 @@ export const match = {
 
     return new ArrayContainingOnlyEqualMatcher();
   },
+  /**
+   * Matches any value that positively validates with the given
+   * function.
+   */
+  validates(validator: (value: any) => boolean): CustomMatcher {
+    class ValidatesMatcher extends CustomMatcher {
+      check(value: any) {
+        return !!validator(value);
+      }
+
+      diffAgainst(key: string, value: any): Record<string, any> {
+        if (this.check(value)) return {};
+
+        return {
+          [`+${key}`]: "",
+          [`-${key}`]: value,
+        };
+      }
+
+      toPresentation(): string {
+        return "unknown";
+      }
+    }
+
+    return new ValidatesMatcher();
+  },
+  /**
+   * Matches any value that is matching all the given values or
+   * Matchers.
+   *
+   * @example
+   *   expect(new Error("Hello")).toMatch(
+   *     match.allOf(
+   *       {
+   *         message: "Hello",
+   *       },
+   *       match.instanceOf(Error)
+   *     )
+   *   );
+   */
+  allOf(...matchers: any[]): CustomMatcher {
+    class AllOfMatcher extends CustomMatcher {
+      private checkWith(m: any, value: any) {
+        if (CustomMatcher.isCustomMatch(m)) {
+          if (!m.check(value)) return false;
+        } else {
+          if (!matchValues(m, value)) return false;
+        }
+      }
+
+      check(value: any) {
+        for (const m of matchers) {
+          const isMatching = this.checkWith(m, value);
+          if (!isMatching) return false;
+        }
+        return true;
+      }
+
+      diffAgainst(key: string, value: any): Record<string, any> {
+        // find matcher that does not match
+        const mismatch = matchers.find((m) => !this.checkWith(m, value));
+
+        if (mismatch) {
+          if (CustomMatcher.isCustomMatch(mismatch)) {
+            return mismatch.diffAgainst(key, value);
+          } else {
+            return diff({ [key]: value }, { [key]: mismatch }, "match")
+              .diffStruct;
+          }
+        }
+
+        return {};
+      }
+
+      toPresentation(): string {
+        return matchers.map((m) => getPresentationForValue(m)).join(" &&\n");
+      }
+    }
+
+    return new AllOfMatcher();
+  },
+  /**
+   * Matches any value that is matching any of the given values
+   * or Matchers.
+   *
+   * @example
+   *   expect(123).toMatch(
+   *     match.anyOf(
+   *       match.type("number"),
+   *       match.type("string")
+   *     )
+   *   );
+   */
+  anyOf(...matchers: any[]): CustomMatcher {
+    class OneOfMatcher extends CustomMatcher {
+      private checkWith(m: any, value: any) {
+        if (CustomMatcher.isCustomMatch(m)) {
+          if (m.check(value)) return true;
+        } else {
+          if (matchValues(m, value)) return true;
+        }
+      }
+
+      check(value: any) {
+        for (const m of matchers) {
+          const isMatching = this.checkWith(m, value);
+          if (isMatching) return true;
+        }
+        return false;
+      }
+
+      diffAgainst(key: string, value: any): Record<string, any> {
+        // find first matcher that does not match
+        const mismatch = matchers.find((m) => !this.checkWith(m, value));
+
+        if (mismatch) {
+          if (CustomMatcher.isCustomMatch(mismatch)) {
+            return mismatch.diffAgainst(key, value);
+          } else {
+            return diff({ [key]: value }, { [key]: mismatch }, "match")
+              .diffStruct;
+          }
+        }
+
+        return {};
+      }
+
+      toPresentation(): string {
+        return matchers.map((m) => getPresentationForValue(m)).join(" ||\n");
+      }
+    }
+
+    return new OneOfMatcher();
+  },
 };
