@@ -1,11 +1,12 @@
 import { html, OutputBuffer, raw } from "termx-markup";
 import type { ExpectError } from "../../user-land";
+import { _leftPad } from "../utils/left-pad";
 import type { ProgressTracker } from "./progress";
 import type { SuiteFinishState } from "./progress-utils/suite-progress";
 import type { UnitFinishState } from "./progress-utils/unit-progress";
 
 class MonitorMessages {
-  static formatUnitName(unitName: string[]) {
+  private static formatUnitName(unitName: string[]) {
     return raw(
       "<span>" +
         unitName.join(html`<pre bold color="cyan">${" > "}</pre>`) +
@@ -13,7 +14,7 @@ class MonitorMessages {
     );
   }
 
-  static formatError(message: string, stack?: string) {
+  private static formatError(message: string, stack?: string) {
     const stackf = stack
       ? raw(html`
           <br />
@@ -36,8 +37,38 @@ class MonitorMessages {
     `);
   }
 
-  static formatLink(link: string) {
+  private static formatLink(link: string) {
     return raw(html`<line color="#91e5ff">${link}</line>`);
+  }
+
+  private static formatReceived(received?: string) {
+    if (!received) return "";
+
+    const label = "Received:";
+    const text = _leftPad(received, label.length + 1).trimStart();
+
+    return raw(
+      html` <br />
+        <pad size="6">
+          <span bold>${label}</span>
+          <pre color="lightRed"> ${text}</pre>
+        </pad>`
+    );
+  }
+
+  private static formatExpected(expected?: string) {
+    if (!expected) return "";
+
+    const label = "Expected:";
+    const text = _leftPad(expected, label.length + 1).trimStart();
+
+    return raw(
+      html` <br />
+        <pad size="6">
+          <span bold>${label}</span>
+          <pre color="lightGreen"> ${text}</pre>
+        </pad>`
+    );
   }
 
   static symbol = {
@@ -164,24 +195,8 @@ class MonitorMessages {
           <pad size="4">
             <pre>${errMessage}</pre>
           </pad>
-          ${expected
-            ? raw(
-                html`<br />
-                  <pad size="6">
-                    <span bold>Expected:</span>
-                    <pre color="lightGreen"> ${expected}</pre>
-                  </pad>`
-              )
-            : ""}
-          ${received
-            ? raw(
-                html` <br />
-                  <pad size="6">
-                    <span bold>Received:</span>
-                    <pre color="lightRed"> ${received}</pre>
-                  </pad>`
-              )
-            : ""}
+          ${MonitorMessages.formatExpected(expected)}
+          ${MonitorMessages.formatReceived(received)}
           ${diff
             ? raw(html`
                 <br />
