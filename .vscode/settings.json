@@ -14,5 +14,6 @@
   ],
   "files.associations": {
     "sstream": "c"
-  }
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

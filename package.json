@@ -21,7 +21,8 @@
     "test:lint": "eslint .",
     "test:prettier": "prettier -c ./src",
     "test:tsc": "tsc --noEmit",
-    "build": "node ./scripts/build.cjs"
+    "build": "./scripts/build.cjs",
+    "auto-bump": "./scripts/auto-bump.mjs"
   },
   "bundledDependencies": [
     "dilswer",
@@ -29,23 +30,23 @@
   ],
   "devDependencies": {
     "@ncpa0cpl/nodepack": "^2.1.1",
-    "@types/node": "^18.14.5",
-    "@typescript-eslint/eslint-plugin": "^5.54.0",
-    "@typescript-eslint/parser": "^5.54.0",
-    "eslint": "^8.35.0",
-    "eslint-config-prettier": "^8.6.0",
+    "@types/node": "^18.15.5",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "git-hook-tasks": "ncpa0cpl/git-hook-tasks",
     "gjs-esm-types": "^0.0.3",
     "husky": "^8.0.3",
-    "prettier": "^2.8.4",
+    "prettier": "^2.8.6",
     "prettier-plugin-jsdoc": "^0.4.2",
-    "rimraf": "^4.1.2",
-    "typescript": "^4.9.5"
+    "rimraf": "^4.4.0",
+    "typescript": "^5.0.2"
   },
   "dependencies": {
     "dilswer": "^2.0.2",
-    "esbuild": "^0.17.10",
+    "esbuild": "^0.17.12",
     "termx-markup": "^1.1.0"
   },
   "resolutions": {

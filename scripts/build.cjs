@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { build } = require("@ncpa0cpl/nodepack");
 const path = require("path");
 
