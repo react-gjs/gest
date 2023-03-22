@@ -1,19 +1,26 @@
 {
   "name": "gest",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "./dist/esm/user-land/index.mjs",
   "types": "./dist/types/user-land/index.d.ts",
   "bin": "./bin/gest.cjs",
   "packageManager": "yarn@3.4.1",
-  "keywords": [],
+  "keywords": [
+    "test",
+    "testing",
+    "unit",
+    "gjs",
+    "gnome",
+    "javascript"
+  ],
   "repository": {
-    "url": ""
+    "url": "https://github.com/react-gjs/gest"
   },
-  "description": "",
+  "description": "Testing framework for Gnome JavaScript (GJS).",
   "license": "MIT",
   "author": {
     "name": "Szymon Bretner",
-    "email": ""
+    "email": "szymonb21@gmail.com"
   },
   "scripts": {
     "fix:lint": "eslint --fix .",
