@@ -1,34 +1,18 @@
-import type { GetDataType } from "dilswer";
-import { assertDataType, OptionalField, Type, ValidationError } from "dilswer";
+import { assertDataType, ValidationError } from "dilswer";
 import { html, Output } from "termx-markup";
 import { Global } from "../globals";
+import type { Config } from "./config-schema";
+import { ConfigSchema } from "./config-schema";
 import { _readdir, _readFile } from "./filesystem";
 import path from "./path";
 
-export const ConfigSchema = Type.RecordOf({
-  testDirectory: OptionalField(Type.String),
-  parallel: OptionalField(Type.Number),
-  setup: OptionalField(Type.String),
-  defaultTimeoutThreshold: OptionalField(Type.Number),
-  globals: OptionalField(
-    Type.Dict(
-      Type.Number,
-      Type.Boolean,
-      Type.String,
-      Type.ArrayOf(Type.Unknown),
-      Type.RecordOf({})
-    )
-  ),
-});
-
-type Config = GetDataType<typeof ConfigSchema>;
-
 class ConfigFacade {
   private defaults: Config = {
+    srcDir: Global.getCwd(),
     defaultTimeoutThreshold: 5000,
     globals: {},
     parallel: 2,
-    testDirectory: "__tests__",
+    testDir: "__tests__",
     setup: undefined,
   };
 
@@ -40,6 +24,10 @@ class ConfigFacade {
 
   get<K extends keyof Config>(key: K): Config[K] {
     return this.config[key] ?? this.defaults[key];
+  }
+
+  get srcDir() {
+    return this.get("srcDir")!;
   }
 
   get defaultTimeoutThreshold() {
@@ -54,8 +42,8 @@ class ConfigFacade {
     return this.get("parallel")!;
   }
 
-  get testDirectory() {
-    return this.get("testDirectory")!;
+  get testDir() {
+    return this.get("testDir")!;
   }
 
   get setup() {

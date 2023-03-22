@@ -270,6 +270,7 @@ export class TestRunner {
         fileSetup: testUnit.setupFile,
         mainSetup: this.config.setup,
         globals: this.config.globals,
+        projectSrcDir: path.resolve(Global.getCwd(), this.config.srcDir),
       });
 
       this.tmpFiles.push(outputFile, mapFile);

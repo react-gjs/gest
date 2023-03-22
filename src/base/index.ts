@@ -82,7 +82,7 @@ async function main() {
       return;
     }
 
-    const testsDir = config.testDirectory;
+    const testsDir = config.testDir;
     const parallel = config.parallel;
 
     const testFileMatcher = /.*\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/;

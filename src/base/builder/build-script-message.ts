@@ -14,6 +14,7 @@ export interface BSMJsonValue {
 }
 
 export interface BuildScriptMessage {
+  projectSrcDir: string;
   input: string;
   output: string;
   globals?: Record<string, BSMIdentifier | BSMValue | BSMJsonValue>;

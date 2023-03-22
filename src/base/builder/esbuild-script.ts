@@ -1,9 +1,14 @@
+import { OptionalField, Type, createValidatedFunction } from "dilswer";
 import esbuild from "esbuild";
 import path from "path";
 import * as url from "url";
 import type { BuildScriptMessage } from "./build-script-message";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+
+const setupFileSchema = Type.RecordOf({
+  mocks: OptionalField(Type.Dict(Type.String)),
+});
 
 function getDefineForGlobals(
   globals: Exclude<BuildScriptMessage["globals"], undefined>
@@ -37,13 +42,24 @@ class PluginHelpers {
 
   static addMockImportHandlers(
     build: esbuild.PluginBuild,
+    entryDir: string,
+    projectSrcDir: string,
     mockMap: Record<string, string>
   ) {
     if (Object.keys(mockMap).length > 0) {
       build.onResolve({ filter: /.*/ }, (args) => {
-        if (mockMap![args.path]) {
+        const relativePath = path.relative(
+          projectSrcDir,
+          path.join(entryDir, args.path)
+        );
+
+        if (mockMap[relativePath]) {
           return {
-            path: mockMap![args.path],
+            path: path.join(projectSrcDir, mockMap[relativePath]!),
+          };
+        } else if (mockMap["./" + relativePath]) {
+          return {
+            path: path.join(projectSrcDir, mockMap["./" + relativePath]!),
           };
         }
       });
@@ -102,15 +118,21 @@ async function main() {
 
       const setup = (await import(setupFile)).default;
 
-      if (
-        setup &&
-        typeof setup === "object" &&
-        "mocks" in setup &&
-        setup.mocks &&
-        typeof setup.mocks === "object"
-      ) {
-        Object.assign(mockMap, setup.mocks);
-      }
+      const parse = createValidatedFunction(
+        setupFileSchema,
+        (setup) => {
+          if (setup.mocks) {
+            Object.assign(mockMap, setup.mocks);
+          }
+        },
+        (err) => {
+          throw new Error(
+            `Test setup is invalid. '${err.fieldPath}' was not what was expected.`
+          );
+        }
+      );
+
+      parse(setup);
     };
 
     if (msg.setup.main) {
@@ -142,7 +164,12 @@ async function main() {
             });
 
             PluginHelpers.addIntrospectionImportHandlers(build);
-            PluginHelpers.addMockImportHandlers(build, mockMap);
+            PluginHelpers.addMockImportHandlers(
+              build,
+              path.dirname(msg.input),
+              msg.projectSrcDir,
+              mockMap
+            );
             PluginHelpers.addSystemImportHandlers(build, msg);
           },
         },

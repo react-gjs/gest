@@ -12,15 +12,18 @@ import type {
 export async function _buildFile(params: {
   input: string;
   output: string;
+  projectSrcDir: string;
   mainSetup?: string;
   fileSetup?: string;
   globals?: ConfigFacade["globals"];
 }) {
-  const { input, output, mainSetup, fileSetup, globals } = params;
+  const { input, output, mainSetup, fileSetup, globals, projectSrcDir } =
+    params;
 
   const msg: BuildScriptMessage = {
     input,
     output,
+    projectSrcDir,
     globals: {
       ...Object.fromEntries(
         Object.entries(globals ?? {}).map(([k, v]) => {

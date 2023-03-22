@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "./dist/esm/user-land/index.mjs",
   "types": "./dist/types/user-land/index.d.ts",
-  "bin": "./bin/gest.sh",
+  "bin": "./bin/gest.cjs",
   "packageManager": "yarn@3.4.1",
   "keywords": [],
   "repository": {
@@ -21,7 +21,7 @@
     "test:lint": "eslint .",
     "test:prettier": "prettier -c ./src",
     "test:tsc": "tsc --noEmit",
-    "build": "./scripts/build.cjs",
+    "build": "./scripts/build.mjs",
     "auto-bump": "./scripts/auto-bump.mjs"
   },
   "bundledDependencies": [
