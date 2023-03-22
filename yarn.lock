@@ -281,6 +281,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@reactgjs/gest@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@reactgjs/gest@workspace:."
+  dependencies:
+    "@ncpa0cpl/nodepack": ^2.1.1
+    "@types/node": ^18.15.5
+    "@typescript-eslint/eslint-plugin": ^5.56.0
+    "@typescript-eslint/parser": ^5.56.0
+    dilswer: ^2.0.2
+    esbuild: ^0.17.12
+    eslint: ^8.36.0
+    eslint-config-prettier: ^8.8.0
+    eslint-plugin-prettier: ^4.2.1
+    git-hook-tasks: ncpa0cpl/git-hook-tasks
+    gjs-esm-types: ^0.0.3
+    husky: ^8.0.3
+    prettier: ^2.8.6
+    prettier-plugin-jsdoc: ^0.4.2
+    rimraf: ^4.4.0
+    termx-markup: ^1.1.0
+    typescript: ^5.0.2
+  bin:
+    gest: ./bin/gest.cjs
+  languageName: unknown
+  linkType: soft
+
 "@ts-morph/bootstrap@npm:^0.18.0":
   version: 0.18.0
   resolution: "@ts-morph/bootstrap@npm:0.18.0"
@@ -1322,32 +1348,6 @@ clify.js@ncpa0cpl/clify.js:
   checksum: c3f1f5ba20f4e962efb71344ce0a40722163e85bee2101ce25f88214e78182d2d2476aa85ef37950c579eb6cf6ee811c17b3101bb84004bb75655f3e33f3fdb5
   languageName: node
   linkType: hard
-
-"gest@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "gest@workspace:."
-  dependencies:
-    "@ncpa0cpl/nodepack": ^2.1.1
-    "@types/node": ^18.15.5
-    "@typescript-eslint/eslint-plugin": ^5.56.0
-    "@typescript-eslint/parser": ^5.56.0
-    dilswer: ^2.0.2
-    esbuild: ^0.17.12
-    eslint: ^8.36.0
-    eslint-config-prettier: ^8.8.0
-    eslint-plugin-prettier: ^4.2.1
-    git-hook-tasks: ncpa0cpl/git-hook-tasks
-    gjs-esm-types: ^0.0.3
-    husky: ^8.0.3
-    prettier: ^2.8.6
-    prettier-plugin-jsdoc: ^0.4.2
-    rimraf: ^4.4.0
-    termx-markup: ^1.1.0
-    typescript: ^5.0.2
-  bin:
-    gest: ./bin/gest.sh
-  languageName: unknown
-  linkType: soft
 
 "get-intrinsic@npm:^1.0.2, get-intrinsic@npm:^1.1.1, get-intrinsic@npm:^1.1.3, get-intrinsic@npm:^1.2.0":
   version: 1.2.0
