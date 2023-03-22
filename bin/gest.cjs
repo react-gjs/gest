@@ -14,7 +14,6 @@ const proc = childProcess.spawn(
   ],
   {
     stdio: "inherit",
-    shell: true,
   }
 );
 
