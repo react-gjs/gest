@@ -32,7 +32,7 @@
     "auto-bump": "./scripts/auto-bump.mjs",
     "publish:npm": "yarn build --clean && npm publish --access public"
   },
-  "bundledDependencies": [
+  "_bundledDependencies": [
     "dilswer",
     "termx-markup"
   ],

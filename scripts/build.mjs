@@ -45,7 +45,7 @@ async function main() {
       formats: ["esm"],
       declarations: true,
       exclude: /.*\.d\.ts$/,
-      compileVendors: pkg.bundledDependencies,
+      compileVendors: pkg._bundledDependencies,
     });
 
     await generateConfigSchema();
