@@ -4,6 +4,7 @@ import { build } from "@ncpa0cpl/nodepack";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import rimraf from "rimraf";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +25,16 @@ async function generateConfigSchema() {
 
 async function main() {
   try {
+    const shouldCleanDist = process.argv.includes("--clean");
+
+    if (shouldCleanDist) {
+      try {
+        await rimraf(p("dist"));
+      } catch {
+        // do nothing
+      }
+    }
+
     const pkg = await fs.readFile(p("package.json")).then(JSON.parse);
 
     await build({

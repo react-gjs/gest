@@ -29,7 +29,8 @@
     "test:prettier": "prettier -c ./src",
     "test:tsc": "tsc --noEmit",
     "build": "./scripts/build.mjs",
-    "auto-bump": "./scripts/auto-bump.mjs"
+    "auto-bump": "./scripts/auto-bump.mjs",
+    "publish:npm": "yarn build --clean && npm publish --access public"
   },
   "bundledDependencies": [
     "dilswer",
