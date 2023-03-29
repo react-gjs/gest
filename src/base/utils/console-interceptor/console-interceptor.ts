@@ -1,4 +1,5 @@
 import GLib from "gi://GLib?version=2.0";
+import { deepCopy } from "../deep-copy";
 import { printInterceptedLogs } from "./printer";
 
 type Console = Omit<typeof console, "Console">;
@@ -48,31 +49,31 @@ export class ConsoleInterceptor implements Console {
   private _logs: Log[] = [];
 
   public print = (...data: any[]) => {
-    new Log(this, "print", data);
+    new Log(this, "print", deepCopy(data));
   };
 
   public log = (...data: any[]) => {
-    new Log(this, "log", data);
+    new Log(this, "log", deepCopy(data));
   };
 
   public error = (...data: any[]) => {
-    new Log(this, "error", data);
+    new Log(this, "error", deepCopy(data));
   };
 
   public warn = (...data: any[]) => {
-    new Log(this, "warn", data);
+    new Log(this, "warn", deepCopy(data));
   };
 
   public info = (...data: any[]) => {
-    new Log(this, "info", data);
+    new Log(this, "info", deepCopy(data));
   };
 
   public debug = (...data: any[]) => {
-    new Log(this, "debug", data);
+    new Log(this, "debug", deepCopy(data));
   };
 
   public table = (...data: any[]) => {
-    new Log(this, "table", data);
+    new Log(this, "table", deepCopy(data));
   };
 
   public clear = () => {
@@ -80,7 +81,7 @@ export class ConsoleInterceptor implements Console {
   };
 
   public assert = (...data: any[]) => {
-    new Log(this, "assert", data, new Error().stack);
+    new Log(this, "assert", deepCopy(data), new Error().stack);
   };
 
   public count = (label: string) => {
@@ -92,11 +93,11 @@ export class ConsoleInterceptor implements Console {
   };
 
   public dir = (...data: any[]) => {
-    new Log(this, "dir", data);
+    new Log(this, "dir", deepCopy(data));
   };
 
   public dirxml = (...data: any[]) => {
-    new Log(this, "dirxml", data);
+    new Log(this, "dirxml", deepCopy(data));
   };
 
   public group = (label: string) => {
@@ -120,11 +121,11 @@ export class ConsoleInterceptor implements Console {
   };
 
   public timeLog = (label: string, ...data: any[]) => {
-    new Log(this, "timeLog", [label, ...data]);
+    new Log(this, "timeLog", [label, ...deepCopy(data)]);
   };
 
   public trace = (...data: any[]) => {
-    new Log(this, "trace", data, new Error().stack);
+    new Log(this, "trace", deepCopy(data), new Error().stack);
   };
 
   public profile = (label: string) => {

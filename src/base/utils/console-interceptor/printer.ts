@@ -30,7 +30,7 @@ class Printer {
           `
         );
       } else {
-        p.push(html`<pre>${jsonToPresentation(d, 4)}</pre>`);
+        p.push(html`<pre>${jsonToPresentation(d, 5)}</pre>`);
       }
     }
 
