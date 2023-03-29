@@ -6,10 +6,6 @@ const isObject = (value: any): value is object => {
   return typeof value === "object" && value !== null;
 };
 
-const areOfSameInstance = (a: object, b: object) => {
-  return Object.getPrototypeOf(a) === Object.getPrototypeOf(b);
-};
-
 const diffSets = (a: Set<any>, b: Set<any>, mode: "equal" | "match") => {
   const result: Record<string, any> = {
     _gest_meta: "Set",
@@ -81,18 +77,18 @@ const diffMaps = (
   for (const [bkey, bval] of b) {
     const aval = a.get(bkey);
 
-    if (isObject(bval) && isObject(aval) && areOfSameInstance(aval, bval)) {
+    if (CustomMatcher.isCustomMatch(bval)) {
+      Object.assign(result, bval.diffAgainst(bkey, aval));
+      hasDiffs = true;
+      continue;
+    }
+
+    if (isObject(bval) && isObject(aval)) {
       const subDiff = diffObj(aval, bval, mode);
       if (subDiff.hasDiffs) {
         Object.assign(result, { [bkey]: subDiff.result });
         hasDiffs = true;
       }
-      continue;
-    }
-
-    if (CustomMatcher.isCustomMatch(bval)) {
-      Object.assign(result, bval.diffAgainst(bkey, aval));
-      hasDiffs = true;
       continue;
     }
 
@@ -143,18 +139,18 @@ const diffObj = (
     const bval = b[bkey];
     const aval = a[bkey];
 
-    if (isObject(bval) && isObject(aval) && areOfSameInstance(aval, bval)) {
+    if (CustomMatcher.isCustomMatch(bval)) {
+      Object.assign(result, bval.diffAgainst(bkey, aval));
+      hasDiffs = true;
+      continue;
+    }
+
+    if (isObject(bval) && isObject(aval)) {
       const subDiff = diffObj(aval, bval, mode);
       if (subDiff.hasDiffs) {
         Object.assign(result, { [bkey]: subDiff.result });
         hasDiffs = true;
       }
-      continue;
-    }
-
-    if (CustomMatcher.isCustomMatch(bval)) {
-      Object.assign(result, bval.diffAgainst(bkey, aval));
-      hasDiffs = true;
       continue;
     }
 
@@ -184,7 +180,12 @@ const diffObj = (
   return { result, hasDiffs };
 };
 
-class Diff {
+export interface Diff {
+  diffStruct: Record<string, any>;
+  stringify(): string;
+}
+
+class ObjectDiff implements Diff {
   constructor(public diffStruct: Record<string, any>) {}
 
   private getMeta(org: any): string | undefined {
@@ -227,23 +228,58 @@ class Diff {
   }
 }
 
+class DiffOfTwo implements Diff {
+  public diffStructs: [Record<string, any>, Record<string, any>];
+
+  constructor(expected: Record<string, any>, received: Record<string, any>) {
+    this.diffStructs = [expected, received];
+  }
+
+  get diffStruct() {
+    return {
+      "+$": this.diffStructs[0],
+      "-$": this.diffStructs[1],
+    };
+  }
+
+  stringify(): string {
+    const red = "\x1b[31m";
+    const green = "\x1b[32m";
+    const reset = "\x1b[0m";
+
+    return `${green}+ ${new ObjectDiff(
+      this.diffStructs[0]
+    ).stringify()}${reset}\n${red}- ${new ObjectDiff(
+      this.diffStructs[1]
+    ).stringify()}${reset}`;
+  }
+}
+
 export const diff = (a: any, b: any, mode: "equal" | "match"): Diff => {
   if (CustomMatcher.isCustomMatch(b)) {
-    return new Diff(b.diffAgainst("$", a));
+    const diffStruct = b.diffAgainst("$", a);
+
+    if ("-$" in diffStruct) {
+      return new DiffOfTwo(diffStruct["+$"], diffStruct["-$"]);
+    } else if ("$" in diffStruct) {
+      return new ObjectDiff(diffStruct["$"]);
+    }
+
+    return new ObjectDiff(diffStruct);
   }
 
   if (typeof a === "object" && typeof b === "object") {
-    if (isObject(a) && isObject(b) && areOfSameInstance(a, b)) {
+    if (isObject(a) && isObject(b)) {
       const d = diffObj(a, b, mode);
-      return new Diff(d.hasDiffs ? d.result : {});
+      return new ObjectDiff(d.hasDiffs ? d.result : {});
     }
   }
 
   if (mode === "equal" && deepEqual(a, b).isEqual) {
-    return new Diff({});
+    return new ObjectDiff({});
   } else if (matchValues(a, b).isEqual) {
-    return new Diff({});
+    return new ObjectDiff({});
   } else {
-    return new Diff({ "+$": b, "-$": a });
+    return new ObjectDiff({ "+$": b, "-$": a });
   }
 };

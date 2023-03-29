@@ -253,7 +253,7 @@ function getPresentationForValue(v: unknown): string {
     case "symbol":
       return v.toString();
     case "function":
-      return v.name ? `[Function: ${v.name}]` : "[Function]";
+      return v.name ? `[Function: ${v.name}]` : "Function";
     case "object": {
       if (v === null) {
         return "null";
@@ -278,7 +278,11 @@ function getPresentationForValue(v: unknown): string {
       }
       const proto = Object.getPrototypeOf(v);
       if (proto !== Object.prototype) {
-        return `${proto.name ?? proto.constructor.name}{}`;
+        const name = proto.name ?? proto.constructor.name;
+
+        if (name && name !== "Object") {
+          return `[Object: ${name}]`;
+        }
       }
       return "Object";
     }
