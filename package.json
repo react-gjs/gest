@@ -37,7 +37,7 @@
     "termx-markup"
   ],
   "devDependencies": {
-    "@ncpa0cpl/nodepack": "^2.1.1",
+    "@ncpa0cpl/nodepack": "^2.1.2",
     "@types/node": "^18.15.5",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",

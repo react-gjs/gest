@@ -235,22 +235,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ncpa0cpl/nodepack@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@ncpa0cpl/nodepack@npm:2.1.1"
+"@ncpa0cpl/nodepack@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "@ncpa0cpl/nodepack@npm:2.1.2"
   dependencies:
     "@ncpa0cpl/node-worker-bridge": ^0.0.3
     "@ts-morph/bootstrap": ^0.18.0
-    dilswer: ^1.5.0
+    dilswer: 2.0.2
     json-to-ts: ^1.7.0
     node-os-walk: ">=1.0.2"
     pretty-error: ^4.0.0
   peerDependencies:
-    esbuild: ^0.17.4
+    esbuild: ">0.17.0"
   dependenciesMeta:
     json-to-ts:
       optional: true
-  checksum: 7e28e01096f6f530b12961355009abcc3917e9e890f237416376ff62cfda8f865d15b5a79635fc4153f2d50a0c6e7c3b1643fb627e76675690fa3e4e61afb31e
+  checksum: c3a352c9cafb07ca9c562518eaf6b11a8992dd1df01c2c47aec8241b5a2473ca4a9b8a7a4c798ab080a122deeab7df40f2b9d531ed4a511c93296193cc76227d
   languageName: node
   linkType: hard
 
@@ -285,7 +285,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@reactgjs/gest@workspace:."
   dependencies:
-    "@ncpa0cpl/nodepack": ^2.1.1
+    "@ncpa0cpl/nodepack": ^2.1.2
     "@types/node": ^18.15.5
     "@typescript-eslint/eslint-plugin": ^5.56.0
     "@typescript-eslint/parser": ^5.56.0
