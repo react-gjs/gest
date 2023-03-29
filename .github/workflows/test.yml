@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+env:
+  NPM_TOKEN: ""
+
+jobs:
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+      - name: Install dependencies
+        run: ./.yarn/yarn.cjs install --immutable --mode=skip-build
+      - name: Run TypeScript
+        run: ./.yarn/yarn.cjs test:tsc
+      - name: Run Linter
+        run: ./.yarn/yarn.cjs test:lint
+      - name: Run Prettier Check
+        run: ./.yarn/yarn.cjs test:prettier
+      - name: Attempt Build
+        run: ./.yarn/yarn.cjs build
