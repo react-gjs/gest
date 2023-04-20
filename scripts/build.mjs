@@ -4,7 +4,7 @@ import { build } from "@ncpa0cpl/nodepack";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
