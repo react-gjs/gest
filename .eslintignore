@@ -17,3 +17,5 @@ yarn.lock
 package-lock.json
 /@types
 /scripts
+/config.ts
+/base-reporter.ts

@@ -15,12 +15,44 @@ async function generateConfigSchema() {
     "../dist/esm/base/utils/config-schema.mjs"
   );
 
-  const schema = generateConfigSchema();
+  /** @type {import("dilswer").ParseToJsonSchemaOptions} */
+  const options = {
+    incompatibleTypes: "omit",
+  };
+
+  const schema = generateConfigSchema(options);
 
   return fs.writeFile(
     p("dist/gest-config.schema.json"),
     JSON.stringify(schema, null, 2)
   );
+}
+
+async function generateConfigType() {
+  const { generateConfigType } = await import(
+    "../dist/esm/base/utils/config-schema.mjs"
+  );
+
+  /** @type {import("dilswer").TsParsingOptions} */
+  const options = {
+    declaration: true,
+    exports: "main",
+    getExternalTypeImport(type) {
+      const proto = Object.getPrototypeOf(type);
+      /** @type {import("dilswer").BasicDataType} */
+      const constructor = proto.constructor;
+
+      const meta = constructor.getMetadata(type);
+
+      if (meta && meta.extra && meta.extra.typeName) {
+        return meta.extra;
+      }
+    },
+  };
+
+  const types = generateConfigType(options);
+
+  return fs.writeFile(p("dist/types/base/utils/config-type.d.ts"), types);
 }
 
 async function main() {
@@ -49,6 +81,7 @@ async function main() {
     });
 
     await generateConfigSchema();
+    await generateConfigType();
   } catch (e) {
     console.error(e);
     process.exit(1);

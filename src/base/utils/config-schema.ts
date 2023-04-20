@@ -1,5 +1,20 @@
-import type { GetDataType, ParseToJsonSchemaOptions } from "dilswer";
-import { OptionalField, Type, toJsonSchema } from "dilswer";
+import type { ParseToJsonSchemaOptions, TsParsingOptions } from "dilswer";
+import { OptionalField, Type, toJsonSchema, toTsType } from "dilswer";
+import { BaseReporter } from "../progress/base-reporter";
+
+const ReporterType = Type.Custom((v): v is new () => BaseReporter => {
+  return (
+    (typeof v === "object" || typeof v === "function") &&
+    v != null &&
+    v.prototype instanceof BaseReporter
+  );
+});
+
+ReporterType.setExtra({
+  typeName: "BaseReporter",
+  path: "../progress/reporter",
+  valueImport: true,
+});
 
 export const ConfigSchema = Type.RecordOf({
   srcDir: OptionalField(Type.String),
@@ -16,7 +31,16 @@ export const ConfigSchema = Type.RecordOf({
       Type.RecordOf({})
     )
   ),
+  errorReporterParser: OptionalField(
+    Type.Function.setExtra({
+      typeName: "ErrorReporterParser",
+      path: "./error-reporter-parser-type",
+    })
+  ),
+  reporters: OptionalField(Type.ArrayOf(Type.Literal("default"), ReporterType)),
 });
+
+ConfigSchema.setTitle("Config");
 
 export const generateConfigSchema = (
   options?: ParseToJsonSchemaOptions | undefined
@@ -24,7 +48,9 @@ export const generateConfigSchema = (
   return toJsonSchema(ConfigSchema, options);
 };
 
-export type Config = GetDataType<typeof ConfigSchema>;
+export const generateConfigType = (options?: Partial<TsParsingOptions>) => {
+  return toTsType(ConfigSchema, options);
+};
 
 // Config options description
 
@@ -50,4 +76,12 @@ ConfigSchema.recordOf.setup.type.setDescription(
 
 ConfigSchema.recordOf.globals.type.setDescription(
   "Global variables that will be available to all tests."
+);
+
+ConfigSchema.recordOf.errorReporterParser.type.setDescription(
+  "A function that allows to modify and customize the error messages that are printed in the console output when running tests.\n\nEach Error intercepted during a test run will be passed to this function along with the message that would be printed by default. The returned string will be printed as the error message instead."
+);
+
+ConfigSchema.recordOf.reporters.type.setDescription(
+  "An array of reporters to use. Default is `['default']`."
 );

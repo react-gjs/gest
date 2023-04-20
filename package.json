@@ -3,6 +3,17 @@
   "version": "0.0.1",
   "main": "./dist/esm/user-land/index.mjs",
   "types": "./dist/types/user-land/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/esm/user-land/index.mjs",
+      "types": "./dist/types/user-land/index.d.ts"
+    },
+    "./base-reporter": {
+      "default": "./dist/esm/base/progress/base-reporter.mjs",
+      "types": "./dist/types/base/progress/base-reporter.d.ts"
+    },
+    "./config": "./config.ts"
+  },
   "bin": "./bin/gest.cjs",
   "packageManager": "yarn@3.4.1",
   "keywords": [
