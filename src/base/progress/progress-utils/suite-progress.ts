@@ -31,7 +31,7 @@ export interface SuiteFinishState {
 }
 
 export type SuiteProgressEvents = {
-  finished: (suite: SuiteFinishState, updates: UnitFinishState[]) => void;
+  finished: (suite: SuiteFinishState, unitResults: UnitFinishState[]) => void;
 };
 
 export class SuiteProgress {

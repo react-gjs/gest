@@ -1,11 +1,7 @@
-import { html, OutputBuffer, raw } from "termx-markup";
-import type { ExpectError } from "../../user-land";
+import { html, raw } from "termx-markup";
 import { _leftPad } from "../utils/left-pad";
-import type { ProgressTracker } from "./progress";
-import type { SuiteFinishState } from "./progress-utils/suite-progress";
-import type { UnitFinishState } from "./progress-utils/unit-progress";
 
-class MonitorMessages {
+export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {
     return raw(
       "<span>" +
@@ -88,8 +84,8 @@ class MonitorMessages {
      *   [-] MonitorMessages > info > unitSkipped
      */
     unitSkipped(unitName: string[]): string {
-      const symbol = MonitorMessages.symbol.Skipped;
-      const name = MonitorMessages.formatUnitName(unitName);
+      const symbol = ReportsFormatter.symbol.Skipped;
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">${symbol}<s />${name}</pad>`;
     },
@@ -98,8 +94,8 @@ class MonitorMessages {
      *   [✓] MonitorMessages > info > unitPassed (123 microseconds)
      */
     unitPassed(unitName: string[], duration: number | string): string {
-      const symbol = MonitorMessages.symbol.Success;
-      const name = MonitorMessages.formatUnitName(unitName);
+      const symbol = ReportsFormatter.symbol.Success;
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">
         ${symbol}<s />${name}<s />
@@ -111,8 +107,8 @@ class MonitorMessages {
      *   [✗] MonitorMessages > info > unitFailed (123 microseconds)
      */
     unitFailed(unitName: string[]): string {
-      const symbol = MonitorMessages.symbol.Failure;
-      const name = MonitorMessages.formatUnitName(unitName);
+      const symbol = ReportsFormatter.symbol.Failure;
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4"> ${symbol}<s />${name}<s /> </pad>`;
     },
@@ -121,8 +117,8 @@ class MonitorMessages {
      *   [!] MonitorMessages > info > unitTimedOut (timed-out)
      */
     unitTimedOut(unitName: string[]): string {
-      const symbol = MonitorMessages.symbol.Timeout;
-      const name = MonitorMessages.formatUnitName(unitName);
+      const symbol = ReportsFormatter.symbol.Timeout;
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">
         ${symbol}<s />${name}<s />
@@ -134,7 +130,7 @@ class MonitorMessages {
      *   [-] __tests__/base/progress/monitor.test.ts SKIPPED
      */
     suiteSkipped(filepath: string): string {
-      const symbol = MonitorMessages.symbol.Skipped;
+      const symbol = ReportsFormatter.symbol.Skipped;
 
       return html`<span>
         ${symbol}
@@ -149,7 +145,7 @@ class MonitorMessages {
      *   [✓] __tests__/base/progress/monitor.test.ts PASSED
      */
     suitePassed(filepath: string): string {
-      const symbol = MonitorMessages.symbol.Success;
+      const symbol = ReportsFormatter.symbol.Success;
 
       return html`<span>
         ${symbol}
@@ -164,7 +160,7 @@ class MonitorMessages {
      *   [✗] __tests__/base/progress/monitor.test.ts FAILED
      */
     suiteFailed(filepath: string): string {
-      const symbol = MonitorMessages.symbol.Failure;
+      const symbol = ReportsFormatter.symbol.Failure;
 
       return html`<span>
         ${symbol}
@@ -185,18 +181,18 @@ class MonitorMessages {
       received?: string,
       diff?: string
     ): string {
-      const name = MonitorMessages.formatUnitName(unitName);
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`
         <br />
         <span>
           <line bold color="red">${name}</line>
-          ${MonitorMessages.formatLink(link)}
+          ${ReportsFormatter.formatLink(link)}
           <pad size="4">
             <pre>${errMessage}</pre>
           </pad>
-          ${MonitorMessages.formatExpected(expected)}
-          ${MonitorMessages.formatReceived(received)}
+          ${ReportsFormatter.formatExpected(expected)}
+          ${ReportsFormatter.formatReceived(received)}
           ${diff
             ? raw(html`
                 <br />
@@ -217,8 +213,8 @@ class MonitorMessages {
         <br />
         <span>
           <line color="red">Failed to start a test:</line>
-          ${MonitorMessages.formatLink(filepath)}
-          ${MonitorMessages.formatError(errMessage, stack)}
+          ${ReportsFormatter.formatLink(filepath)}
+          ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
       `;
     },
@@ -229,8 +225,8 @@ class MonitorMessages {
           <line bold color="red">
             An error occurred when running a lifecycle hook:
           </line>
-          ${MonitorMessages.formatLink(link)}
-          ${MonitorMessages.formatError(errMessage, stack)}
+          ${ReportsFormatter.formatLink(link)}
+          ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
       `;
     },
@@ -240,14 +236,14 @@ class MonitorMessages {
       errMessage: string,
       stack: string
     ): string {
-      const name = MonitorMessages.formatUnitName(unitName);
+      const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`
         <br />
         <span>
           <line bold color="red">${name}</line>
-          ${MonitorMessages.formatLink(link)}
-          ${MonitorMessages.formatError(errMessage, stack)}
+          ${ReportsFormatter.formatLink(link)}
+          ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
       `;
     },
@@ -260,131 +256,10 @@ class MonitorMessages {
         <br />
         <span>
           <line bold color="red"> An error occurred when running a test: </line>
-          ${MonitorMessages.formatLink(filepath)}
-          ${MonitorMessages.formatError(errMessage, stack)}
+          ${ReportsFormatter.formatLink(filepath)}
+          ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
       `;
     },
   };
-}
-
-export class ProgressMonitor {
-  private errorBuffer = new OutputBuffer();
-  private hasErrors = false;
-
-  constructor(tracker: ProgressTracker, private readonly verbose: boolean) {
-    tracker.on("suiteAdded", (suiteID) => {
-      const suiteEmitter = tracker.suiteEmitter(suiteID);
-
-      suiteEmitter.on("finished", (suiteState, updates) => {
-        this.process(suiteState, updates);
-      });
-    });
-  }
-
-  private printErr(...markup: string[]) {
-    this.hasErrors = true;
-    this.errorBuffer.print(...markup);
-  }
-
-  private process(suiteState: SuiteFinishState, updates: UnitFinishState[]) {
-    const buffer = new OutputBuffer();
-
-    const filepath = suiteState.testFilepath;
-    const hasAnyUnitFailed =
-      suiteState.errors.length > 0 ||
-      updates.some((u) => u.error || u.timedOut);
-
-    if (suiteState.skipped) {
-      buffer.print(MonitorMessages.info.suiteSkipped(filepath));
-    } else if (hasAnyUnitFailed) {
-      buffer.print(MonitorMessages.info.suiteFailed(filepath));
-    } else {
-      buffer.print(MonitorMessages.info.suitePassed(filepath));
-    }
-
-    if (this.verbose) {
-      for (const update of updates) {
-        if (update.skipped) {
-          buffer.print(MonitorMessages.info.unitSkipped(update.unitName));
-        } else if (update.error) {
-          buffer.print(MonitorMessages.info.unitFailed(update.unitName));
-        } else {
-          buffer.print(
-            MonitorMessages.info.unitPassed(
-              update.unitName,
-              update.duration ?? "?"
-            )
-          );
-        }
-      }
-    }
-
-    buffer.flush();
-
-    for (const update of updates) {
-      if (update.error) {
-        if (update.error.isExpectError) {
-          const err = update.error.thrown as ExpectError;
-          this.printErr(
-            MonitorMessages.error.expectError(
-              update.unitName,
-              update.error.expectLink ?? "",
-              update.error.message,
-              err.expected,
-              err.received,
-              err.diff
-            )
-          );
-        } else {
-          this.printErr(
-            MonitorMessages.error.unknownUnitError(
-              update.unitName,
-              update.unitLink ?? "",
-              update.error.message,
-              update.error.stack ?? ""
-            )
-          );
-        }
-      }
-    }
-
-    for (const error of suiteState.errors) {
-      switch (error.origin) {
-        case "gest":
-          this.printErr(
-            MonitorMessages.error.unableToStartSuite(
-              suiteState.testFilepath,
-              error.message,
-              error.stack ?? ""
-            )
-          );
-          break;
-        case "lifecycleHook":
-          this.printErr(
-            MonitorMessages.error.lifecycleHook(
-              error.link ?? suiteState.testFilepath,
-              error.message,
-              error.stack ?? ""
-            )
-          );
-          break;
-        case "test":
-          this.printErr(
-            MonitorMessages.error.unknownSuiteError(
-              suiteState.testFilepath,
-              error.message,
-              error.stack ?? ""
-            )
-          );
-          break;
-      }
-    }
-  }
-
-  flushErrorBuffer() {
-    if (this.hasErrors) {
-      this.errorBuffer.flush();
-    }
-  }
 }

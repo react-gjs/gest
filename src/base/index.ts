@@ -3,8 +3,8 @@ import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
 import { html, MarkupFormatter, Output } from "termx-markup";
 import { Global } from "./globals";
-import { ProgressMonitor } from "./progress/monitor";
 import { ProgressTracker } from "./progress/progress";
+import { ProgressReporter } from "./progress/reporter";
 import type { TestRunnerOptions, TestSuite } from "./test-runner";
 import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
@@ -75,7 +75,7 @@ async function main() {
       //
     }
 
-    const config = await loadConfig();
+    const config = await loadConfig(pargs, options);
 
     if (!config) {
       exitCode = 1;
@@ -139,7 +139,11 @@ async function main() {
 
     const progressTracker = new ProgressTracker();
 
-    const monitor = new ProgressMonitor(progressTracker, !!options.verbose);
+    const monitor = new ProgressReporter(
+      progressTracker,
+      !!options.verbose,
+      config
+    );
 
     const testRunners = Array.from(
       { length: parallel },
