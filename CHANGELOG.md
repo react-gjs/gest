@@ -1,3 +1,11 @@
+## 0.1.1 (April 24, 2023)
+
+### Bug Fixes
+
+- #### fix: loading of config file in a json format ([#12](https://github.com/react-gjs/gest/pull/12))
+
+  Previous release unintentionally broke loading `gest.config.json` files. This is fixed now.
+
 ## 0.1.0 (April 24, 2023)
 
 ### Features
