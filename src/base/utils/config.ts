@@ -77,7 +77,7 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
   const files = await _readdir(Global.getCwd());
 
   const jsTypeConfig = files.find((filename) =>
-    /gest\.config\.(js|mjs)/i.test(filename)
+    /gest\.config\.(js|mjs)$/i.test(filename)
   );
 
   if (jsTypeConfig) {
