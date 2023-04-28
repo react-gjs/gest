@@ -44,6 +44,11 @@ function _isTest(t: any): t is Test {
   return t && typeof t === "object" && t.name && t.line !== undefined;
 }
 
+const currentMicrosecond = () => {
+  const now = GLib.DateTime.new_now_local();
+  return now.to_unix() * 1000000 + now.get_microsecond();
+};
+
 class SuiteRunner {
   constructor(
     private readonly options: SuiteRunnerOptions,
@@ -51,12 +56,15 @@ class SuiteRunner {
     private readonly suiteID: symbol
   ) {}
 
-  private async measureRun(action: () => void): Promise<number> {
-    const start = GLib.DateTime.new_now_local()!.get_microsecond();
+  private async measureRun(
+    action: () => void | Promise<void>
+  ): Promise<number> {
+    const start = currentMicrosecond();
     await action();
-    const end = GLib.DateTime.new_now_local()!.get_microsecond();
+    const end = currentMicrosecond();
 
-    return end - start;
+    const duration = end - start;
+    return duration;
   }
 
   private testNameMatches(unitName: string[]) {
