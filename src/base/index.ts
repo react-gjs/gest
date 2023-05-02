@@ -1,7 +1,7 @@
 import GLib from "gi://GLib?version=2.0";
 import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
-import { html, MarkupFormatter, Output } from "termx-markup";
+import { html, Output } from "termx-markup";
 import { Global } from "./globals";
 import { ProgressTracker } from "./progress/progress";
 import { ProgressReporter } from "./progress/reporter";
@@ -197,8 +197,6 @@ try {
   Global.setCwd(GLib.get_current_dir());
 
   Output.setDefaultPrintMethod(print);
-  MarkupFormatter.defineColor("customBlack", "#1b1c26");
-  MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
   setTimeout(() => main());
 
