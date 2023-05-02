@@ -1,4 +1,4 @@
-import { OutputBuffer } from "termx-markup";
+import { Output, OutputBuffer } from "termx-markup";
 import type { ExpectError } from "../../user-land";
 import type { ConfigFacade } from "../utils/config";
 import { BaseReporter } from "./base-reporter";
@@ -9,6 +9,7 @@ import type {
   UnitErrorReport,
   UnitFinishState,
 } from "./progress-utils/unit-progress";
+import type { SummaryInfo } from "./reports-formatter";
 import { ReportsFormatter } from "./reports-formatter";
 
 export class DefaultReporter extends BaseReporter {
@@ -121,15 +122,30 @@ export class DefaultReporter extends BaseReporter {
     this.output.flush();
   }
 
-  override printErrorReports(): void {
+  override printErrorReports(): boolean {
     if (this.hasErrors) {
       this.errorBuffer.flush();
+      return true;
     }
+    return false;
+  }
+
+  override printSummary(summary: SummaryInfo): void {
+    Output.print(ReportsFormatter.info.summary(summary));
   }
 }
 
 export class ProgressReporter {
   private suiteReporters: Array<BaseReporter> = [];
+
+  private summaryInfo: SummaryInfo = {
+    failedSuites: 0,
+    failedUnits: 0,
+    passedSuites: 0,
+    passedUnits: 0,
+    skippedSuites: 0,
+    skippedUnits: 0,
+  };
 
   constructor(
     tracker: ProgressTracker,
@@ -141,6 +157,7 @@ export class ProgressReporter {
 
       suiteEmitter.on("finished", (suiteState, unitResults) => {
         this.reportFinishedSuite(suiteState, unitResults);
+        this.updateSummeryInfo(suiteState, unitResults);
       });
     });
   }
@@ -205,9 +222,55 @@ export class ProgressReporter {
     }
   }
 
+  private updateSummeryInfo(
+    suiteState: SuiteFinishState,
+    unitResults: UnitFinishState[]
+  ) {
+    if (suiteState.skipped) {
+      this.summaryInfo.skippedSuites++;
+    } else if (
+      suiteState.errors.length > 0 ||
+      unitResults.some((u) => u.error || u.timedOut)
+    ) {
+      this.summaryInfo.failedSuites++;
+    } else {
+      this.summaryInfo.passedSuites++;
+    }
+
+    for (const unit of unitResults) {
+      if (unit.skipped) {
+        this.summaryInfo.skippedUnits++;
+      } else if (unit.error || unit.timedOut) {
+        this.summaryInfo.failedUnits++;
+      } else {
+        this.summaryInfo.passedUnits++;
+      }
+    }
+  }
+
   flushErrorBuffer() {
     for (const reporter of this.suiteReporters) {
-      reporter.printErrorReports();
+      const wasPrinted = reporter.printErrorReports();
+      if (wasPrinted) {
+        Output.print(""); // add a new line, in between error reports
+      }
+    }
+  }
+
+  printSummary() {
+    const reporters = this.config.reporters.map((r) =>
+      typeof r === "string" ? DefaultReporter : r
+    );
+
+    for (const Reporter of reporters) {
+      try {
+        const suiteReporter = new Reporter();
+        suiteReporter.parseError = (e, m) => this.parseError(e, m);
+
+        suiteReporter.printSummary(this.summaryInfo);
+      } catch {
+        //
+      }
     }
   }
 }
