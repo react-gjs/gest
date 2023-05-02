@@ -50,6 +50,7 @@ async function main() {
           <line>-f, --file [path]</line>
           <line>-t, --testNamePattern [regex]</line>
           <line>-p, --testPathPattern [regex]</line>
+          <line>-s, --silenceLogs</line>
         </pad>
       `);
 
@@ -59,6 +60,7 @@ async function main() {
     const fileArg = _getArgValue(pargs, "-f", "--file");
     const testNamePattern = _getArgValue(pargs, "-t", "--testNamePattern");
     const testFilePattern = _getArgValue(pargs, "-p", "--testPathPattern");
+    const silenceLogs = pargs.includes("-s") || pargs.includes("--silenceLogs");
 
     const options: TestRunnerOptions = {
       verbose: pargs.includes("--verbose") || pargs.includes("-v"),
@@ -167,7 +169,9 @@ async function main() {
 
     await progressTracker.flush();
 
-    ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
+    if (!silenceLogs) {
+      ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
+    }
 
     Output.print("");
 
