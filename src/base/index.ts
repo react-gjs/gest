@@ -1,7 +1,7 @@
 import GLib from "gi://GLib?version=2.0";
 import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
-import { html, MarkupFormatter, Output } from "termx-markup";
+import { html, Output } from "termx-markup";
 import { Global } from "./globals";
 import { ProgressTracker } from "./progress/progress";
 import { ProgressReporter } from "./progress/reporter";
@@ -50,6 +50,7 @@ async function main() {
           <line>-f, --file [path]</line>
           <line>-t, --testNamePattern [regex]</line>
           <line>-p, --testPathPattern [regex]</line>
+          <line>-s, --silenceLogs</line>
         </pad>
       `);
 
@@ -59,6 +60,7 @@ async function main() {
     const fileArg = _getArgValue(pargs, "-f", "--file");
     const testNamePattern = _getArgValue(pargs, "-t", "--testNamePattern");
     const testFilePattern = _getArgValue(pargs, "-p", "--testPathPattern");
+    const silenceLogs = pargs.includes("-s") || pargs.includes("--silenceLogs");
 
     const options: TestRunnerOptions = {
       verbose: pargs.includes("--verbose") || pargs.includes("-v"),
@@ -167,7 +169,9 @@ async function main() {
 
     await progressTracker.flush();
 
-    ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
+    if (!silenceLogs) {
+      ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
+    }
 
     Output.print("");
 
@@ -193,8 +197,6 @@ try {
   Global.setCwd(GLib.get_current_dir());
 
   Output.setDefaultPrintMethod(print);
-  MarkupFormatter.defineColor("customBlack", "#1b1c26");
-  MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
   setTimeout(() => main());
 
