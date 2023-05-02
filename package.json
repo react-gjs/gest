@@ -39,7 +39,7 @@
     "test:lint": "eslint .",
     "test:prettier": "prettier -c ./src",
     "test:tsc": "tsc --noEmit",
-    "test:unit": "yarn g --verbose",
+    "test:unit": "yarn g",
     "build": "./scripts/build.mjs",
     "auto-bump": "./scripts/auto-bump.mjs",
     "publish:npm": "yarn build --clean && npm publish --access public",
