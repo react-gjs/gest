@@ -11,7 +11,7 @@ import { _getArgValue } from "./utils/args";
 import { loadConfig } from "./utils/config";
 import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
 import { _getErrorMessage, _getErrorStack } from "./utils/error-handling";
-import { _mkdir, _walkFiles } from "./utils/filesystem";
+import { _fileExists, _mkdir, _walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
 import path from "./utils/path";
 
@@ -102,6 +102,19 @@ async function main() {
         });
       }
     } else {
+      if (!(await _fileExists(testsDir))) {
+        Output.print(
+          html`
+            <span color="yellow">
+              Given test directory does not exist (
+              <span color="white"> ${testsDir} </span>
+              )
+            </span>
+          `
+        );
+        return;
+      }
+
       await _walkFiles(testsDir, (root, name) => {
         if (testFileMatcher.test(name)) {
           testFiles.push({
