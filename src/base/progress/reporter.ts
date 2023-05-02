@@ -156,6 +156,8 @@ export class ProgressReporter {
         if (typeof m !== "string") {
           throw new Error("Error reporter parser must return a string.");
         }
+
+        return m;
       } catch {
         //
       }
