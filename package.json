@@ -15,7 +15,7 @@
     "./config": "./config.ts"
   },
   "bin": "./bin/gest.cjs",
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@3.5.1",
   "keywords": [
     "test",
     "testing",

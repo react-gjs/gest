@@ -157,11 +157,14 @@ async function main() {
         {
           name: "gest-import-replacer",
           setup(build) {
-            build.onResolve({ filter: /^gest$/ }, (args) => {
-              return {
-                path: path.resolve(__dirname, "../../user-land/index.mjs"),
-              };
-            });
+            build.onResolve(
+              { filter: /^gest$|^@reactgjs\/gest$|^gest-globals$/ },
+              () => {
+                return {
+                  path: path.resolve(__dirname, "../../user-land/index.mjs"),
+                };
+              }
+            );
 
             PluginHelpers.addIntrospectionImportHandlers(build);
             PluginHelpers.addMockImportHandlers(
