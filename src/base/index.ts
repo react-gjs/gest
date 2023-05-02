@@ -156,17 +156,13 @@ async function main() {
 
     ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
 
+    Output.print("");
+
     monitor.flushErrorBuffer();
+    monitor.printSummary();
 
     if (testRunners.some((runner) => !runner.success)) {
       exitCode = 1;
-      Output.println(
-        html`<br /><br /><span color="red">Tests have failed.</span>`
-      );
-    } else {
-      Output.println(
-        html`<br /><br /><span color="green">All tests have passed.</span>`
-      );
     }
   } catch (e) {
     Output.print(
