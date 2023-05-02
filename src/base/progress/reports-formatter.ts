@@ -1,4 +1,4 @@
-import { html, raw } from "termx-markup";
+import { MarkupFormatter, html, raw } from "termx-markup";
 import { _leftPad } from "../utils/left-pad";
 
 export type SummaryInfo = {
@@ -9,6 +9,9 @@ export type SummaryInfo = {
   passedSuites: number;
   passedUnits: number;
 };
+
+MarkupFormatter.defineColor("customBlack", "#1b1c26");
+MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
 export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {

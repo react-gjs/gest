@@ -306,7 +306,7 @@ __metadata:
   resolution: "@reactgjs/gest@workspace:."
   dependencies:
     "@ncpa0cpl/nodepack": ^2.1.2
-    "@reactgjs/gest": ^0.1.1
+    "@reactgjs/gest": 0.1.1
     "@types/node": ^18.15.12
     "@typescript-eslint/eslint-plugin": ^5.59.0
     "@typescript-eslint/parser": ^5.59.0
