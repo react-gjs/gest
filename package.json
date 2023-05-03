@@ -62,6 +62,7 @@
     "git-hook-tasks": "ncpa0cpl/git-hook-tasks",
     "gjs-esm-types": "^0.0.3",
     "husky": "^8.0.3",
+    "pr-changelog-gen": "^1.1.0",
     "prettier": "^2.8.7",
     "prettier-plugin-jsdoc": "^0.4.2",
     "rimraf": "^5.0.0",

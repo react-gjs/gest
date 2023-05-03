@@ -1,3 +1,44 @@
+## 0.2.0 (May 3, 2023)
+
+### Features
+
+- #### feat: added option to skip a single unit test in code ([#29](https://github.com/react-gjs/gest/pull/29))
+
+  new function available in tests: `skip()` which can be used instead of `it()`, tests declared with `skip()` will not be ran and will show as skipped in the report.
+  
+  Additionally `beforeEach` and `afterEach` hooks will now always be skipped along with the individual tests. Before those hooks could be ran before a test that was skipped.
+
+- #### feat: added timouts to test units ([#27](https://github.com/react-gjs/gest/pull/27))
+
+  Added timeouts to all unit tests. Previously the config had a timeout threshold option, but it did not do anything. If a tests hanged and did never finish `gest` would also hang. A proper timeouts are now added, by default if a single test takes longer than 5 seconds it will be marked as failed. (this does not prevent synchronous thread locks, for example a synchronous infinite loop will still lock the program)
+
+- #### feat: improved the mock path detection logic ([#25](https://github.com/react-gjs/gest/pull/25))
+
+  Improved how mocks are matched against import paths, mocks should now work with paths that start with `./` or without it, the file extension can as well be defined or not. Package names will not be transformed to incorrect filepaths when resolving mocks.
+
+- #### feat: added option that will silence all logs within the test files ([#23](https://github.com/react-gjs/gest/pull/23))
+
+  A new cli argument has been added: `-s` or `--silenceLogs`. When passed to the gest all logs emitted from within tests will be silenced.
+
+- #### feat: added test summary reporting ([#14](https://github.com/react-gjs/gest/pull/14))
+
+  Added a test summary that will be printed at the very end of all test runs, it will present you with the information on how many Suite/Units have failed, passed or have been skipped.
+
+### Bug Fixes
+
+- #### fix: incorrect test duration measurement ([#28](https://github.com/react-gjs/gest/pull/28))
+
+  Duration measurement were previously done incorrectly, if a test took more than a second or happened to start at the end of the current second (ex. 12:00:01.990), the measurement would be incorrect. This has been fixed now.
+
+- #### fix: proper comparison of arrays ([#26](https://github.com/react-gjs/gest/pull/26))
+
+  Comparison methods up till now did not handle arrays properly, each array was being treated as a regular object and each enumerable property on those was being compared.
+
+- #### fix: errors and mistakes related to reporting ([#15](https://github.com/react-gjs/gest/pull/15))
+
+  - added a proper error message for situations when the specified test directory does not exist
+  - in-tests logs concatenation - previously each separate argument passed to a console log function would get joined with neighboring ones with an white-space character in between them, because of that if an argument started or ended with an end-of-line character, the formatting of those arguments could get broken, from now on, a white-space character is inserted between arguments only if there's not a EOL char in between already
+
 ## 0.1.1 (April 24, 2023)
 
 ### Bug Fixes
