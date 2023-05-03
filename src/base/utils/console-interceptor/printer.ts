@@ -34,7 +34,15 @@ class Printer {
       }
     }
 
-    return raw("<span>" + p.join("<s />") + "</span>");
+    const content = p.reduce(
+      (c, elem) =>
+        c.endsWith("\n</pre>") || elem.startsWith("<pre>\n")
+          ? c + elem
+          : c + "<s />" + elem,
+      ""
+    );
+
+    return raw("<span>" + content + "</span>");
   }
 
   public printAssert(log: Log) {
