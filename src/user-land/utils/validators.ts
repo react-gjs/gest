@@ -29,6 +29,32 @@ export function deepEqual(a: any, b: any): EqualityCheck {
     };
   }
 
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const lastAIndex = a.length - 1;
+    for (const bIndex of b.keys()) {
+      if (bIndex > lastAIndex) {
+        return {
+          isEqual: false,
+          expected: b[bIndex],
+          received: undefined,
+        };
+      }
+
+      const aItem = a[bIndex];
+      const bItem = b[bIndex];
+
+      const result = deepEqual(aItem, bItem);
+
+      if (!result.isEqual) {
+        return result;
+      }
+    }
+
+    return {
+      isEqual: true,
+    };
+  }
+
   if (a instanceof Date && b instanceof Date) {
     return {
       isEqual: a.valueOf() === b.valueOf(),
@@ -191,6 +217,32 @@ export function matchValues(a: any, b: any): EqualityCheck {
       isEqual: false,
       expected: b,
       received: a,
+    };
+  }
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const lastAIndex = a.length - 1;
+    for (const bIndex of b.keys()) {
+      if (bIndex > lastAIndex) {
+        return {
+          isEqual: false,
+          expected: b[bIndex],
+          received: undefined,
+        };
+      }
+
+      const aItem = a[bIndex];
+      const bItem = b[bIndex];
+
+      const result = matchValues(aItem, bItem);
+
+      if (!result.isEqual) {
+        return result;
+      }
+    }
+
+    return {
+      isEqual: true,
     };
   }
 
