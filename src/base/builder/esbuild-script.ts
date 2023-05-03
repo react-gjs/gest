@@ -31,6 +31,48 @@ function getDefineForGlobals(
   return define;
 }
 
+export class MockRegistry {
+  private mocks = new Map<string, string>();
+
+  hasAny() {
+    return this.mocks.size > 0;
+  }
+
+  add(filepath: string, mockFilepath: string) {
+    this.mocks.set(filepath, mockFilepath);
+  }
+
+  getPackageMock(packageName: string) {
+    return this.mocks.get(packageName);
+  }
+
+  get(filepath: string) {
+    const normalized = path.normalize(filepath);
+
+    if (this.mocks.has(normalized)) {
+      return this.mocks.get(normalized);
+    } else if (this.mocks.has("./" + normalized)) {
+      return this.mocks.get("./" + normalized);
+    } else {
+      const hasExt = path.extname(normalized) !== "";
+
+      if (hasExt) {
+        const withoutExt = path.join(
+          path.dirname(normalized),
+          path.basename(normalized, path.extname(normalized))
+        );
+        if (this.mocks.has(withoutExt)) {
+          return this.mocks.get(withoutExt);
+        } else {
+          return this.mocks.get("./" + withoutExt);
+        }
+      } else {
+        return undefined;
+      }
+    }
+  }
+}
+
 class PluginHelpers {
   static addIntrospectionImportHandlers(build: esbuild.PluginBuild) {
     build.onResolve({ filter: /gi:.*/ }, (args) => {
@@ -44,22 +86,30 @@ class PluginHelpers {
     build: esbuild.PluginBuild,
     entryDir: string,
     projectSrcDir: string,
-    mockMap: Record<string, string>
+    mocks: MockRegistry
   ) {
-    if (Object.keys(mockMap).length > 0) {
+    if (mocks.hasAny()) {
       build.onResolve({ filter: /.*/ }, (args) => {
-        const relativePath = path.relative(
-          projectSrcDir,
-          path.join(entryDir, args.path)
-        );
+        const isFileImport =
+          args.path.startsWith("./") || args.path.startsWith("../");
 
-        if (mockMap[relativePath]) {
+        if (!isFileImport) {
+          const mock = mocks.get(args.path);
+          if (mock) {
+            return {
+              path: path.join(projectSrcDir, mock!),
+            };
+          }
+          return;
+        }
+
+        const absPath = path.resolve(args.resolveDir, args.path);
+        const relativePath = path.relative(projectSrcDir, absPath);
+
+        const mock = mocks.get(relativePath);
+        if (mock) {
           return {
-            path: path.join(projectSrcDir, mockMap[relativePath]!),
-          };
-        } else if (mockMap["./" + relativePath]) {
-          return {
-            path: path.join(projectSrcDir, mockMap["./" + relativePath]!),
+            path: path.join(projectSrcDir, mock!),
           };
         }
       });
@@ -111,7 +161,7 @@ async function main() {
 
     const msg: BuildScriptMessage = JSON.parse(atob(encodedMsg).trim());
 
-    const mockMap: Record<string, string> = {};
+    const mocks = new MockRegistry();
 
     const loadSetup = async (filepath: string) => {
       const setupFile = path.resolve(process.cwd(), filepath);
@@ -122,7 +172,9 @@ async function main() {
         setupFileSchema,
         (setup) => {
           if (setup.mocks) {
-            Object.assign(mockMap, setup.mocks);
+            for (const [key, value] of Object.entries(setup.mocks)) {
+              mocks.add(key, value);
+            }
           }
         },
         (err) => {
@@ -157,18 +209,21 @@ async function main() {
         {
           name: "gest-import-replacer",
           setup(build) {
-            build.onResolve({ filter: /^gest$/ }, (args) => {
-              return {
-                path: path.resolve(__dirname, "../../user-land/index.mjs"),
-              };
-            });
+            build.onResolve(
+              { filter: /^gest$|^@reactgjs\/gest$|^gest-globals$/ },
+              () => {
+                return {
+                  path: path.resolve(__dirname, "../../user-land/index.mjs"),
+                };
+              }
+            );
 
             PluginHelpers.addIntrospectionImportHandlers(build);
             PluginHelpers.addMockImportHandlers(
               build,
               path.dirname(msg.input),
               msg.projectSrcDir,
-              mockMap
+              mocks
             );
             PluginHelpers.addSystemImportHandlers(build, msg);
           },

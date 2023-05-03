@@ -36,6 +36,10 @@ export type TestRunnerOptions = {
   testFilePattern?: string;
 };
 
+type SuiteRunnerOptions = TestRunnerOptions & {
+  timeout: number;
+};
+
 function _isTest(t: any): t is Test {
   return t && typeof t === "object" && t.name && t.line !== undefined;
 }
@@ -47,7 +51,7 @@ const currentMicrosecond = () => {
 
 class SuiteRunner {
   constructor(
-    private readonly options: TestRunnerOptions,
+    private readonly options: SuiteRunnerOptions,
     private readonly tracker: ProgressTracker,
     private readonly suiteID: symbol
   ) {}
@@ -80,6 +84,32 @@ class SuiteRunner {
         unit,
       });
     }
+  }
+
+  private async runWithTimeout(
+    action: () => void | Promise<void>,
+    time: number
+  ) {
+    const r = action();
+
+    if (r && typeof r === "object" && r instanceof Promise) {
+      return await new Promise<void>((resolve, reject) => {
+        const t = setTimeout(() => {
+          reject(
+            new Error(
+              `Unit tests has not finished within the given time (${time}ms)`
+            )
+          );
+        }, time);
+
+        r.finally(() => {
+          clearTimeout(t);
+          resolve(r);
+        });
+      });
+    }
+
+    return r;
   }
 
   private async runHook(hook: TestHook, unitName: string[]) {
@@ -115,7 +145,9 @@ class SuiteRunner {
         return true;
       }
 
-      const duration = await this.measureRun(() => unit.callback());
+      const duration = await this.measureRun(() =>
+        this.runWithTimeout(unit.callback, this.options.timeout)
+      );
 
       this.tracker.unitProgress({
         suite: this.suiteID,
@@ -288,9 +320,14 @@ export class TestRunner {
           .then(async (module) => {
             const test = module.default;
 
+            const timeout =
+              module.timeout && typeof module.timeout === "number"
+                ? (module.timeout as number)
+                : this.config.defaultTimeoutThreshold;
+
             if (_isTest(test)) {
               const suiteRunner = new SuiteRunner(
-                this.options,
+                { ...this.options, timeout },
                 this.tracker,
                 suiteID
               );

@@ -1,5 +1,17 @@
-import { html, raw } from "termx-markup";
+import { MarkupFormatter, html, raw } from "termx-markup";
 import { _leftPad } from "../utils/left-pad";
+
+export type SummaryInfo = {
+  failedSuites: number;
+  failedUnits: number;
+  skippedSuites: number;
+  skippedUnits: number;
+  passedSuites: number;
+  passedUnits: number;
+};
+
+MarkupFormatter.defineColor("customBlack", "#1b1c26");
+MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
 export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {
@@ -169,6 +181,88 @@ export class ReportsFormatter {
         <s />
         <span bold color="customGrey" bg="lightRed">FAILED</span>
       </span>`;
+    },
+    summary(info: SummaryInfo): string {
+      return html`
+        <span>
+          <line bold>Test Suites:</line>
+          <pad size="3">
+            <line>
+              Passed:
+              <s /><s />
+              <span
+                bold
+                color="${info.passedSuites > 0 ? "lightGreen" : "white"}"
+              >
+                ${info.passedSuites}
+              </span>
+            </line>
+            <line>
+              Failed:
+              <s /><s />
+              <span
+                bold
+                color="${info.failedSuites > 0 ? "lightRed" : "white"}"
+              >
+                ${info.failedSuites}
+              </span>
+            </line>
+            <span>
+              Skipped:
+              <s />
+              <span
+                bold
+                color="${info.skippedSuites > 0 ? "lightYellow" : "white"}"
+              >
+                ${info.skippedSuites}
+              </span>
+            </span>
+          </pad>
+          <br />
+          <line bold>Test Units: </line>
+          <pad size="3">
+            <line>
+              Passed:
+              <s /><s />
+              <span
+                bold
+                color="${info.passedUnits > 0 ? "lightGreen" : "white"}"
+              >
+                ${info.passedUnits}
+              </span>
+            </line>
+            <line>
+              Failed:
+              <s /><s />
+              <span bold color="${info.failedUnits > 0 ? "lightRed" : "white"}">
+                ${info.failedUnits}
+              </span>
+            </line>
+            <span>
+              Skipped:
+              <s />
+              <span
+                bold
+                color="${info.skippedUnits > 0 ? "lightYellow" : "white"}"
+              >
+                ${info.skippedUnits}
+              </span>
+            </span>
+          </pad>
+          <br /><br />
+          ${info.failedSuites === 0 && info.failedUnits === 0
+            ? raw(
+                html`
+                  <span bold color="lightGreen">All tests have passed.</span>
+                `
+              )
+            : raw(
+                html`
+                  <span bold color="lightRed">Some tests have failed.</span>
+                `
+              )}
+        </span>
+      `;
     },
   };
 

@@ -19,3 +19,4 @@ package-lock.json
 /scripts
 /config.ts
 /base-reporter.ts
+/gest.config.*

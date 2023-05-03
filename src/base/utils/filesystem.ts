@@ -1,5 +1,5 @@
-import Gio from "gi://Gio?version=2.0";
 import GLib from "gi://GLib?version=2.0";
+import Gio from "gi://Gio?version=2.0";
 import { _async } from "./async";
 import path from "./path";
 
@@ -228,5 +228,13 @@ export const _mkdir = fsFunc("mkdir", (path: string) =>
         }
       }
     );
+  })
+);
+
+export const _fileExists = fsFunc("fileExists", (path: string) =>
+  _async<boolean>((p) => {
+    const file = Gio.File.new_for_path(path.toString());
+
+    p.resolve(file.query_exists(null));
   })
 );
