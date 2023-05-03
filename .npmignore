@@ -14,3 +14,5 @@
 /.yarnrc.yml
 /git-hook-tasks.config.json
 /tsconfig.json
+/tests
+/gest.config.mjs
