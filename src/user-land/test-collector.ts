@@ -2,6 +2,7 @@ export type It = {
   name: string;
   line: number;
   column: number;
+  skip?: boolean;
   callback: () => any;
 };
 
