@@ -49,41 +49,33 @@ const currentMicrosecond = () => {
   return now.to_unix() * 1000000 + now.get_microsecond();
 };
 
-class SuiteRunner {
+class UnitRunner {
+  readonly unitName: string[];
+  readonly isSkipped: boolean = false;
+
   constructor(
-    private readonly options: SuiteRunnerOptions,
-    private readonly tracker: ProgressTracker,
-    private readonly suiteID: symbol
-  ) {}
+    public readonly unit: It,
+    parentName: string[],
+    public readonly suite: SuiteRunner
+  ) {
+    this.unitName = [...parentName, unit.name];
 
-  private async measureRun(
-    action: () => void | Promise<void>
-  ): Promise<number> {
-    const start = currentMicrosecond();
-    await action();
-    const end = currentMicrosecond();
-
-    const duration = end - start;
-    return duration;
-  }
-
-  private testNameMatches(unitName: string[]) {
-    const testableName = unitName.join(" > ");
-    const { testNamePattern } = this.options;
-    if (!testNamePattern) return true;
-    return testableName.match(testNamePattern) !== null;
-  }
-
-  private markAsSkipped(units: It[], parentName: string[]) {
-    for (const unit of units) {
-      const unitName = [...parentName, unit.name];
-      this.tracker.unitProgress({
-        suite: this.suiteID,
-        unitName,
+    if (!this.testNameMatches(this.unitName) || unit.skip) {
+      this.isSkipped = true;
+      this.suite.tracker.unitProgress({
+        suite: this.suite.suiteID,
         skipped: true,
+        unitName: this.unitName,
         unit,
       });
     }
+  }
+
+  private testNameMatches(unitName: string[]) {
+    const { testNamePattern } = this.suite.options;
+    if (!testNamePattern) return true;
+    const testableName = unitName.join(" > ");
+    return testableName.match(testNamePattern) !== null;
   }
 
   private async runWithTimeout(
@@ -112,6 +104,72 @@ class SuiteRunner {
     return r;
   }
 
+  private async measureRun(
+    action: () => void | Promise<void>
+  ): Promise<number> {
+    const start = currentMicrosecond();
+    await action();
+    const end = currentMicrosecond();
+
+    const duration = end - start;
+    return duration;
+  }
+
+  async run() {
+    if (this.isSkipped) return false;
+
+    try {
+      const duration = await this.measureRun(() =>
+        this.runWithTimeout(this.unit.callback, this.suite.options.timeout)
+      );
+
+      this.suite.tracker.unitProgress({
+        suite: this.suite.suiteID,
+        unitName: this.unitName,
+        duration,
+        unit: this.unit,
+      });
+
+      return true;
+    } catch (e) {
+      this.suite.tracker.unitProgress({
+        suite: this.suite.suiteID,
+        unitName: this.unitName,
+        error: {
+          origin: "test",
+          thrown: e,
+        },
+        unit: this.unit,
+      });
+
+      if (_isExpectError(e)) {
+        e.handle();
+      }
+
+      return false;
+    }
+  }
+}
+
+class SuiteRunner {
+  constructor(
+    public readonly options: SuiteRunnerOptions,
+    public readonly tracker: ProgressTracker,
+    public readonly suiteID: symbol
+  ) {}
+
+  private markAsSkipped(units: It[], parentName: string[]) {
+    for (const unit of units) {
+      const unitName = [...parentName, unit.name];
+      this.tracker.unitProgress({
+        suite: this.suiteID,
+        unitName,
+        skipped: true,
+        unit,
+      });
+    }
+  }
+
   private async runHook(hook: TestHook, unitName: string[]) {
     try {
       await hook.callback();
@@ -127,52 +185,6 @@ class SuiteRunner {
       });
 
       throw new NoLogError(e, "Hook error");
-    }
-  }
-
-  private async runUnit(unit: It, parentName: string[]) {
-    const unitName = [...parentName, unit.name];
-
-    try {
-      if (!this.testNameMatches(unitName)) {
-        this.tracker.unitProgress({
-          suite: this.suiteID,
-          skipped: true,
-          unitName,
-          unit,
-        });
-
-        return true;
-      }
-
-      const duration = await this.measureRun(() =>
-        this.runWithTimeout(unit.callback, this.options.timeout)
-      );
-
-      this.tracker.unitProgress({
-        suite: this.suiteID,
-        unitName,
-        duration,
-        unit,
-      });
-
-      return true;
-    } catch (e) {
-      this.tracker.unitProgress({
-        suite: this.suiteID,
-        unitName,
-        error: {
-          origin: "test",
-          thrown: e,
-        },
-        unit,
-      });
-
-      if (_isExpectError(e)) {
-        e.handle();
-      }
-
-      return false;
     }
   }
 
@@ -192,19 +204,25 @@ class SuiteRunner {
         }
       }
 
-      $: for (const [index, unitTest] of test.its.entries()) {
+      $: for (const unitTest of test.its) {
+        const unitRunner = new UnitRunner(unitTest, unitName, this);
+
+        if (unitRunner.isSkipped) {
+          continue;
+        }
+
         for (const hook of test.beforeEach) {
           try {
             await this.runHook(hook, unitName);
           } catch (e) {
             // All tests that cannot be ran because of a beforeAll hook
             // error should be marked as skipped
-            this.markAsSkipped(test.its.slice(index, index + 1), unitName);
+            this.markAsSkipped([unitTest], unitName);
             continue $;
           }
         }
 
-        const result = await this.runUnit(unitTest, unitName);
+        const result = await unitRunner.run();
 
         passed &&= result;
 

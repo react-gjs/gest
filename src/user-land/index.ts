@@ -23,6 +23,16 @@ export const it = (name: string, fn: () => any) => {
   });
 };
 
+export const skip = (name: string, fn: () => any) => {
+  TestCollector.addIt({
+    name,
+    line: 0,
+    column: 0,
+    skip: true,
+    callback: () => {},
+  });
+};
+
 export const beforeAll = (fn: () => void) => {
   // Get line where this function was called
   const [line, column] = _getLineFromError(new Error());
