@@ -1,4 +1,5 @@
 import { _async } from "../utils/async";
+import type { ConfigFacade } from "../utils/config";
 import { Emitter } from "../utils/emitter";
 import type {
   SuiteProgressEvents,
@@ -16,6 +17,8 @@ export class ProgressTracker {
   private suites: SuiteProgress[] = [];
   private readonly emitter = new Emitter<ProgressTrackerEvents>();
   private readonly outputFlushOps: Array<Promise<void>> = [];
+
+  constructor(private config: ConfigFacade) {}
 
   private getSuite(suite: symbol) {
     return this.suites.find((s) => s.id === suite)!;
@@ -55,7 +58,7 @@ export class ProgressTracker {
   }
 
   createSuiteTracker(params: SuiteProgressInitParams) {
-    const suite = new SuiteProgress(params);
+    const suite = new SuiteProgress(params, this.config);
     this.suites.push(suite);
 
     this.emitter.emitImmediate("suiteAdded", suite.id);

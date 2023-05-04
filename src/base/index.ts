@@ -10,7 +10,10 @@ import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
 import { loadConfig } from "./utils/config";
 import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
-import { _getErrorMessage, _getErrorStack } from "./utils/error-handling";
+import {
+  _getErrorMessage,
+  _getErrorStack,
+} from "./utils/errors/error-handling";
 import { _fileExists, _mkdir, _walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
 import path from "./utils/path";
@@ -68,7 +71,22 @@ async function main() {
       testFilePattern,
     };
 
-    const tmpDir = path.join(getDirname(import.meta.url), "_tmp");
+    let tmpDir = path.join(getDirname(import.meta.url), "_tmp");
+    if (tmpDir.includes("/node_modules/")) {
+      while (true) {
+        if (path.parse(tmpDir).name === "node_modules") {
+          break;
+        }
+
+        tmpDir = path.dirname(tmpDir);
+
+        if (tmpDir.length === 1) {
+          throw new Error("Could not find node_modules directory.");
+        }
+      }
+
+      tmpDir = path.join(tmpDir, ".cache/gest");
+    }
     Global.setTmpDir(tmpDir);
 
     try {
@@ -152,7 +170,7 @@ async function main() {
 
     const consoleInterceptor = ConsoleInterceptor.init();
 
-    const progressTracker = new ProgressTracker();
+    const progressTracker = new ProgressTracker(config);
 
     const monitor = new ProgressReporter(
       progressTracker,
@@ -185,7 +203,7 @@ async function main() {
     Output.print(
       html`<pre color="red">${_getErrorMessage(e)}</pre>
         <br /><br />
-        <pre>${_getErrorStack(e)}</pre>`
+        <pre>${_getErrorStack(e, undefined)}</pre>`
     );
     exitCode = 1;
   } finally {

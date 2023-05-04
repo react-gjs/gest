@@ -37,6 +37,12 @@ export const ConfigSchema = Type.RecordOf({
       path: "./error-reporter-parser-type",
     })
   ),
+  errorStackParser: OptionalField(
+    Type.Function.setExtra({
+      typeName: "ErrorStackParser",
+      path: "./error-stack-parser-type",
+    })
+  ),
   reporters: OptionalField(Type.ArrayOf(Type.Literal("default"), ReporterType)),
 });
 

@@ -14,7 +14,16 @@ export type FileLocation = {
   file: string | undefined;
   line: number;
   column: number;
+  symbolName?: string | undefined;
 };
+
+type MapState = [
+  outColumn: number,
+  file: number,
+  line: number,
+  column: number,
+  nameIndex: number
+];
 
 export class SourceMapReader {
   static async newFromMapFile(mapFilepath: string) {
@@ -66,11 +75,11 @@ export class SourceMapReader {
   getOriginalPosition(outLine: number, outColumn: number): FileLocation | null {
     // SourceMap is 0 based, error stack is 1 based
     outLine -= 1;
-    outColumn -= 1;
+    // outColumn -= 1;
 
     const vlqs = this.map.mappings.split(";").map((line) => line.split(","));
 
-    const state: [number, number, number, number, number] = [0, 0, 0, 0, 0];
+    const state: MapState = [0, 0, 0, 0, 0];
 
     if (vlqs.length <= outLine) return null;
 
@@ -81,24 +90,34 @@ export class SourceMapReader {
       for (let i = 0; i < line.length; i++) {
         const segment = line[i];
         if (!segment) continue;
-        const segmentCords = this.converter.decode(segment);
+        const decodedSegment = this.converter.decode(segment);
 
-        const prevState: typeof state = [...state];
+        const prevState = state.slice() as MapState;
 
-        state[0] += segmentCords[0];
+        state[0] += decodedSegment[0];
 
-        if (segmentCords.length > 1) {
-          state[1] += segmentCords[1];
-          state[2] += segmentCords[2];
-          state[3] += segmentCords[3];
-          if (segmentCords[4] !== undefined) state[4] += segmentCords[4];
+        if (decodedSegment.length > 1) {
+          state[1] += decodedSegment[1] ?? 0;
+          state[2] += decodedSegment[2] ?? 0;
+          state[3] += decodedSegment[3] ?? 0;
+          state[4] += decodedSegment[4] ?? 0;
 
           if (index === outLine) {
-            if (prevState[0] < outColumn && outColumn <= state[0]) {
+            const currentOutCol = state[0] + 1;
+            const prevOutCol = prevState[0] + 1;
+
+            if (
+              currentOutCol === outColumn ||
+              (outColumn > prevOutCol && outColumn < currentOutCol)
+            ) {
               return {
                 file: this.getFile(state[1]),
                 line: state[2] + 1,
-                column: outColumn + state[3] - state[0] + 1,
+                column: state[3] + 1,
+                symbolName:
+                  decodedSegment[4] != null
+                    ? this.map.names[state[4]]
+                    : undefined,
               };
             }
           }
