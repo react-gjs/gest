@@ -6,9 +6,9 @@ import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
 import { _async } from "./utils/async";
 import type { ConfigFacade } from "./utils/config";
-import { _isExpectError } from "./utils/error-handling";
-import { GestError } from "./utils/gest-error";
-import { NoLogError } from "./utils/no-log-err";
+import { _isExpectError } from "./utils/errors/error-handling";
+import { GestError } from "./utils/errors/gest-error";
+import { NoLogError } from "./utils/errors/no-log-err";
 import path from "./utils/path";
 
 export type TestSuite = {
@@ -94,7 +94,9 @@ class UnitRunner {
           );
         }, time);
 
-        r.finally(() => {
+        r.catch(() => {
+          // prevent warning for unhandled promise rejection
+        }).finally(() => {
           clearTimeout(t);
           resolve(r);
         });

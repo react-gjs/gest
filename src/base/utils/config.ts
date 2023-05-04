@@ -5,6 +5,7 @@ import type { TestRunnerOptions } from "../test-runner";
 import { ConfigSchema } from "./config-schema";
 import type { Config } from "./config-type";
 import type { ErrorReporterParser } from "./error-reporter-parser-type";
+import type { ErrorStackParser } from "./error-stack-parser-type";
 import { _readdir, _readFile } from "./filesystem";
 import { importModule } from "./import-module";
 import path from "./path";
@@ -50,10 +51,6 @@ class ConfigFacade {
     return this.get("testDir")!;
   }
 
-  get errorReporterParser() {
-    return this.get("errorReporterParser") as ErrorReporterParser;
-  }
-
   get reporters() {
     return this.get("reporters")!;
   }
@@ -61,9 +58,17 @@ class ConfigFacade {
   get setup() {
     return this.config.setup;
   }
+
+  get errorReporterParser() {
+    return this.get("errorReporterParser") as ErrorReporterParser | undefined;
+  }
+
+  get errorStackParser() {
+    return this.get("errorStackParser") as ErrorStackParser | undefined;
+  }
 }
 
-export type { ConfigFacade };
+export { ConfigFacade };
 
 export type ConfigContext = {
   vargs: string[];

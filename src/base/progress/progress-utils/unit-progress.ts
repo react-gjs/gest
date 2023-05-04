@@ -1,11 +1,11 @@
 import type { It } from "../../../user-land/test-collector";
 import type { SourceMapReader } from "../../sourcemaps/reader";
+import type { ConfigFacade } from "../../utils/config";
 import {
   _getErrorMessage,
   _getErrorStack,
   _isExpectError,
-} from "../../utils/error-handling";
-import path from "../../utils/path";
+} from "../../utils/errors/error-handling";
 import type {
   ProgressErrorReport,
   ProgressErrorReportParsed,
@@ -49,7 +49,11 @@ export class UnitProgress {
   skipped?: boolean;
   unit?: It;
 
-  constructor(private parent: SuiteProgress, update: UnitProgressInitParams) {
+  constructor(
+    private parent: SuiteProgress,
+    update: UnitProgressInitParams,
+    private config: ConfigFacade
+  ) {
     Object.assign(this, update);
   }
 
@@ -88,11 +92,7 @@ export class UnitProgress {
   private parseError(sourceMap?: SourceMapReader): UnitErrorReport | undefined {
     if (this.error) {
       const message = _getErrorMessage(this.error.thrown);
-      const stack = _getErrorStack(
-        this.error.thrown,
-        sourceMap,
-        path.dirname(this.parent.getSuiteFilepath(false))
-      );
+      const stack = _getErrorStack(this.error.thrown, sourceMap, this.config);
 
       return {
         thrown: this.error.thrown,

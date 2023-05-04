@@ -1,4 +1,4 @@
-import { isError } from "./gest-error";
+import { isError } from "./errors/gest-error";
 
 class UnknowError extends Error {
   constructor(public data: any) {

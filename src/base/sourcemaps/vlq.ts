@@ -1,3 +1,14 @@
+type Segment =
+  | [
+      outColumn: number,
+      file: number,
+      line: number,
+      column: number,
+      nameIndex: number
+    ]
+  | [outColumn: number, file: number, line: number, column: number]
+  | [outColumn: number];
+
 export class Base64VLQ {
   charToInteger: Map<string, number> = new Map();
   integerToChar: Map<number, string> = new Map();
@@ -11,7 +22,7 @@ export class Base64VLQ {
       });
   }
 
-  decode(string: string): [number, number, number, number, number | undefined] {
+  decode(string: string): Segment {
     const result: number[] = [];
 
     let shift = 0;
@@ -47,7 +58,7 @@ export class Base64VLQ {
       }
     }
 
-    return result as [number, number, number, number, number | undefined];
+    return result as Segment;
   }
 
   encode(value: number | number[]) {

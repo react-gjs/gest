@@ -1,8 +1,12 @@
 import type { TestHook } from "../../../user-land/test-collector";
 import { Global } from "../../globals";
 import { SourceMapReader } from "../../sourcemaps/reader";
+import type { ConfigFacade } from "../../utils/config";
 import { Emitter } from "../../utils/emitter";
-import { _getErrorMessage, _getErrorStack } from "../../utils/error-handling";
+import {
+  _getErrorMessage,
+  _getErrorStack,
+} from "../../utils/errors/error-handling";
 import path from "../../utils/path";
 import type {
   ProgressErrorReport,
@@ -49,7 +53,7 @@ export class SuiteProgress {
     skipped: false,
   };
 
-  constructor(params: SuiteProgressInitParams) {
+  constructor(params: SuiteProgressInitParams, private config: ConfigFacade) {
     Object.assign(this, params);
   }
 
@@ -67,11 +71,7 @@ export class SuiteProgress {
     const result: ProgressErrorReportParsed[] = [];
     for (const err of this.state.errors) {
       const message = _getErrorMessage(err.thrown);
-      const stack = _getErrorStack(
-        err.thrown,
-        sourceMap,
-        path.dirname(this.getSuiteFilepath(false))
-      );
+      const stack = _getErrorStack(err.thrown, sourceMap, this.config);
 
       result.push({
         origin: err.origin,
@@ -97,7 +97,7 @@ export class SuiteProgress {
   }
 
   addUnitUpdate(progressUpdate: UnitProgressInitParams) {
-    const update = new UnitProgress(this, progressUpdate);
+    const update = new UnitProgress(this, progressUpdate, this.config);
     this.unitUpdates.push(update);
   }
 
