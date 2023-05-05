@@ -1,5 +1,6 @@
 import { OptionalField, Type, createValidatedFunction } from "dilswer";
 import esbuild from "esbuild";
+import fs from "fs/promises";
 import path from "path";
 import * as url from "url";
 import type { BuildScriptMessage } from "./build-script-message";
@@ -230,6 +231,14 @@ async function main() {
         },
       ],
     });
+
+    const out = await fs.readFile(msg.output, "utf-8");
+    const injects = await fs.readFile(
+      path.join(__dirname, "injects.mjs"),
+      "utf-8"
+    );
+
+    await fs.writeFile(msg.output, injects + "\n" + out, "utf-8");
   } catch (e) {
     console.error(e);
     process.exit(1);

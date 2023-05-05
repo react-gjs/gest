@@ -1,4 +1,4 @@
-type Segment =
+export type Segment =
   | [
       outColumn: number,
       file: number,

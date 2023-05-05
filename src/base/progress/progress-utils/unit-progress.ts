@@ -1,4 +1,5 @@
 import type { It } from "../../../user-land/test-collector";
+import { Global } from "../../globals";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../../utils/config";
 import {
@@ -61,7 +62,7 @@ export class UnitProgress {
     if (this.unit == null || !sourceMap) return undefined;
 
     const unitLocation = sourceMap.getOriginalPosition(
-      this.unit.line,
+      this.unit.line - Global.getSourceMapLineOffset(),
       this.unit.column
     );
 
@@ -80,7 +81,7 @@ export class UnitProgress {
     if (!_isExpectError(this.error.thrown)) return suiteFilepath;
 
     const expectLocation = sourceMap.getOriginalPosition(
-      this.error.thrown.line,
+      this.error.thrown.line - Global.getSourceMapLineOffset(),
       this.error.thrown.column
     );
 

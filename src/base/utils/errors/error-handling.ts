@@ -1,4 +1,5 @@
 import type { ExpectError } from "../../../user-land";
+import { Global } from "../../globals";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../config";
 import type { ParsedStack } from "../error-stack-parser-type";
@@ -56,7 +57,7 @@ export function _getErrorStack(
 
         if (stackItem.line != null && stackItem.column != null) {
           const mapped = sourceMap.getOriginalPosition(
-            Number(stackItem.line),
+            Number(stackItem.line) - Global.getSourceMapLineOffset(),
             Number(stackItem.column)
           );
 

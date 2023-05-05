@@ -1,3 +1,4 @@
+import type { FakeTimers as FT } from "../base/builder/injects";
 import type { CalledFrom, Matcher, MatcherResultHandlers } from "./matchers";
 import { Matchers } from "./matchers";
 import type { Test } from "./test-collector";
@@ -97,7 +98,7 @@ export class ExpectError extends Error {
   }
 
   private detectUnhandled() {
-    this.timeoutId = setTimeout(() => {
+    this.timeoutId = FakeTimers.originalSetTimeout(() => {
       // TODO: communicate with the monitor
       console.error(
         `An expect error was not handled. This is most likely due to an async matcher not being awaited.\n\nError: ${this.message}`
@@ -143,6 +144,12 @@ export const expect = (value: any) => {
 export const defineMatcher = (matcherName: string, matcher: Matcher) => {
   Matchers.add(matcherName, matcher);
 };
+
+// Fake Timers
+
+declare global {
+  const FakeTimers: typeof FT;
+}
 
 // Default matchers
 
