@@ -58,7 +58,10 @@ export class SuiteProgress {
   }
 
   private getHookLink(sourceMap: SourceMapReader, hook: TestHook) {
-    const hookLocation = sourceMap.getOriginalPosition(hook.line, hook.column);
+    const hookLocation = sourceMap.getOriginalPosition(
+      hook.line - Global.getSourceMapLineOffset(),
+      hook.column
+    );
 
     if (hookLocation == null) return undefined;
 

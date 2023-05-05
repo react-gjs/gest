@@ -20,6 +20,8 @@ export const deepCopy = <T>(obj: T, visited = new Map<any, any>()): T => {
 
   const copy: Record<any, any> = {};
 
+  Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
+
   visited.set(obj, copy);
 
   for (const key of keys) {
@@ -30,6 +32,11 @@ export const deepCopy = <T>(obj: T, visited = new Map<any, any>()): T => {
 
   if (orgProto != null) {
     Object.setPrototypeOf(copy, orgProto);
+  }
+
+  if (obj instanceof Error) {
+    copy.stack = obj.stack;
+    copy.message = obj.message;
   }
 
   return copy as T;

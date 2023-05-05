@@ -39,6 +39,14 @@ export async function _buildFile(params: {
             ];
         })
       ),
+      setTimeout: {
+        kind: "identifier",
+        value: "__gest_timers.setTimeout",
+      },
+      setInterval: {
+        kind: "identifier",
+        value: "__gest_timers.setInterval",
+      },
       console: {
         kind: "identifier",
         value: "__gest_console",

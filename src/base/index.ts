@@ -14,9 +14,10 @@ import {
   _getErrorMessage,
   _getErrorStack,
 } from "./utils/errors/error-handling";
-import { _fileExists, _mkdir, _walkFiles } from "./utils/filesystem";
+import { _fileExists, _mkdir, _readFile, _walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
 import path from "./utils/path";
+import { initFakeTimers } from "./utils/timers";
 
 declare global {
   function print(text: string): void;
@@ -71,7 +72,15 @@ async function main() {
       testFilePattern,
     };
 
-    let tmpDir = path.join(getDirname(import.meta.url), "_tmp");
+    const _dirname = getDirname(import.meta.url);
+
+    const injectsFilepath = path.resolve(_dirname, "./builder/injects.mjs");
+    const injectsFile = await _readFile(injectsFilepath);
+    const injectsLines = injectsFile.split("\n");
+
+    Global.setSourceMapLineOffset(injectsLines.length);
+
+    let tmpDir = path.join(_dirname, "_tmp");
     if (tmpDir.includes("/node_modules/")) {
       while (true) {
         if (path.parse(tmpDir).name === "node_modules") {
@@ -177,6 +186,8 @@ async function main() {
       !!options.verbose,
       config
     );
+
+    initFakeTimers(consoleInterceptor);
 
     const testRunners = Array.from(
       { length: parallel },

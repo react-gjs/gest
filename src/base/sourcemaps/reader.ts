@@ -1,5 +1,6 @@
 import { _readFile } from "../utils/filesystem";
 import path from "../utils/path";
+import type { Segment } from "./vlq";
 import { Base64VLQ } from "./vlq";
 
 export type SourceMap = {
@@ -75,7 +76,7 @@ export class SourceMapReader {
   getOriginalPosition(outLine: number, outColumn: number): FileLocation | null {
     // SourceMap is 0 based, error stack is 1 based
     outLine -= 1;
-    // outColumn -= 1;
+    outColumn -= 1;
 
     const vlqs = this.map.mappings.split(";").map((line) => line.split(","));
 
@@ -86,6 +87,8 @@ export class SourceMapReader {
     for (let index = 0; index < vlqs.length; index++) {
       const line = vlqs[index]!;
       state[0] = 0;
+
+      let prevSegment: Segment = [0];
 
       for (let i = 0; i < line.length; i++) {
         const segment = line[i];
@@ -103,13 +106,10 @@ export class SourceMapReader {
           state[4] += decodedSegment[4] ?? 0;
 
           if (index === outLine) {
-            const currentOutCol = state[0] + 1;
-            const prevOutCol = prevState[0] + 1;
+            const currentOutCol = state[0];
+            const prevOutCol = prevState[0];
 
-            if (
-              currentOutCol === outColumn ||
-              (outColumn > prevOutCol && outColumn < currentOutCol)
-            ) {
+            if (currentOutCol === outColumn) {
               return {
                 file: this.getFile(state[1]),
                 line: state[2] + 1,
@@ -119,9 +119,21 @@ export class SourceMapReader {
                     ? this.map.names[state[4]]
                     : undefined,
               };
+            } else if (outColumn >= prevOutCol && outColumn <= currentOutCol) {
+              return {
+                file: this.getFile(state[1]),
+                line: state[2] + 1,
+                column: prevState[3] + 1,
+                symbolName:
+                  prevSegment[4] != null
+                    ? this.map.names[prevState[4]]
+                    : undefined,
+              };
             }
           }
         }
+
+        prevSegment = decodedSegment;
       }
 
       if (index === outLine) {
