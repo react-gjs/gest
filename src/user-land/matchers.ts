@@ -1,3 +1,4 @@
+import { FunctionMock } from "./utils/function-mocks";
 import { diff } from "./utils/json-diff";
 import { _getLineFromError } from "./utils/parse-error";
 import {
@@ -115,6 +116,44 @@ export interface ExpectMatchers {
    * This matcher should always be awaited.
    */
   toReject(expected: Promise<any>): Promise<void>;
+  /**
+   * Check if the given Function Mock has been invoked, or if the
+   * `times` parameter is specified, check if the function has
+   * been invoked the specified number of times.
+   */
+  toHaveBeenCalled(time?: number): void;
+  /**
+   * Check if the given Function Mock has been invoked with
+   * matching arguments. Arguments are compared using deep
+   * equality similar to `toMatch`.
+   */
+  toHaveBeenCalledWith(...args: any[]): void;
+  /**
+   * Check if the last call to the given Function Mock has been
+   * invoked with matching arguments. Arguments are compared
+   * using deep equality similar to `toMatch`.
+   */
+  toHaveBeenCalledWithLast(...args: any[]): void;
+  /**
+   * Check if the given Function Mock has been invoked and has
+   * returned the specified value.
+   */
+  toHaveReturnedWithLast(expected: any): void;
+  /**
+   * Check if the given Function Mock has been invoked and has
+   * thrown the specified value.
+   */
+  toHaveThrownWithLast(expected: any): void;
+  /**
+   * Check if the given Function Mock has been invoked and has
+   * returned a promise that resolves to the specified value.
+   */
+  toHaveResolvedWithLast(expected: any): void;
+  /**
+   * Check if the given Function Mock has been invoked and has
+   * returned a promise that rejects to the specified value.
+   */
+  toHaveRejectedWithLast(expected: any): void;
 }
 
 export type MatcherResult =
@@ -124,8 +163,8 @@ export type MatcherResult =
   | {
       failed: true;
       reason: string;
-      expected: string;
-      received: string;
+      expected?: string;
+      received?: string;
       diff?: string;
     };
 
@@ -736,6 +775,354 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
         expected: getPresentationForValue(toBeThrown),
       };
     }
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+// Mock Matchers
+
+Matchers.add("toHaveBeenCalled", (mock, [times]) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (times != null && typeof times !== "number") {
+    return {
+      failed: true,
+      reason: "toHaveBenCalled() argument must be a number.",
+      received: getPresentationForValue(times),
+      expected: "number",
+    };
+  }
+
+  if (mock.tracker.callCount === 0) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  if (times != null && mock.tracker.callCount !== times) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called a specific number of times.",
+      received: getPresentationForValue(mock.tracker.callCount),
+      expected: getPresentationForValue(times),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveBeenCalledWith", (mock, args: any[]) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (mock.tracker.callCount === 0) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  const matchingCall = mock.tracker.calls.find((call) => {
+    return (
+      call.args.length === args.length && matchValues(call.args, args).isEqual
+    );
+  });
+
+  if (!matchingCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called with specific arguments.",
+      expected: getPresentationForArray(args),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveBeenCalledWithLast", (mock, args: any[]) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (!mock.tracker.latestCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  const match = matchValues(mock.tracker.latestCall.args, args);
+
+  if (!match.isEqual) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called with specific arguments.",
+      expected: getPresentationForValue(match.expected),
+      received: getPresentationForValue(match.received),
+      diff: diff(mock.tracker.latestCall?.args, args, "match").stringify(),
+    };
+  }
+
+  if (mock.tracker.latestCall.args.length !== args.length) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called with specific arguments.",
+      expected: getPresentationForArray(args),
+      received: getPresentationForArray(mock.tracker.latestCall.args as any),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveReturnedWithLast", (mock, args) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (!mock.tracker.latestCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  if (mock.tracker.latestCall.isAsync) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have returned a value, but instead it returned a promise.",
+    };
+  }
+
+  if (mock.tracker.latestCall.error) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have returned a value, but instead it threw an error.",
+      diff: String(mock.tracker.latestCall.error),
+    };
+  }
+
+  if (args.length === 0) {
+    return {
+      failed: false,
+    };
+  }
+
+  const match = matchValues(mock.tracker.latestCall.result, args[0]);
+
+  if (!match.isEqual) {
+    return {
+      failed: true,
+      reason: "Expected mock to have returned a specific value.",
+      expected: getPresentationForValue(match.expected),
+      received: getPresentationForValue(match.received),
+      diff: diff(mock.tracker.latestCall.result, args[0], "match").stringify(),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveThrownWithLast", (mock, args) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (!mock.tracker.latestCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  if (mock.tracker.latestCall.isAsync) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have throw a exception, but instead it returned a promise.",
+    };
+  }
+
+  if (!mock.tracker.latestCall.error) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have throw a exception, but instead it returned.",
+      diff: String(mock.tracker.latestCall.result),
+    };
+  }
+
+  if (args.length === 0) {
+    return {
+      failed: false,
+    };
+  }
+
+  const match = matchValues(mock.tracker.latestCall.error, args[0]);
+
+  if (!match.isEqual) {
+    return {
+      failed: true,
+      reason: "Expected mock to have throw a specific exception.",
+      expected: getPresentationForValue(match.expected),
+      received: getPresentationForValue(match.received),
+      diff: diff(mock.tracker.latestCall.error, args[0], "match").stringify(),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveResolvedWithLast", (mock, args) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (!mock.tracker.latestCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  if (!mock.tracker.latestCall.isAsync) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have resolved a value, but it was not a promise.",
+    };
+  }
+
+  if (mock.tracker.latestCall.error) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have resolved a value, but instead it rejected.",
+      diff: String(mock.tracker.latestCall.error),
+    };
+  }
+
+  if (args.length === 0) {
+    return {
+      failed: false,
+    };
+  }
+
+  const match = matchValues(mock.tracker.latestCall.result, args[0]);
+
+  if (!match.isEqual) {
+    return {
+      failed: true,
+      reason: "Expected mock to have resolved with a specific value.",
+      expected: getPresentationForValue(match.expected),
+      received: getPresentationForValue(match.received),
+      diff: diff(mock.tracker.latestCall.result, args[0], "match").stringify(),
+    };
+  }
+
+  return {
+    failed: false,
+  };
+});
+
+Matchers.add("toHaveRejectedWithLast", (mock, args) => {
+  if (!(mock instanceof FunctionMock)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a mock.",
+      received: getPresentationForValue(mock),
+      expected: "FunctionMock",
+    };
+  }
+
+  if (!mock.tracker.latestCall) {
+    return {
+      failed: true,
+      reason: "Expected mock to have been called.",
+    };
+  }
+
+  if (!mock.tracker.latestCall.isAsync) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have rejected a value, but it was not a promise.",
+    };
+  }
+
+  if (!mock.tracker.latestCall.error) {
+    return {
+      failed: true,
+      reason:
+        "Expected mock to have rejected an exception, but instead it resolved.",
+    };
+  }
+
+  if (args.length === 0) {
+    return {
+      failed: false,
+    };
+  }
+
+  const match = matchValues(mock.tracker.latestCall.error, args[0]);
+
+  if (!match.isEqual) {
+    return {
+      failed: true,
+      reason: "Expected mock to have rejected with a specific exception.",
+      expected: getPresentationForValue(match.expected),
+      received: getPresentationForValue(match.received),
+      diff: diff(mock.tracker.latestCall.error, args[0], "match").stringify(),
+    };
   }
 
   return {
