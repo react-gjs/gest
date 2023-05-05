@@ -3,6 +3,7 @@ import type { CalledFrom, Matcher, MatcherResultHandlers } from "./matchers";
 import { Matchers } from "./matchers";
 import type { Test } from "./test-collector";
 import { TestCollector } from "./test-collector";
+import { FunctionMockRegistry, createMock } from "./utils/function-mocks";
 import { _getLineFromError } from "./utils/parse-error";
 
 export const describe = (name: string, fn: () => void): Test => {
@@ -150,6 +151,35 @@ export const defineMatcher = (matcherName: string, matcher: Matcher) => {
 declare global {
   const FakeTimers: typeof FT;
 }
+
+export const Mock = {
+  /**
+   * Creates a new mock function.
+   *
+   * @example
+   *   const mock = Mock.create(() => null);
+   *
+   *   // Call the mock function
+   *   mock.fn();
+   *
+   *   // Check call count
+   *   mock.tracker.callCount; // 1
+   *
+   *   // Check call arguments
+   *   mock.tracker.latestCall.args; // []
+   *
+   *   // Check call return value
+   *   mock.tracker.latestCall.result; // null
+   *
+   *   // Check if the last call failed
+   *   mock.tracker.latestCall.error; // undefined
+   *
+   *   // Check if the result was asynchronous
+   *   mock.tracker.latestCall.isAsync; // false
+   */
+  create: createMock,
+  ...FunctionMockRegistry.public(),
+};
 
 // Default matchers
 
