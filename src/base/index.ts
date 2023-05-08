@@ -36,6 +36,8 @@ let exitCode = 0;
 
 async function main() {
   try {
+    const startTime = GLib.get_monotonic_time();
+
     // @ts-expect-error
     const pargs: string[] = imports.system.programArgs;
 
@@ -198,6 +200,9 @@ async function main() {
 
     await progressTracker.flush();
 
+    const endTime = GLib.get_monotonic_time();
+    const totalDuration = (endTime - startTime) / 1000; // in milliseconds
+
     if (!silenceLogs) {
       ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
     }
@@ -205,7 +210,7 @@ async function main() {
     Output.print("");
 
     monitor.flushErrorBuffer();
-    monitor.printSummary();
+    monitor.printSummary(totalDuration);
 
     if (testRunners.some((runner) => !runner.success)) {
       exitCode = 1;

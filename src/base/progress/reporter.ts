@@ -145,6 +145,7 @@ export class ProgressReporter {
     passedUnits: 0,
     skippedSuites: 0,
     skippedUnits: 0,
+    totalDuration: 0,
   };
 
   constructor(
@@ -257,7 +258,9 @@ export class ProgressReporter {
     }
   }
 
-  printSummary() {
+  printSummary(totalDuration: number) {
+    this.summaryInfo.totalDuration = totalDuration;
+
     const reporters = this.config.reporters.map((r) =>
       typeof r === "string" ? DefaultReporter : r
     );

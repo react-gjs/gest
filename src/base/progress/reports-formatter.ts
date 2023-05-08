@@ -8,6 +8,7 @@ export type SummaryInfo = {
   skippedUnits: number;
   passedSuites: number;
   passedUnits: number;
+  totalDuration: number;
 };
 
 MarkupFormatter.defineColor("customBlack", "#1b1c26");
@@ -77,6 +78,24 @@ export class ReportsFormatter {
           <pre color="lightGreen"> ${text}</pre>
         </pad>`
     );
+  }
+
+  private static formatDuration(duration: number) {
+    const hours = Math.floor(duration / 3600000);
+    const minutes = Math.floor((duration % 3600000) / 60000);
+    const seconds = Math.floor((duration % 60000) / 1000);
+    const milliseconds = Math.floor(duration % 1000);
+
+    // ms number as a 3 digit long string
+    const ms = milliseconds.toString().slice(0, 3).padEnd(3, "0");
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}.${ms}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}.${ms}s`;
+    } else {
+      return `${seconds}.${ms}s`;
+    }
   }
 
   static symbol = {
@@ -249,18 +268,22 @@ export class ReportsFormatter {
               </span>
             </span>
           </pad>
-          <br /><br />
+          <br />
+          <br />
           ${info.failedSuites === 0 && info.failedUnits === 0
             ? raw(
                 html`
-                  <span bold color="lightGreen">All tests have passed.</span>
+                  <line bold color="lightGreen">All tests have passed.</line>
                 `
               )
             : raw(
                 html`
-                  <span bold color="lightRed">Some tests have failed.</span>
+                  <line bold color="lightRed">Some tests have failed.</line>
                 `
               )}
+          <span dim>
+            Done in ${ReportsFormatter.formatDuration(info.totalDuration)}
+          </span>
         </span>
       `;
     },
