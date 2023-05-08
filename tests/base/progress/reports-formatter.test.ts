@@ -13,6 +13,7 @@ export default describe("ReportsFormatter", () => {
           passedUnits: 0,
           skippedSuites: 0,
           skippedUnits: 3,
+          totalDuration: 12769,
         });
 
         const formatted = MarkupFormatter.format(markup);
