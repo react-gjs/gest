@@ -38,8 +38,7 @@ async function main() {
   try {
     const startTime = GLib.get_monotonic_time();
 
-    // @ts-expect-error
-    const pargs: string[] = imports.system.programArgs;
+    const pargs = imports.system.programArgs;
 
     if (pargs.includes("--help") || pargs.includes("-h")) {
       // prettier-ignore
