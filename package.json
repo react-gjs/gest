@@ -61,7 +61,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "git-hook-tasks": "ncpa0cpl/git-hook-tasks",
-    "gjs-esm-types": "^0.0.3",
+    "gjs-esm-types": "^0.0.4",
     "husky": "^8.0.3",
     "pr-changelog-gen": "^1.1.0",
     "prettier": "^2.8.7",
