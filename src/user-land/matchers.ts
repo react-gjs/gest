@@ -348,7 +348,7 @@ Matchers.add("toBe", (testedValue, [expectedValue]) => {
 });
 
 Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
-  if (testedValue !== "object" || testedValue === null) {
+  if (typeof testedValue !== "object" || testedValue === null) {
     return {
       failed: true,
       reason: "Expected value to be an object.",
@@ -562,7 +562,14 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
         received: getPresentationForArray(testedValues),
         expected: "array containing: " + getPresentationForValue(requiredValue),
         diff: testedValues
-          .map((v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`)
+          .map(
+            (v, i) =>
+              `Expected vs [${i}]: ${diff(
+                v,
+                requiredValue,
+                "match"
+              ).stringify()}`
+          )
           .join("\n"),
       };
     }
