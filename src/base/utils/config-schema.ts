@@ -12,7 +12,7 @@ const ReporterType = Type.Custom((v): v is new () => BaseReporter => {
 
 ReporterType.setExtra({
   typeName: "BaseReporter",
-  path: "../progress/reporter",
+  path: "../progress/base-reporter",
   valueImport: true,
 });
 
@@ -65,7 +65,7 @@ ConfigSchema.recordOf.defaultTimeoutThreshold.type.setDescription(
 );
 
 ConfigSchema.recordOf.parallel.type.setDescription(
-  "Number of tests to run in parallel. Default value is 2."
+  "Defines how many test Suites can be ran in parallel. Although currently all tests are always ran on a single thread, meaning this option will mostly only affect tests that are heavily asynchronous. Defaults to `2`."
 );
 
 ConfigSchema.recordOf.srcDir.type.setDescription(
@@ -73,11 +73,11 @@ ConfigSchema.recordOf.srcDir.type.setDescription(
 );
 
 ConfigSchema.recordOf.testDir.type.setDescription(
-  "Directory where your test files are located. Default is a `__tests__` within the current directory."
+  "The directory where the test files are located. Defaults to `./__tests__`."
 );
 
 ConfigSchema.recordOf.setup.type.setDescription(
-  "Filepath to a setup file. This file will be executed before running any tests."
+  "Path to a setup file that can contain module mock's import maps."
 );
 
 ConfigSchema.recordOf.globals.type.setDescription(

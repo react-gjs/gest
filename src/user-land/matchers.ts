@@ -100,7 +100,7 @@ export interface ExpectMatchers {
    * if a parameter is specified, the test will pass only if the
    * thrown value is strictly equal to the specified value.
    *
-   * If the tested fuinction is async, this matcher will return a
+   * If the tested function is async, this matcher will return a
    * promise that should be awaited.
    */
   toThrow(toBeThrown?: any): void | Promise<void>;
