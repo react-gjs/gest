@@ -1,3 +1,54 @@
+## 0.3.0 (May 17, 2023)
+
+### Features
+
+- #### feat: added the total duration of all tests in the reported summary ([#35](https://github.com/react-gjs/gest/pull/35))
+
+  Report summary is now able to display one more additional information - the time it took to complete all the tests.
+
+- #### feat: function mocks ([#34](https://github.com/react-gjs/gest/pull/34))
+
+  Added a Function Mock API, that allows to create special functions which are being tracked and can have their implementation changed at any time.
+  
+  Mocks track information's about:
+  - the amount of times they were called
+  - arguments provided to each call
+  - result given for each call
+  - whether a call ended in a failure or not
+  - whether the returned value was a Promise or not
+  - number of mock calls that are still pending (unresolved promises)
+
+- #### feat: added FakeTimers feature ([#33](https://github.com/react-gjs/gest/pull/33))
+
+  Added fake timers. To use fake timers use the global variable that globally available in all tests - `FakeTimers`.
+  
+  **Example**
+  
+  ```ts
+  export default describe("FakeTimers test", () => {
+    it("timers are disabled in this test", () => {
+      FakeTimers.enable();
+      
+      let wasCalled = false;
+  
+      const onTimeout = () => {
+        wasCalled = true;
+      }
+      setTimeout(onTimeout); // will never run until manually triggered
+  
+      wasCalled; // false
+  
+      FakeTimers.runNext(); // trigger, will invoke the `onTimeout` callback
+  
+      wasCalled; // true
+  
+      FakeTimers.disable(); // remember to disable fake timers once the test ends
+    })
+  })
+  ```
+
+- #### feat: reworked the stack parsing algorithm, added config option that allows for replacing this algorithm ([#32](https://github.com/react-gjs/gest/pull/32))
+
 ## 0.2.0 (May 3, 2023)
 
 ### Features
@@ -8,7 +59,7 @@
   
   Additionally `beforeEach` and `afterEach` hooks will now always be skipped along with the individual tests. Before those hooks could be ran before a test that was skipped.
 
-- #### feat: added timouts to test units ([#27](https://github.com/react-gjs/gest/pull/27))
+- #### feat: added timeouts to test units ([#27](https://github.com/react-gjs/gest/pull/27))
 
   Added timeouts to all unit tests. Previously the config had a timeout threshold option, but it did not do anything. If a tests hanged and did never finish `gest` would also hang. A proper timeouts are now added, by default if a single test takes longer than 5 seconds it will be marked as failed. (this does not prevent synchronous thread locks, for example a synchronous infinite loop will still lock the program)
 
