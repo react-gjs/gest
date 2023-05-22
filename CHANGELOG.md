@@ -1,3 +1,11 @@
+## 0.3.1 (May 22, 2023)
+
+### Bug Fixes
+
+- #### fix: missing `typeof` operator in matchers ([#50](https://github.com/react-gjs/gest/pull/50))
+
+  `expect().toBeInstanceOf` and `expect().toReject` have been broken due to missing `typeof`` operator, matchers were comparing the tested value itself against the type name which was causing tests to fail in situations where the values were correct. 
+
 ## 0.3.0 (May 17, 2023)
 
 ### Features
