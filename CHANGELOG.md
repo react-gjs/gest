@@ -1,3 +1,23 @@
+## 0.3.2 (May 22, 2023)
+
+### Features
+
+- #### feat: added toThrowMatch and toRejectMatch assert methods ([#54](https://github.com/react-gjs/gest/pull/54))
+
+  Added two new assert methods on the `expect()`:
+  - `toThrowMatch()` - similar to the existing `toThrow()` but uses the sane comparison algorithm as `toMatch()` 
+  - `toRejectMatch()` - similar to the existing `toReject()` but uses the sane comparison algorithm as `toMatch()` 
+
+### Bug Fixes
+
+- #### fix: toThrow and toReject assert were sometimes incorrectly passing ([#53](https://github.com/react-gjs/gest/pull/53))
+
+  `toThrow()` and `toReject()` asserts both were incorrectly handling promises and as a result, asserts that should have failed, were passing. Has been fixed now.
+
+- #### fix: prevent async describes by throwing errors when detected ([#52](https://github.com/react-gjs/gest/pull/52))
+
+  Before, passing asynchronous function into `describe()` would not raise any errors or warnings and the test would pass successfully even if some tests have been omitted because of a race condition. This has now been fixed, if the function given to `describe()` is detected to be asynchronous, error will be thrown and the whole Test Suite will not be run.
+
 ## 0.3.1 (May 22, 2023)
 
 ### Bug Fixes
