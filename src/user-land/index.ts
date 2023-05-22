@@ -1,16 +1,16 @@
 import type { FakeTimers as FT } from "../base/builder/injects";
 import type { CalledFrom, Matcher, MatcherResultHandlers } from "./matchers";
 import { Matchers } from "./matchers";
-import type { Test } from "./test-collector";
+import type { Describe } from "./test-collector";
 import { TestCollector } from "./test-collector";
 import { FunctionMockRegistry, createMock } from "./utils/function-mocks";
 import { _getLineFromError } from "./utils/parse-error";
 
-export const describe = (name: string, fn: () => void): Test => {
+export const describe = (name: string, fn: () => void): Describe => {
   // Get line where this function was called
   const [line, column] = _getLineFromError(new Error());
 
-  return TestCollector.collectSubTest(name, line, column, fn);
+  return TestCollector.collectDescribes(name, line, column, fn);
 };
 
 export const it = (name: string, fn: () => any) => {
@@ -24,6 +24,8 @@ export const it = (name: string, fn: () => any) => {
     callback: fn,
   });
 };
+
+export const test = it;
 
 export const skip = (name: string, fn: () => any) => {
   TestCollector.addIt({
