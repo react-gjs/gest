@@ -115,7 +115,7 @@ export interface ExpectMatchers {
    *
    * This matcher should always be awaited.
    */
-  toReject(expected: Promise<any>): Promise<void>;
+  toReject(expected?: any): Promise<void>;
   /**
    * Check if the given Function Mock has been invoked, or if the
    * `times` parameter is specified, check if the function has
@@ -348,7 +348,7 @@ Matchers.add("toBe", (testedValue, [expectedValue]) => {
 });
 
 Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
-  if (testedValue !== "object" || testedValue === null) {
+  if (typeof testedValue !== "object" || testedValue === null) {
     return {
       failed: true,
       reason: "Expected value to be an object.",
@@ -750,7 +750,7 @@ Matchers.add("toThrow", (fn, [toBeThrown]) => {
 });
 
 Matchers.add("toReject", async (fn, [toBeThrown]) => {
-  if (fn !== "object" || fn === null || !(fn instanceof Promise)) {
+  if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
       failed: true,
       reason: "Expected value to be a promise.",
