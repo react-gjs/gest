@@ -1,6 +1,6 @@
 import GLib from "gi://GLib?version=2.0";
 import { OutputBuffer } from "termx-markup";
-import type { It, Test, TestHook } from "../user-land/test-collector";
+import type { Describe, Test, TestHook } from "../user-land/test-collector";
 import { _buildFile } from "./builder/build-file";
 import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
@@ -40,7 +40,7 @@ type SuiteRunnerOptions = TestRunnerOptions & {
   timeout: number;
 };
 
-function _isTest(t: any): t is Test {
+function _isTest(t: any): t is Describe {
   return t && typeof t === "object" && t.name && t.line !== undefined;
 }
 
@@ -54,7 +54,7 @@ class UnitRunner {
   readonly isSkipped: boolean = false;
 
   constructor(
-    public readonly unit: It,
+    public readonly unit: Test,
     parentName: string[],
     public readonly suite: SuiteRunner
   ) {
@@ -160,7 +160,7 @@ class SuiteRunner {
     public readonly suiteID: symbol
   ) {}
 
-  private markAsSkipped(units: It[], parentName: string[]) {
+  private markAsSkipped(units: Test[], parentName: string[]) {
     for (const unit of units) {
       const unitName = [...parentName, unit.name];
       this.tracker.unitProgress({
@@ -190,7 +190,7 @@ class SuiteRunner {
     }
   }
 
-  async runSuite(test: Test, parentName: string[] = []): Promise<boolean> {
+  async runSuite(test: Describe, parentName: string[] = []): Promise<boolean> {
     let passed = true;
 
     const unitName = [...parentName, test.name];
@@ -201,12 +201,12 @@ class SuiteRunner {
         } catch (e) {
           // All tests that cannot be ran because of a beforeAll hook
           // error should be marked as skipped
-          this.markAsSkipped(test.its, unitName);
+          this.markAsSkipped(test.tests, unitName);
           throw e;
         }
       }
 
-      $: for (const unitTest of test.its) {
+      $: for (const unitTest of test.tests) {
         const unitRunner = new UnitRunner(unitTest, unitName, this);
 
         if (unitRunner.isSkipped) {
@@ -233,7 +233,7 @@ class SuiteRunner {
         }
       }
 
-      for (const subTest of test.subTests) {
+      for (const subTest of test.children) {
         const result = await this.runSuite(
           {
             ...subTest,
