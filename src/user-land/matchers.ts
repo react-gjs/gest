@@ -709,7 +709,7 @@ Matchers.add(
   }
 );
 
-Matchers.add("toThrow", (fn, [toBeThrown]) => {
+Matchers.add("toThrow", (fn, args) => {
   if (typeof fn !== "function") {
     return {
       failed: true,
@@ -719,37 +719,48 @@ Matchers.add("toThrow", (fn, [toBeThrown]) => {
     };
   }
 
-  const onErr = (e: any) => {
-    if (toBeThrown === undefined) {
+  const onErr = (e: any): MatcherResult => {
+    if (args.length === 0) {
       return {
         failed: false,
       };
     }
-    if (e !== toBeThrown) {
+    if (e !== args[0]) {
       return {
         failed: true,
         reason: "Expected function to throw a specific value.",
         received: getPresentationForValue(e),
-        expected: getPresentationForValue(toBeThrown),
+        expected: getPresentationForValue(args[0]),
       };
     }
+    return {
+      failed: false,
+    };
   };
 
   try {
     const result = fn();
-    if (result === "object" && fn === null && fn instanceof Promise) {
-      return result.catch(onErr);
+    if (result != null && result instanceof Promise) {
+      return result
+        .then(
+          (): MatcherResult => ({
+            failed: true,
+            reason: "Expected function to throw.",
+          })
+        )
+        .catch(onErr);
     }
   } catch (e) {
     return onErr(e);
   }
 
   return {
-    failed: false,
+    failed: true,
+    reason: "Expected function to throw.",
   };
 });
 
-Matchers.add("toReject", async (fn, [toBeThrown]) => {
+Matchers.add("toReject", async (fn, args) => {
   if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
       failed: true,
@@ -761,25 +772,29 @@ Matchers.add("toReject", async (fn, [toBeThrown]) => {
 
   try {
     await fn;
+    return {
+      failed: true,
+      reason: "Expected promise to reject, but it resolved.",
+    };
   } catch (e) {
-    if (toBeThrown === undefined) {
+    if (args.length === 0) {
       return {
         failed: false,
       };
     }
-    if (e !== toBeThrown) {
+    if (e !== args[0]) {
       return {
         failed: true,
         reason: "Expected promise to reject a certain value.",
         received: getPresentationForValue(e),
-        expected: getPresentationForValue(toBeThrown),
+        expected: getPresentationForValue(args[0]),
       };
     }
-  }
 
-  return {
-    failed: false,
-  };
+    return {
+      failed: false,
+    };
+  }
 });
 
 // Mock Matchers
