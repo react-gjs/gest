@@ -105,8 +105,15 @@ export interface ExpectMatchers {
    */
   toThrow(toBeThrown?: any): void | Promise<void>;
   /**
-   * Check if the tested value is a promise that rejects with the
-   * specified value.
+   * Check if the tested value is a function that throws a value
+   * matching the given value when called.
+   *
+   * If the tested function is async, this matcher will return a
+   * promise that should be awaited.
+   */
+  toThrowMatch(toBeThrown: any): void | Promise<void>;
+  /**
+   * Check if the tested value is a promise that rejects.
    *
    * If no value is specified, the test will pass if the promise
    * rejects to any value, otherwise the test will pass only if
@@ -116,6 +123,13 @@ export interface ExpectMatchers {
    * This matcher should always be awaited.
    */
   toReject(expected?: any): Promise<void>;
+  /**
+   * Check if the tested value is a promise that rejects with the
+   * specified value.
+   *
+   * This matcher should always be awaited.
+   */
+  toRejectMatch(expected: any): Promise<void>;
   /**
    * Check if the given Function Mock has been invoked, or if the
    * `times` parameter is specified, check if the function has
@@ -760,6 +774,56 @@ Matchers.add("toThrow", (fn, args) => {
   };
 });
 
+Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
+  if (typeof fn !== "function") {
+    return {
+      failed: true,
+      reason: "Expected value to be a function.",
+      received: getPresentationForValue(fn),
+      expected: "Function",
+    };
+  }
+
+  const onErr = (e: any): MatcherResult => {
+    const match = matchValues(e, shouldBeThrown);
+
+    if (!match.isEqual) {
+      const d = diff(e, shouldBeThrown, "match");
+      return {
+        failed: true,
+        reason: "Expected function to throw a specific value.",
+        received: getPresentationForValue(match.received),
+        expected: getPresentationForValue(match.expected),
+        diff: d.stringify(),
+      };
+    }
+    return {
+      failed: false,
+    };
+  };
+
+  try {
+    const result = fn();
+    if (result != null && result instanceof Promise) {
+      return result
+        .then(
+          (): MatcherResult => ({
+            failed: true,
+            reason: "Expected function to throw.",
+          })
+        )
+        .catch(onErr);
+    }
+  } catch (e) {
+    return onErr(e);
+  }
+
+  return {
+    failed: true,
+    reason: "Expected function to throw.",
+  };
+});
+
 Matchers.add("toReject", async (fn, args) => {
   if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
@@ -788,6 +852,42 @@ Matchers.add("toReject", async (fn, args) => {
         reason: "Expected promise to reject a certain value.",
         received: getPresentationForValue(e),
         expected: getPresentationForValue(args[0]),
+      };
+    }
+
+    return {
+      failed: false,
+    };
+  }
+});
+
+Matchers.add("toRejectMatch", async (fn, [shouldBeThrown]) => {
+  if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
+    return {
+      failed: true,
+      reason: "Expected value to be a promise.",
+      received: getPresentationForValue(fn),
+      expected: "Promise",
+    };
+  }
+
+  try {
+    await fn;
+    return {
+      failed: true,
+      reason: "Expected promise to reject, but it resolved.",
+    };
+  } catch (e) {
+    const match = matchValues(e, shouldBeThrown);
+
+    if (!match.isEqual) {
+      const d = diff(e, shouldBeThrown, "match");
+      return {
+        failed: true,
+        reason: "Expected promise to reject a certain value.",
+        received: getPresentationForValue(match.received),
+        expected: getPresentationForValue(match.expected),
+        diff: d.stringify(),
       };
     }
 
