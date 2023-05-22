@@ -1,4 +1,4 @@
-import type { It } from "../../../user-land/test-collector";
+import type { Test } from "../../../user-land/test-collector";
 import { Global } from "../../globals";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../../utils/config";
@@ -21,7 +21,7 @@ export interface UnitProgressInitParams {
   error?: ProgressErrorReport;
   timedOut?: boolean;
   skipped?: boolean;
-  unit?: It;
+  unit?: Test;
 }
 
 export type UnitErrorReport = ProgressErrorReportParsed & {
@@ -48,7 +48,7 @@ export class UnitProgress {
   error?: ProgressErrorReport;
   timedOut?: boolean;
   skipped?: boolean;
-  unit?: It;
+  unit?: Test;
 
   constructor(
     private parent: SuiteProgress,

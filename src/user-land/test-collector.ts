@@ -1,4 +1,4 @@
-export type It = {
+export type Test = {
   name: string;
   line: number;
   column: number;
@@ -12,7 +12,7 @@ export type TestHook = {
   column: number;
 };
 
-export type Test = {
+export type Describe = {
   name: string;
   line: number;
   column: number;
@@ -20,12 +20,12 @@ export type Test = {
   beforeEach: Array<TestHook>;
   afterEach: Array<TestHook>;
   afterAll: Array<TestHook>;
-  subTests: Test[];
-  its: Array<It>;
+  children: Describe[];
+  tests: Array<Test>;
 };
 
 export class TestCollector {
-  private static current: Test;
+  private static current: Describe;
 
   static addBeforeAll(hook: TestHook) {
     TestCollector.current.beforeAll.push(hook);
@@ -43,11 +43,11 @@ export class TestCollector {
     TestCollector.current.afterAll.push(hook);
   }
 
-  static addIt(it: It) {
-    TestCollector.current.its.push(it);
+  static addIt(test: Test) {
+    TestCollector.current.tests.push(test);
   }
 
-  static collectSubTest(
+  static collectDescribes(
     name: string,
     line: number,
     column: number,
@@ -63,14 +63,18 @@ export class TestCollector {
       afterEach: [],
       beforeAll: [],
       beforeEach: [],
-      its: [],
-      subTests: [],
+      tests: [],
+      children: [],
     });
 
-    fn();
+    const r = fn();
+
+    if (r != null && (r as any) instanceof Promise) {
+      throw new Error("`describe` cannot be asynchronous");
+    }
 
     if (parentTest) {
-      parentTest.subTests.push(TestCollector.current);
+      parentTest.children.push(TestCollector.current);
       TestCollector.current = parentTest;
     }
 
