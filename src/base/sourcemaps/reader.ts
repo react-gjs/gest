@@ -1,4 +1,4 @@
-import { _readFile } from "../utils/filesystem";
+import Fs from "fs-gjs";
 import path from "../utils/path";
 import type { Segment } from "./vlq";
 import { Base64VLQ } from "./vlq";
@@ -29,7 +29,7 @@ type MapState = [
 export class SourceMapReader {
   static async newFromMapFile(mapFilepath: string) {
     try {
-      const fileContent = await _readFile(mapFilepath);
+      const fileContent = await Fs.readTextFile(mapFilepath);
       const map = JSON.parse(fileContent);
       return new SourceMapReader(map, mapFilepath);
     } catch (err) {

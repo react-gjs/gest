@@ -78,6 +78,9 @@ async function main() {
       declarations: true,
       exclude: /.*\.d\.ts$/,
       compileVendors: pkg._bundledDependencies,
+      esbuildOptions: {
+        external: ["gi://GLib?version=2.0", "gi://Gio?version=2.0"],
+      },
     });
 
     await generateConfigSchema();

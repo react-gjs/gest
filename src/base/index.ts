@@ -1,3 +1,4 @@
+import Fs from "fs-gjs";
 import GLib from "gi://GLib?version=2.0";
 import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
@@ -14,7 +15,7 @@ import {
   _getErrorMessage,
   _getErrorStack,
 } from "./utils/errors/error-handling";
-import { _fileExists, _mkdir, _readFile, _walkFiles } from "./utils/filesystem";
+import { walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
 import path from "./utils/path";
 import { initFakeTimers } from "./utils/timers";
@@ -76,7 +77,7 @@ async function main() {
     const _dirname = getDirname(import.meta.url);
 
     const injectsFilepath = path.resolve(_dirname, "./builder/injects.mjs");
-    const injectsFile = await _readFile(injectsFilepath);
+    const injectsFile = await Fs.readTextFile(injectsFilepath);
     const injectsLines = injectsFile.split("\n");
 
     Global.setSourceMapLineOffset(injectsLines.length);
@@ -100,7 +101,7 @@ async function main() {
     Global.setTmpDir(tmpDir);
 
     try {
-      await _mkdir(tmpDir);
+      await Fs.makeDir(tmpDir);
     } catch {
       //
     }
@@ -132,7 +133,7 @@ async function main() {
         });
       }
     } else {
-      if (!(await _fileExists(testsDir))) {
+      if (!(await Fs.fileExists(testsDir))) {
         Output.print(
           html`
             <span color="yellow">
@@ -145,7 +146,7 @@ async function main() {
         return;
       }
 
-      await _walkFiles(testsDir, (root, name) => {
+      await walkFiles(testsDir, (root, name) => {
         if (testFileMatcher.test(name)) {
           testFiles.push({
             dirname: root,
@@ -162,7 +163,7 @@ async function main() {
       return;
     }
 
-    await _walkFiles(testsDir, (root, name) => {
+    await walkFiles(testsDir, (root, name) => {
       if (setupFileMatcher.test(name)) {
         const basename = name.replace(
           /\.setup\.(m|c){0,1}(ts|js|tsx|jsx)$/,
