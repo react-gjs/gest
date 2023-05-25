@@ -1,4 +1,5 @@
 import { assertDataType, ValidationError } from "dilswer";
+import Fs from "fs-gjs";
 import { html, Output } from "termx-markup";
 import { Global } from "../globals";
 import type { TestRunnerOptions } from "../test-runner";
@@ -6,7 +7,6 @@ import { ConfigSchema } from "./config-schema";
 import type { Config } from "./config-type";
 import type { ErrorReporterParser } from "./error-reporter-parser-type";
 import type { ErrorStackParser } from "./error-stack-parser-type";
-import { _readdir, _readFile } from "./filesystem";
 import { importModule } from "./import-module";
 import path from "./path";
 
@@ -79,7 +79,7 @@ export type ConfigContext = {
 export type ConfigGetter = (context: ConfigContext) => Promise<Config> | Config;
 
 export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
-  const files = await _readdir(Global.getCwd());
+  const files = await Fs.listFilenames(Global.getCwd());
 
   const jsTypeConfig = files.find((filename) =>
     /gest\.config\.(js|mjs)$/i.test(filename)
@@ -129,7 +129,7 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
   }
 
   if (files.includes("gest.config.json")) {
-    const configText = await _readFile(
+    const configText = await Fs.readTextFile(
       path.join(Global.getCwd(), "gest.config.json")
     );
     const config = JSON.parse(configText);

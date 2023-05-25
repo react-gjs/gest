@@ -47,7 +47,8 @@
   },
   "_bundledDependencies": [
     "dilswer",
-    "termx-markup"
+    "termx-markup",
+    "fs-gjs"
   ],
   "devDependencies": {
     "@ncpa0cpl/nodepack": "^2.1.2",
@@ -60,6 +61,7 @@
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "fs-gjs": "^1.0.0",
     "git-hook-tasks": "ncpa0cpl/git-hook-tasks",
     "gjs-esm-types": "^0.0.4",
     "husky": "^8.0.3",

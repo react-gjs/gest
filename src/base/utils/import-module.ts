@@ -1,6 +1,6 @@
 import { OptionalField, Type, assertDataType } from "dilswer";
+import Fs from "fs-gjs";
 import { Global } from "../globals";
-import { _readFile, _readdir } from "./filesystem";
 import { join } from "./path";
 
 const PackageJsonSchema = Type.RecordOf({
@@ -33,13 +33,13 @@ export const importModule = async <T>(module: string): Promise<T> => {
     scope ? join(scope, packageName) : packageName
   );
 
-  const files = await _readdir(packageDir);
+  const hasPackageJson = await Fs.fileExists(join(packageDir, "package.json"));
 
-  if (!files.includes("package.json")) {
+  if (!hasPackageJson) {
     throw new Error(`Cannot locate module [${module}]`);
   }
 
-  const packageJson: Record<string, any> = await _readFile(
+  const packageJson: Record<string, any> = await Fs.readTextFile(
     join(packageDir, "package.json")
   ).then(JSON.parse);
 
