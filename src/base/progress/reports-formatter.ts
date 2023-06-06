@@ -1,4 +1,5 @@
 import { MarkupFormatter, html, raw } from "termx-markup";
+import { strForPresentation } from "../utils/json-to-presentation";
 import { _leftPad } from "../utils/left-pad";
 
 export type SummaryInfo = {
@@ -25,7 +26,9 @@ export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {
     return raw(
       "<span>" +
-        unitName.join(html`<pre bold color="cyan">${" > "}</pre>`) +
+        unitName
+          .map(strForPresentation)
+          .join(html`<pre bold color="cyan">${" > "}</pre>`) +
         "</span>"
     );
   }
@@ -36,7 +39,7 @@ export class ReportsFormatter {
           <br />
           <line color="magenta" bold><pad size="2">Stack:</pad></line>
           <pad size="4">
-            <pre>${stack.trim()}</pre>
+            <pre>${strForPresentation(stack.trim())}</pre>
           </pad>
         `)
       : "";
@@ -46,7 +49,7 @@ export class ReportsFormatter {
         <pad size="2"> Message: </pad>
       </line>
       <pad size="4">
-        <pre>${message}</pre>
+        <pre>${strForPresentation(message)}</pre>
       </pad>
       ${stackf}
       <br />
@@ -54,7 +57,7 @@ export class ReportsFormatter {
   }
 
   private static formatLink(link: string) {
-    return raw(html`<line color="#91e5ff">${link}</line>`);
+    return raw(html`<line color="#91e5ff">${strForPresentation(link)}</line>`);
   }
 
   private static formatReceived(received?: string) {
@@ -178,7 +181,7 @@ export class ReportsFormatter {
       return html`<span>
         ${symbol}
         <s />
-        <span bold color="yellow">${filepath}</span>
+        <span bold color="yellow">${strForPresentation(filepath)}</span>
       </span>`;
     },
     /**
@@ -191,7 +194,7 @@ export class ReportsFormatter {
       return html`<span>
         ${symbol}
         <s />
-        <span bold color="green">${filepath}</span>
+        <span bold color="green">${strForPresentation(filepath)}</span>
         <s />
         <span>(${ReportsFormatter.formatDuration(duration)})</span>
       </span>`;
@@ -206,7 +209,7 @@ export class ReportsFormatter {
       return html`<span>
         ${symbol}
         <s />
-        <span bold color="red">${filepath}</span>
+        <span bold color="red">${strForPresentation(filepath)}</span>
       </span>`;
     },
     summary(info: SummaryInfo): string {
@@ -314,7 +317,7 @@ export class ReportsFormatter {
           <line bold color="red">${name}</line>
           ${ReportsFormatter.formatLink(link)}
           <pad size="4">
-            <pre>${errMessage}</pre>
+            <pre>${strForPresentation(errMessage)}</pre>
           </pad>
           ${ReportsFormatter.formatExpected(expected)}
           ${ReportsFormatter.formatReceived(received)}
@@ -322,7 +325,7 @@ export class ReportsFormatter {
             ? raw(html`
                 <br />
                 <pad size="8">
-                  <pre>${diff}</pre>
+                  <pre>${strForPresentation(diff)}</pre>
                 </pad>
               `)
             : ""}

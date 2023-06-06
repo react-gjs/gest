@@ -293,7 +293,7 @@ export abstract class CustomMatcher {
 function getPresentationForValue(v: unknown): string {
   switch (typeof v) {
     case "string":
-      return `"${v}"`;
+      return JSON.stringify(v);
     case "number":
     case "boolean":
     case "bigint":
