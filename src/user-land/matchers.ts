@@ -7,12 +7,12 @@ import {
 } from "./utils/stringify-json";
 import { deepEqual, matchValues } from "./utils/validators";
 
-export interface ExpectMatchers {
+export interface ExpectAsserts {
   /**
    * Negates the matcher. The test will pass if expectation
    * fails.
    */
-  not: Omit<ExpectMatchers, "not">;
+  not: Omit<ExpectAsserts, "not">;
   /**
    * Compares the tested value to the expected value using strict
    * shallow equality (equivalent to `Object.is`).
@@ -170,7 +170,7 @@ export interface ExpectMatchers {
   toHaveRejectedWithLast(expected: any): void;
 }
 
-export type MatcherResult =
+export type AssertResult =
   | {
       failed: false;
     }
@@ -182,41 +182,37 @@ export type MatcherResult =
       diff?: string;
     };
 
-export type Matcher = (
+export type Assert = (
   testedValue: any,
   matcherArgs: any[]
-) => MatcherResult | Promise<MatcherResult>;
+) => AssertResult | Promise<AssertResult>;
 
 export type CalledFrom = {
   line: number;
   column: number;
 };
 
-export type MatcherResultHandlers = {
-  sync: (
-    result: MatcherResult,
-    negate: boolean,
-    celledFrom: CalledFrom
-  ) => void;
+export type AssertResultHandlers = {
+  sync: (result: AssertResult, negate: boolean, celledFrom: CalledFrom) => void;
   async: (
-    result: Promise<MatcherResult>,
+    result: Promise<AssertResult>,
     negate: boolean,
     celledFrom: CalledFrom
   ) => Promise<void>;
 };
 
-export class Matchers {
-  private static matchers = new Map<string, Matcher>();
+export class Asserts {
+  private static asserts = new Map<string, Assert>();
 
-  static add(name: string, matcher: Matcher) {
-    this.matchers.set(name, matcher);
+  static add(name: string, assert: Assert) {
+    this.asserts.set(name, assert);
   }
 
-  static get(name: string): Matcher {
-    const m = this.matchers.get(name);
+  static get(name: string): Assert {
+    const m = this.asserts.get(name);
 
     if (!m) {
-      throw new Error(`Invalid matcher: '${name}'`);
+      throw new Error(`Invalid assertion: '${name}'`);
     }
 
     return m;
@@ -224,18 +220,18 @@ export class Matchers {
 
   static proxy(
     testedValue: any,
-    handleMatcherResult: MatcherResultHandlers,
+    handleAssertResult: AssertResultHandlers,
     negate = false
-  ): ExpectMatchers {
+  ): ExpectAsserts {
     return new Proxy(
       {},
       {
-        get(_, matcherName) {
-          if (matcherName === "not") {
-            return Matchers.proxy(testedValue, handleMatcherResult, true);
+        get(_, assertName) {
+          if (assertName === "not") {
+            return Asserts.proxy(testedValue, handleAssertResult, true);
           }
 
-          const matcher = Matchers.get(matcherName as string);
+          const assert = Asserts.get(assertName as string);
 
           return (...args: any[]) => {
             // Get line where this function was called
@@ -246,19 +242,19 @@ export class Matchers {
               column,
             };
 
-            const r = matcher(testedValue, args);
+            const r = assert(testedValue, args);
             if (r instanceof Promise) {
-              return handleMatcherResult.async(r, negate, calledFrom);
+              return handleAssertResult.async(r, negate, calledFrom);
             } else {
-              return handleMatcherResult.sync(r, negate, calledFrom);
+              return handleAssertResult.sync(r, negate, calledFrom);
             }
           };
         },
         has(_, p) {
-          return Matchers.matchers.has(p as string);
+          return Asserts.asserts.has(p as string);
         },
         ownKeys() {
-          return [...Matchers.matchers.keys()];
+          return [...Asserts.asserts.keys()];
         },
       }
     ) as any;
@@ -346,7 +342,7 @@ function getPresentationForArray(v: any[]): string {
   return `[${v.map((i) => getPresentationForValue(i)).join(", ")}]`;
 }
 
-Matchers.add("toBe", (testedValue, [expectedValue]) => {
+Asserts.add("toBe", (testedValue, [expectedValue]) => {
   if (testedValue !== expectedValue) {
     return {
       failed: true,
@@ -361,7 +357,7 @@ Matchers.add("toBe", (testedValue, [expectedValue]) => {
   };
 });
 
-Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
+Asserts.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
   if (typeof testedValue !== "object" || testedValue === null) {
     return {
       failed: true,
@@ -393,7 +389,7 @@ Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
   };
 });
 
-Matchers.add("toEqual", (testedValue, [expectedValue]) => {
+Asserts.add("toEqual", (testedValue, [expectedValue]) => {
   const result = deepEqual(testedValue, expectedValue);
   if (!result.isEqual) {
     return {
@@ -410,7 +406,7 @@ Matchers.add("toEqual", (testedValue, [expectedValue]) => {
   };
 });
 
-Matchers.add("toBeUndefined", (testedValue) => {
+Asserts.add("toBeUndefined", (testedValue) => {
   if (testedValue != null) {
     return {
       failed: true,
@@ -425,7 +421,7 @@ Matchers.add("toBeUndefined", (testedValue) => {
   };
 });
 
-Matchers.add("toBeDefined", (testedValue) => {
+Asserts.add("toBeDefined", (testedValue) => {
   if (testedValue == null) {
     return {
       failed: true,
@@ -440,7 +436,7 @@ Matchers.add("toBeDefined", (testedValue) => {
   };
 });
 
-Matchers.add("toBeOfType", (testedValue, [expectedType]) => {
+Asserts.add("toBeOfType", (testedValue, [expectedType]) => {
   if (typeof testedValue !== expectedType) {
     return {
       failed: true,
@@ -455,7 +451,7 @@ Matchers.add("toBeOfType", (testedValue, [expectedType]) => {
   };
 });
 
-Matchers.add("toMatchRegex", (testedValue, [regex]) => {
+Asserts.add("toMatchRegex", (testedValue, [regex]) => {
   if (typeof testedValue !== "string") {
     return {
       failed: true,
@@ -479,7 +475,7 @@ Matchers.add("toMatchRegex", (testedValue, [regex]) => {
   };
 });
 
-Matchers.add("toMatch", (testedValue, [expectedValue]) => {
+Asserts.add("toMatch", (testedValue, [expectedValue]) => {
   const result = matchValues(testedValue, expectedValue);
   if (!result.isEqual) {
     const d = diff(testedValue, expectedValue, "match");
@@ -497,7 +493,7 @@ Matchers.add("toMatch", (testedValue, [expectedValue]) => {
   };
 });
 
-Matchers.add("toContain", (testedValues, requiredValues) => {
+Asserts.add("toContain", (testedValues, requiredValues) => {
   if (!Array.isArray(testedValues)) {
     return {
       failed: true,
@@ -523,7 +519,7 @@ Matchers.add("toContain", (testedValues, requiredValues) => {
   };
 });
 
-Matchers.add("toContainEqual", (testedValues, requiredValues) => {
+Asserts.add("toContainEqual", (testedValues, requiredValues) => {
   if (!Array.isArray(testedValues)) {
     return {
       failed: true,
@@ -554,7 +550,7 @@ Matchers.add("toContainEqual", (testedValues, requiredValues) => {
   };
 });
 
-Matchers.add("toContainMatch", (testedValues, requiredValues) => {
+Asserts.add("toContainMatch", (testedValues, requiredValues) => {
   if (!Array.isArray(testedValues)) {
     return {
       failed: true,
@@ -587,7 +583,7 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
   };
 });
 
-Matchers.add("toContainOnly", (testedValues, requiredValues) => {
+Asserts.add("toContainOnly", (testedValues, requiredValues) => {
   if (!Array.isArray(testedValues)) {
     return {
       failed: true,
@@ -625,7 +621,7 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
   };
 });
 
-Matchers.add(
+Asserts.add(
   "toContainOnlyEqual",
   (testedValues: any, requiredValues: any[]) => {
     if (!Array.isArray(testedValues)) {
@@ -674,7 +670,7 @@ Matchers.add(
   }
 );
 
-Matchers.add(
+Asserts.add(
   "toContainOnlyMatch",
   (testedValues: any, requiredValues: any[]) => {
     if (!Array.isArray(testedValues)) {
@@ -723,7 +719,7 @@ Matchers.add(
   }
 );
 
-Matchers.add("toThrow", (fn, args) => {
+Asserts.add("toThrow", (fn, args) => {
   if (typeof fn !== "function") {
     return {
       failed: true,
@@ -733,7 +729,7 @@ Matchers.add("toThrow", (fn, args) => {
     };
   }
 
-  const onErr = (e: any): MatcherResult => {
+  const onErr = (e: any): AssertResult => {
     if (args.length === 0) {
       return {
         failed: false,
@@ -757,7 +753,7 @@ Matchers.add("toThrow", (fn, args) => {
     if (result != null && result instanceof Promise) {
       return result
         .then(
-          (): MatcherResult => ({
+          (): AssertResult => ({
             failed: true,
             reason: "Expected function to throw.",
           })
@@ -774,7 +770,7 @@ Matchers.add("toThrow", (fn, args) => {
   };
 });
 
-Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
+Asserts.add("toThrowMatch", (fn, [shouldBeThrown]) => {
   if (typeof fn !== "function") {
     return {
       failed: true,
@@ -784,7 +780,7 @@ Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
     };
   }
 
-  const onErr = (e: any): MatcherResult => {
+  const onErr = (e: any): AssertResult => {
     const match = matchValues(e, shouldBeThrown);
 
     if (!match.isEqual) {
@@ -807,7 +803,7 @@ Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
     if (result != null && result instanceof Promise) {
       return result
         .then(
-          (): MatcherResult => ({
+          (): AssertResult => ({
             failed: true,
             reason: "Expected function to throw.",
           })
@@ -824,7 +820,7 @@ Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
   };
 });
 
-Matchers.add("toReject", async (fn, args) => {
+Asserts.add("toReject", async (fn, args) => {
   if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
       failed: true,
@@ -861,7 +857,7 @@ Matchers.add("toReject", async (fn, args) => {
   }
 });
 
-Matchers.add("toRejectMatch", async (fn, [shouldBeThrown]) => {
+Asserts.add("toRejectMatch", async (fn, [shouldBeThrown]) => {
   if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
     return {
       failed: true,
@@ -899,7 +895,7 @@ Matchers.add("toRejectMatch", async (fn, [shouldBeThrown]) => {
 
 // Mock Matchers
 
-Matchers.add("toHaveBeenCalled", (mock, [times]) => {
+Asserts.add("toHaveBeenCalled", (mock, [times]) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -939,7 +935,7 @@ Matchers.add("toHaveBeenCalled", (mock, [times]) => {
   };
 });
 
-Matchers.add("toHaveBeenCalledWith", (mock, args: any[]) => {
+Asserts.add("toHaveBeenCalledWith", (mock, args: any[]) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -975,7 +971,7 @@ Matchers.add("toHaveBeenCalledWith", (mock, args: any[]) => {
   };
 });
 
-Matchers.add("toHaveBeenCalledWithLast", (mock, args: any[]) => {
+Asserts.add("toHaveBeenCalledWithLast", (mock, args: any[]) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -1018,7 +1014,7 @@ Matchers.add("toHaveBeenCalledWithLast", (mock, args: any[]) => {
   };
 });
 
-Matchers.add("toHaveReturnedWithLast", (mock, args) => {
+Asserts.add("toHaveReturnedWithLast", (mock, args) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -1075,7 +1071,7 @@ Matchers.add("toHaveReturnedWithLast", (mock, args) => {
   };
 });
 
-Matchers.add("toHaveThrownWithLast", (mock, args) => {
+Asserts.add("toHaveThrownWithLast", (mock, args) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -1132,7 +1128,7 @@ Matchers.add("toHaveThrownWithLast", (mock, args) => {
   };
 });
 
-Matchers.add("toHaveResolvedWithLast", (mock, args) => {
+Asserts.add("toHaveResolvedWithLast", (mock, args) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
@@ -1189,7 +1185,7 @@ Matchers.add("toHaveResolvedWithLast", (mock, args) => {
   };
 });
 
-Matchers.add("toHaveRejectedWithLast", (mock, args) => {
+Asserts.add("toHaveRejectedWithLast", (mock, args) => {
   if (!(mock instanceof FunctionMock)) {
     return {
       failed: true,
