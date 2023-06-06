@@ -1,6 +1,11 @@
 import type { FakeTimers as FT } from "../base/builder/injects";
-import type { Matcher, MatcherResultHandlers } from "./matchers";
-import { Matchers } from "./matchers";
+import type {
+  Assert,
+  AssertResultHandlers,
+  CalledFrom,
+  ExpectAsserts,
+} from "./matchers";
+import { Asserts } from "./matchers";
 import type { Describe } from "./test-collector";
 import { TestCollector } from "./test-collector";
 import type { TestContext } from "./test-context";
@@ -90,41 +95,131 @@ export const afterEach = (fn: () => void) => {
   });
 };
 
+const assertionHandlers: AssertResultHandlers = {
+  sync(result, negate, calledFrom) {
+    if (result.failed && !negate) {
+      throw new ExpectError(
+        result.reason,
+        result.expected,
+        result.received,
+        result.diff,
+        calledFrom,
+      );
+    } else if (!result.failed && negate) {
+      throw new ExpectError(
+        "Assertion was expected to fail, but it passed.",
+        undefined,
+        undefined,
+        undefined,
+        calledFrom,
+      );
+    }
+  },
+  async async(result, negate, calledFrom) {
+    const awaitedResult = await result;
+    return this.sync(awaitedResult, negate, calledFrom);
+  },
+};
+
 export const expect = (value: any) => {
-  const handlers: MatcherResultHandlers = {
-    sync(result, negate, calledFrom) {
-      if (result.failed && !negate) {
-        throw new ExpectError(
-          result.reason,
-          result.expected,
-          result.received,
-          result.diff,
-          calledFrom,
-        );
-      } else if (!result.failed && negate) {
-        throw new ExpectError(
-          "Matcher was expected to fail, but it passed.",
-          undefined,
-          undefined,
-          undefined,
-          calledFrom,
-        );
+  return Asserts.proxy(value, assertionHandlers);
+};
+
+type ExpectFactory<
+  A extends any[],
+  K extends Exclude<keyof ExpectAsserts, "not"> = "toBe",
+> = {
+  assert(getArgs: A, ...expectedValue: any[]): AssertFn<A, K>;
+  assertMany(
+    ...scenarios: [A, Parameters<ExpectAsserts[K]>][]
+  ): AssertAllFn<A, K>;
+};
+
+type AssertFn<
+  A extends any[],
+  K extends Exclude<keyof ExpectAsserts, "not">,
+> = ReturnType<ExpectAsserts[K]> extends Promise<any>
+  ? Promise<ExpectFactory<A, K>>
+  : ExpectFactory<A, K>;
+
+type AssertAllFn<
+  A extends any[],
+  K extends Exclude<keyof ExpectAsserts, "not">,
+> = ReturnType<ExpectAsserts[K]> extends Promise<any>
+  ? Promise<void>
+  : void;
+
+export const expectFactory = <
+  A extends any[],
+  K extends Exclude<keyof ExpectAsserts, "not"> = "toBe",
+>(
+  getTestedValue: (...args: A) => any,
+  assertion: K = "toEqual" as any,
+  negate = false,
+): ExpectFactory<A, K> => {
+  const calledFromSym = Symbol("calledFrom");
+
+  return {
+    assert(...args): any {
+      const [getArgs, ...expectedValue] = args;
+      const lastArg = args[args.length - 1];
+
+      let calledFrom: CalledFrom | undefined;
+
+      if (
+        typeof lastArg === "object" &&
+        null !== lastArg &&
+        calledFromSym in lastArg
+      ) {
+        expectedValue.pop();
+        calledFrom = lastArg as CalledFrom;
+      } else {
+        // Get line where this function was called
+        calledFrom = _getLineFromError(new Error());
+      }
+
+      const testedValue = getTestedValue(...getArgs);
+      const assert = Asserts.get(assertion);
+
+      const r = assert(testedValue, expectedValue);
+
+      if (r instanceof Promise) {
+        return assertionHandlers
+          .async(r, negate, calledFrom)
+          .then(() => this);
+      } else {
+        assertionHandlers.sync(r, negate, calledFrom);
+        return this;
       }
     },
-    async async(result, negate, calledFrom) {
-      const awaitedResult = await result;
-      return this.sync(awaitedResult, negate, calledFrom);
+    assertMany(...scenarios): any {
+      // Get line where this function was called
+      const { line, column } = _getLineFromError(new Error());
+
+      const calledFrom = {
+        [calledFromSym]: true,
+        line,
+        column,
+      };
+
+      const results = scenarios.map(([getArgs, expectedValue]) =>
+        this.assert(getArgs, ...expectedValue, calledFrom),
+      );
+
+      const hasPromise = results.some((r) => r instanceof Promise);
+
+      if (hasPromise) {
+        return Promise.all(results).then(() => {});
+      }
     },
   };
-
-  return Matchers.proxy(value, handlers);
 };
 
 export const defineMatcher = (
   matcherName: string,
-  matcher: Matcher,
+  matcher: Assert,
 ) => {
-  Matchers.add(matcherName, matcher);
+  Asserts.add(matcherName, matcher);
 };
 
 // Fake Timers
@@ -165,4 +260,4 @@ export const Mock = {
 // Default matchers
 
 export { CustomMatcher as CustomMatch, match } from "./matchers";
-export type { ExpectMatchers } from "./matchers";
+export type { ExpectAsserts as ExpectMatchers } from "./matchers";
