@@ -1,6 +1,9 @@
 import { html, Output, raw } from "termx-markup";
 import { findLastIndex } from "../find-last-index";
-import { jsonToPresentation } from "../json-to-presentation";
+import {
+  jsonToPresentation,
+  strForPresentation,
+} from "../json-to-presentation";
 import type { Log } from "./console-interceptor";
 
 const DEFAULT_COUNTER = Symbol("DEFAULT_COUNTER");
@@ -17,14 +20,14 @@ class Printer {
 
     for (const d of data) {
       if (typeof d === "string") {
-        p.push(html`<pre>${d}</pre>`);
+        p.push(html`<pre>${strForPresentation(d)}</pre>`);
       } else if (typeof d === "object" && d != null && d instanceof Error) {
         p.push(
           html`
-            <pre>${d.message}</pre>
+            <pre>${strForPresentation(d.message)}</pre>
             <br />
             <pad size="2">
-              <pre>${d.stack}</pre>
+              <pre>${strForPresentation(d.stack ?? "")}</pre>
             </pad>
             <br />
           `

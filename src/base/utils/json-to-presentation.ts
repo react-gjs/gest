@@ -1,3 +1,6 @@
+export const strForPresentation = (value: string) =>
+  JSON.stringify(value).slice(1, -1);
+
 export const jsonToPresentation = (
   value: any,
   maxDepth: number,
@@ -12,7 +15,7 @@ export const jsonToPresentation = (
 
   switch (typeof value) {
     case "string":
-      return `"${value}"`;
+      return strForPresentation(value);
     case "number":
     case "boolean":
     case "undefined":
