@@ -73,7 +73,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "esbuild": "^0.17.17"
+    "esbuild": "^0.18.1"
   },
   "resolutions": {
     "dilswer": "2.1.1",
