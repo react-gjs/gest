@@ -31,13 +31,23 @@ class Log {
 export type { Log };
 
 export class ConsoleInterceptor implements Console {
-  static init() {
+  private static init() {
     const interceptor = new ConsoleInterceptor();
 
     // @ts-ignore
     globalThis.__gest_console = interceptor;
 
     return interceptor;
+  }
+
+  static getInterceptor() {
+    // @ts-ignore
+    if (!globalThis.__gest_console) {
+      return this.init();
+    }
+
+    // @ts-ignore
+    return globalThis.__gest_console as ConsoleInterceptor;
   }
 
   static printCollectedLogs(ci: ConsoleInterceptor) {

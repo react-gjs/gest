@@ -1,5 +1,5 @@
 import Fs from "fs-gjs";
-import path from "../utils/path";
+import path from "path-gjsify";
 import type { Segment } from "./vlq";
 import { Base64VLQ } from "./vlq";
 
