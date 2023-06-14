@@ -7,7 +7,7 @@ export function _getArgValue(args: string[], ...argNames: string[]) {
 
     const argValue = args[argIndex + 1];
     if (argValue === undefined) {
-      continue;
+      return "";
     }
 
     return argValue;

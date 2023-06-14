@@ -1,4 +1,4 @@
-import type { TestHook } from "../../../user-land/test-collector";
+import path from "path-gjsify";
 import { Global } from "../../globals";
 import { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../../utils/config";
@@ -7,7 +7,6 @@ import {
   _getErrorMessage,
   _getErrorStack,
 } from "../../utils/errors/error-handling";
-import path from "../../utils/path";
 import type {
   ProgressErrorReport,
   ProgressErrorReportParsed,
@@ -57,7 +56,10 @@ export class SuiteProgress {
     Object.assign(this, params);
   }
 
-  private getHookLink(sourceMap: SourceMapReader, hook: TestHook) {
+  private getHookLink(
+    sourceMap: SourceMapReader,
+    hook: { line: number; column: number }
+  ) {
     const hookLocation = sourceMap.getOriginalPosition(
       hook.line - Global.getSourceMapLineOffset(),
       hook.column

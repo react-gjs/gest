@@ -1,7 +1,7 @@
 import { OptionalField, Type, assertDataType } from "dilswer";
 import Fs from "fs-gjs";
+import path from "path-gjsify";
 import { Global } from "../globals";
-import { join } from "./path";
 
 const PackageJsonSchema = Type.RecordOf({
   exports: OptionalField(
@@ -25,26 +25,28 @@ export const importModule = async <T>(module: string): Promise<T> => {
   const moduleParts = module.split("/");
   const scope = module.startsWith("@") ? moduleParts[0] : null;
   const packageName = (scope ? moduleParts[1] : moduleParts[0])!;
-  const subPath = join(...moduleParts.slice(scope ? 2 : 1));
+  const subPath = path.join(...moduleParts.slice(scope ? 2 : 1));
 
-  const packageDir = join(
+  const packageDir = path.join(
     Global.getCwd(),
     "node_modules",
-    scope ? join(scope, packageName) : packageName
+    scope ? path.join(scope, packageName) : packageName
   );
 
-  const hasPackageJson = await Fs.fileExists(join(packageDir, "package.json"));
+  const hasPackageJson = await Fs.fileExists(
+    path.join(packageDir, "package.json")
+  );
 
   if (!hasPackageJson) {
     throw new Error(`Cannot locate module [${module}]`);
   }
 
   const packageJson: Record<string, any> = await Fs.readTextFile(
-    join(packageDir, "package.json")
+    path.join(packageDir, "package.json")
   ).then(JSON.parse);
 
   const getAbsPathForPackage = (relPath: string) => {
-    return "file://" + join(packageDir, relPath);
+    return "file://" + path.join(packageDir, relPath);
   };
 
   assertDataType(PackageJsonSchema, packageJson);

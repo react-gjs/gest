@@ -102,6 +102,11 @@ export class FakeTimerRegistry {
 }
 
 export const initFakeTimers = (console: ConsoleInterceptor) => {
+  // @ts-expect-error
+  if (typeof globalThis.__gest_getSetTimeout !== "undefined") {
+    return;
+  }
+
   const originalSetTimeout = setTimeout;
   const originalSetInterval = setInterval;
 
