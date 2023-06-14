@@ -78,9 +78,19 @@ async function main() {
       declarations: true,
       exclude: /.*\.d\.ts$/,
       compileVendors: pkg._bundledDependencies,
-      esbuildOptions: {
-        external: ["gi://GLib?version=2.0", "gi://Gio?version=2.0"],
-      },
+      preset: { gjs: true },
+    });
+
+    await build({
+      target: "ES2022",
+      srcDir: p("./node_modules/gjs-multiprocess/dist/esm/client"),
+      entrypoint: "client.mjs",
+      outDir: p("dist/esm/_vendors"),
+      tsConfig: p("tsconfig.json"),
+      formats: ["esm"],
+      bundle: true,
+      exclude: /.*\.d\.ts$/,
+      preset: { gjs: true },
     });
 
     await generateConfigSchema();

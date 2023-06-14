@@ -9,7 +9,7 @@ class Timer {
     protected id: number,
     protected callback: (...args: any[]) => any,
     protected targetTime: number,
-    protected defaultArgs: any[]
+    protected defaultArgs: any[],
   ) {}
 
   changeTargetTime(targetTime: number) {
@@ -43,7 +43,7 @@ class Interval extends Timer {
     id: number,
     callback: (...args: any[]) => any,
     protected ms: number,
-    defaultArgs: any[]
+    defaultArgs: any[],
   ) {
     super(register, id, callback, register.now() + ms, defaultArgs);
   }
@@ -91,12 +91,16 @@ export class FakeTimerRegistry {
     return this.nextId++;
   }
 
-  /** Sorts timer by the target time in descending order. */
+  /**
+   * Sorts timer by the target time in descending order.
+   */
   private sortTimers() {
     this.timers.sort(compareTimers);
   }
 
-  /** Sorts timer by the target time in descending order. */
+  /**
+   * Sorts timer by the target time in descending order.
+   */
   private sortIntervals() {
     this.intervals.sort(compareTimers);
   }
@@ -166,7 +170,7 @@ export class FakeTimerRegistry {
   public addTimeout(
     callback: (...args: any[]) => any,
     ms: number | undefined,
-    args: any[]
+    args: any[],
   ) {
     const currentMillisecond = this.now();
     const targetTime = currentMillisecond + (ms ?? 0);
@@ -176,7 +180,7 @@ export class FakeTimerRegistry {
       this.generateID(),
       callback,
       targetTime,
-      args
+      args,
     );
     this.timers.push(timer);
     this.sortTimers();
@@ -190,14 +194,14 @@ export class FakeTimerRegistry {
   public addInterval(
     callback: (...args: any[]) => any,
     ms: number | undefined,
-    args: any[]
+    args: any[],
   ) {
     const interval = new Interval(
       this,
       this.generateID(),
       callback,
       ms ?? 0,
-      args
+      args,
     );
     this.intervals.push(interval);
     this.sortIntervals();
@@ -209,7 +213,9 @@ export class FakeTimerRegistry {
   }
 
   public runAll() {
-    const toRun = this.timers.concat(this.intervals).sort(compareTimers);
+    const toRun = this.timers
+      .concat(this.intervals)
+      .sort(compareTimers);
     this.timers = [];
 
     for (const timer of toRun) {
@@ -250,8 +256,13 @@ export class FakeTimerRegistry {
 
 export const initFakeTimers = (
   console: ConsoleInterceptor,
-  setGlobalValues = true
+  setGlobalValues = true,
 ) => {
+  // @ts-expect-error
+  if (typeof globalThis.__gest_getSetTimeout !== "undefined") {
+    return;
+  }
+
   const originalSetTimeout = globalThis.setTimeout;
   const originalClearTimeout = globalThis.clearTimeout;
   const originalSetInterval = globalThis.setInterval;
@@ -274,7 +285,7 @@ export const initFakeTimers = (
             "Exception raised in a timeout callback:",
             err,
             "\nThe above error was raised in this 'setTimeout':",
-            error.stack && "\n  " + padLeftLines(error.stack, " ", 2)
+            error.stack && "\n  " + padLeftLines(error.stack, " ", 2),
           );
         };
 
@@ -316,7 +327,7 @@ export const initFakeTimers = (
             "Exception raised in a interval callback:",
             err,
             "\nThe above error was raised in this 'setInterval':",
-            error.stack && "\n  " + padLeftLines(error.stack, " ", 2)
+            error.stack && "\n  " + padLeftLines(error.stack, " ", 2),
           );
         };
 
@@ -366,9 +377,13 @@ export const initFakeTimers = (
       value: originalSetInterval,
     });
 
-    Object.defineProperty(globalThis, "__gest_originalClearInterval", {
-      value: originalClearInterval,
-    });
+    Object.defineProperty(
+      globalThis,
+      "__gest_originalClearInterval",
+      {
+        value: originalClearInterval,
+      },
+    );
   }
 
   return setupFakeTimers;
@@ -385,5 +400,7 @@ declare global {
   const __gest_originalSetTimeout: typeof setTimeout | undefined;
   const __gest_originalClearTimeout: typeof clearTimeout | undefined;
   const __gest_originalSetInterval: typeof setInterval | undefined;
-  const __gest_originalClearInterval: typeof clearInterval | undefined;
+  const __gest_originalClearInterval:
+    | typeof clearInterval
+    | undefined;
 }

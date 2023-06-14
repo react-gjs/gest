@@ -20,18 +20,20 @@ class Printer {
 
     for (const d of data) {
       if (typeof d === "string") {
-        p.push(html`<pre>${strForPresentation(d)}</pre>`);
-      } else if (typeof d === "object" && d != null && d instanceof Error) {
-        p.push(
-          html`
-            <pre>${strForPresentation(d.message)}</pre>
-            <br />
-            <pad size="2">
-              <pre>${strForPresentation(d.stack ?? "")}</pre>
-            </pad>
-            <br />
-          `
-        );
+        p.push(html`<pre>${d}</pre>`);
+      } else if (
+        typeof d === "object" &&
+        d != null &&
+        d instanceof Error
+      ) {
+        p.push(html`
+          <pre>${strForPresentation(d.message)}</pre>
+          <br />
+          <pad size="2">
+            <pre>${strForPresentation(d.stack ?? "")}</pre>
+          </pad>
+          <br />
+        `);
       } else {
         p.push(html`<pre>${jsonToPresentation(d, 5)}</pre>`);
       }
@@ -42,7 +44,7 @@ class Printer {
         c.endsWith("\n</pre>") || elem.startsWith("<pre>\n")
           ? c + elem
           : c + "<s />" + elem,
-      ""
+      "",
     );
 
     return raw("<span>" + content + "</span>");
@@ -307,8 +309,10 @@ export function printInterceptedLogs(logs: Log[]) {
 
   const lastClear = findLastIndex(logs, (l) => l.type === "clear");
 
-  const clearedLogs = lastClear !== -1 ? logs.slice(0, lastClear) : [];
-  const printedLogs = lastClear !== -1 ? logs.slice(lastClear + 1) : logs;
+  const clearedLogs =
+    lastClear !== -1 ? logs.slice(0, lastClear) : [];
+  const printedLogs =
+    lastClear !== -1 ? logs.slice(lastClear + 1) : logs;
 
   for (const log of clearedLogs) {
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check

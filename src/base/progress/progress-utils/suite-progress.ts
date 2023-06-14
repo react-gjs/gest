@@ -1,4 +1,4 @@
-import type { TestHook } from "../../../user-land/test-collector";
+import path from "path-gjsify";
 import { Global } from "../../globals";
 import { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../../utils/config";
@@ -6,14 +6,18 @@ import { Emitter } from "../../utils/emitter";
 import {
   _getErrorMessage,
   _getErrorStack,
+  _getErrorType,
 } from "../../utils/errors/error-handling";
-import path from "../../utils/path";
 import type {
   ProgressErrorReport,
   ProgressErrorReportParsed,
 } from "./progress-parsed-error";
-import type { UnitFinishState, UnitProgressInitParams } from "./unit-progress";
+import type {
+  UnitFinishState,
+  UnitProgressInitParams,
+} from "./unit-progress";
 import { UnitProgress } from "./unit-progress";
+import { TestHook } from "../../../user-land/test-collector";
 
 export interface SuiteProgressInitParams {
   filepath: string;
@@ -36,7 +40,10 @@ export interface SuiteFinishState {
 }
 
 export type SuiteProgressEvents = {
-  finished: (suite: SuiteFinishState, unitResults: UnitFinishState[]) => void;
+  finished: (
+    suite: SuiteFinishState,
+    unitResults: UnitFinishState[],
+  ) => void;
 };
 
 export class SuiteProgress {
@@ -54,12 +61,21 @@ export class SuiteProgress {
     skipped: false,
   };
 
-  constructor(params: SuiteProgressInitParams, private config: ConfigFacade) {
+  constructor(
+    params: SuiteProgressInitParams,
+    private config: ConfigFacade,
+  ) {
     Object.assign(this, params);
   }
 
-  private getHookLink(sourceMap: SourceMapReader, hook: TestHook) {
-    const hookLocation = sourceMap.getOriginalPosition(hook.line, hook.column);
+  private getHookLink(
+    sourceMap: SourceMapReader,
+    hook: Omit<TestHook, "callback">,
+  ) {
+    const hookLocation = sourceMap.getOriginalPosition(
+      hook.line,
+      hook.column,
+    );
 
     if (hookLocation == null) return undefined;
 
@@ -71,12 +87,18 @@ export class SuiteProgress {
   private parseErrors(sourceMap?: SourceMapReader) {
     const result: ProgressErrorReportParsed[] = [];
     for (const err of this.state.errors) {
+      const errType = _getErrorType(err.thrown);
       const message = _getErrorMessage(err.thrown);
-      const stack = _getErrorStack(err.thrown, sourceMap, this.config);
+      const stack = _getErrorStack(
+        err.thrown,
+        sourceMap,
+        this.config,
+      );
 
       result.push({
         origin: err.origin,
         thrown: err.thrown,
+        errorType: errType,
         message,
         stack,
         link:
@@ -98,7 +120,11 @@ export class SuiteProgress {
   }
 
   addUnitUpdate(progressUpdate: UnitProgressInitParams) {
-    const update = new UnitProgress(this, progressUpdate, this.config);
+    const update = new UnitProgress(
+      this,
+      progressUpdate,
+      this.config,
+    );
     this.unitUpdates.push(update);
   }
 
@@ -123,7 +149,7 @@ export class SuiteProgress {
         skipped: this.state.skipped,
         duration: duration ?? 0,
       },
-      this.unitUpdates.map((u) => u.getFinishState(sourceMap))
+      this.unitUpdates.map((u) => u.getFinishState(sourceMap)),
     );
   }
 }

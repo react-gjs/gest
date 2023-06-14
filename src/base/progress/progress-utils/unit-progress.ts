@@ -4,6 +4,7 @@ import type { ConfigFacade } from "../../utils/config";
 import {
   _getErrorMessage,
   _getErrorStack,
+  _getErrorType,
   _isDeferedError,
   _isExpectError,
   _isGestTestError,
@@ -17,7 +18,9 @@ import type { SuiteProgress } from "./suite-progress";
 export interface UnitProgressInitParams {
   suite: symbol;
   unitName: string[];
-  /** In microseconds */
+  /**
+   * In microseconds
+   */
   duration?: number;
   error?: ProgressErrorReport;
   timedOut?: boolean;
@@ -27,9 +30,8 @@ export interface UnitProgressInitParams {
 
 export type UnitErrorReport = ProgressErrorReportParsed & {
   /**
-   * Link to the `gest` statement within which the error was
-   * thrown. This most most of the time will be an `expect`
-   * statement.
+   * Link to the `gest` statement within which the error was thrown.
+   * This most most of the time will be an `expect` statement.
    */
   link?: string;
   isExpectError: boolean;
@@ -38,7 +40,9 @@ export type UnitErrorReport = ProgressErrorReportParsed & {
 export interface UnitFinishState {
   suite: symbol;
   unitName: string[];
-  /** In microseconds */
+  /**
+   * In microseconds
+   */
   duration?: number;
   errors?: UnitErrorReport[];
   timedOut?: boolean;
@@ -49,7 +53,9 @@ export interface UnitFinishState {
 export class UnitProgress {
   suite!: symbol;
   unitName!: string[];
-  /** In microseconds */
+  /**
+   * In microseconds
+   */
   duration?: number;
   error?: ProgressErrorReport;
   timedOut?: boolean;
@@ -59,17 +65,19 @@ export class UnitProgress {
   constructor(
     private parent: SuiteProgress,
     update: UnitProgressInitParams,
-    private config: ConfigFacade
+    private config: ConfigFacade,
   ) {
     Object.assign(this, update);
   }
 
-  private createUnitLink(sourceMap?: SourceMapReader): string | undefined {
+  private createUnitLink(
+    sourceMap?: SourceMapReader,
+  ): string | undefined {
     if (this.unit == null || !sourceMap) return undefined;
 
     const unitLocation = sourceMap.getOriginalPosition(
       this.unit.line,
-      this.unit.column
+      this.unit.column,
     );
 
     const suiteFilepath = this.parent.getSuiteFilepath();
@@ -81,11 +89,11 @@ export class UnitProgress {
 
   private linkFrom(
     sourceMap: SourceMapReader,
-    location: { file: string; line: number; column: number }
+    location: { file: string; line: number; column: number },
   ) {
     const expectLocation = sourceMap.getOriginalPosition(
       location.line,
-      location.column
+      location.column,
     );
 
     if (!expectLocation) return location.file;
@@ -96,7 +104,7 @@ export class UnitProgress {
   private createLink(
     sourceMap: SourceMapReader,
     error: unknown,
-    fallbackLocation?: { line: number; column: number }
+    fallbackLocation?: { line: number; column: number },
   ): string | undefined {
     if (error == null) return undefined;
 
@@ -131,14 +139,16 @@ export class UnitProgress {
     thrown: unknown,
     origin: ProgressErrorReport["origin"],
     sourceMap?: SourceMapReader,
-    fallbackLocation?: { line: number; column: number }
+    fallbackLocation?: { line: number; column: number },
   ): UnitErrorReport {
+    const errType = _getErrorType(thrown);
     const message = _getErrorMessage(thrown);
     const stack = _getErrorStack(thrown, sourceMap, this.config);
 
     return {
       thrown,
       origin,
+      errorType: errType,
       message: message,
       stack: stack,
       link: sourceMap
@@ -149,17 +159,26 @@ export class UnitProgress {
   }
 
   private parseErrors(
-    sourceMap?: SourceMapReader
+    sourceMap?: SourceMapReader,
   ): UnitErrorReport[] | undefined {
     if (this.error) {
       if (_isDeferedError(this.error.thrown)) {
         return this.error.thrown.errors.map((err) =>
-          this.parseSingleError(err.thrown, this.error!.origin, sourceMap, err)
+          this.parseSingleError(
+            err.thrown,
+            this.error!.origin,
+            sourceMap,
+            err,
+          ),
         );
       }
 
       return [
-        this.parseSingleError(this.error.thrown, this.error.origin, sourceMap),
+        this.parseSingleError(
+          this.error.thrown,
+          this.error.origin,
+          sourceMap,
+        ),
       ];
     }
 

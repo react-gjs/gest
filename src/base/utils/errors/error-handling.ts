@@ -3,6 +3,7 @@ import type {
   ExpectError,
   GestTestError,
 } from "../../../user-land/utils/errors";
+import { isSerializedError } from "../../runner/subprocess/serialize-error";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../config";
 import type { ParsedStack } from "../error-stack-parser-type";
@@ -20,10 +21,27 @@ export function _isDeferedError(e: any): e is DeferedTaskError {
   return e && typeof e === "object" && e.name === "DeferedTaskError";
 }
 
+export function _getErrorType(e: unknown): string | undefined {
+  if (typeof e === "string") return undefined;
+  if (typeof e === "object" && e != null) {
+    if (isSerializedError(e)) {
+      return e.__internal_serialized_error_instance;
+    } else if (e instanceof Error) {
+      return e.name || e.constructor.name;
+    }
+  }
+
+  return undefined;
+}
+
 export function _getErrorMessage(e: unknown) {
   if (typeof e === "string") return e;
-  if (typeof e === "object" && !!e && e instanceof Error)
-    return `${e.name || "Error"}: ${e.message}`;
+  if (typeof e === "object" && e != null) {
+    if (e instanceof Error || isSerializedError(e)) {
+      return `${e.name || "Error"}: ${e.message}`;
+    }
+  }
+
   return String(e);
 }
 
@@ -33,7 +51,9 @@ function stackToString(stack: ParsedStack) {
   for (const stackItem of stack) {
     if (stackItem.filepath) {
       const link = stackItem.line
-        ? `${stackItem.filepath}:${stackItem.line}:${stackItem.column ?? 0}`
+        ? `${stackItem.filepath}:${stackItem.line}:${
+            stackItem.column ?? 0
+          }`
         : stackItem.filepath;
 
       if (stackItem.symbolName) {
@@ -52,41 +72,43 @@ function stackToString(stack: ParsedStack) {
 export function _getErrorStack(
   e: unknown,
   sourceMap: SourceMapReader | undefined,
-  config?: ConfigFacade
+  config?: ConfigFacade,
 ) {
   const parseStack = config?.errorStackParser ?? parseErrorStack;
 
-  if (typeof e === "object" && !!e && e instanceof Error) {
-    const stack = parseStack(e);
-    if (stack.length > 0) {
-      if (!sourceMap) return stackToString(stack);
+  if (typeof e === "object" && e != null) {
+    if (e instanceof Error || isSerializedError(e)) {
+      const stack = parseStack(e);
+      if (stack.length > 0) {
+        if (!sourceMap) return stackToString(stack);
 
-      for (const stackItem of stack) {
-        if (!stackItem.filepath?.includes("bundled.js")) {
-          continue;
-        }
-
-        if (stackItem.line != null && stackItem.column != null) {
-          const mapped = sourceMap.getOriginalPosition(
-            Number(stackItem.line),
-            Number(stackItem.column)
-          );
-
-          if (mapped && mapped.file) {
-            stackItem.filepath = mapped.file;
-            stackItem.line = mapped.line;
-            stackItem.column = mapped.column;
-
-            if (mapped.symbolName) {
-              stackItem.symbolName = mapped.symbolName;
-            }
-
+        for (const stackItem of stack) {
+          if (!stackItem.filepath?.includes("bundled.js")) {
             continue;
+          }
+
+          if (stackItem.line != null && stackItem.column != null) {
+            const mapped = sourceMap.getOriginalPosition(
+              Number(stackItem.line),
+              Number(stackItem.column),
+            );
+
+            if (mapped && mapped.file) {
+              stackItem.filepath = mapped.file;
+              stackItem.line = mapped.line;
+              stackItem.column = mapped.column;
+
+              if (mapped.symbolName) {
+                stackItem.symbolName = mapped.symbolName;
+              }
+
+              continue;
+            }
           }
         }
       }
+      return stackToString(stack);
     }
-    return stackToString(stack);
   }
   return "<unable to generate a stack trace>";
 }

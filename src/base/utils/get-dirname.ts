@@ -1,5 +1,5 @@
 import GLib from "gi://GLib?version=2.0";
-import path from "./path";
+import path from "path-gjsify";
 
 export const getDirname = (metaUri: string) => {
   const uri = GLib.uri_parse(metaUri, GLib.UriFlags.NONE);

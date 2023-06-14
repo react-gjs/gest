@@ -1,14 +1,14 @@
 import { assertDataType, ValidationError } from "dilswer";
 import Fs from "fs-gjs";
+import path from "path-gjsify";
 import { html, Output } from "termx-markup";
 import { Global } from "../globals";
-import type { TestRunnerOptions } from "../test-runner";
+import type { TestRunnerOptions } from "../runner/types";
 import { ConfigSchema } from "./config-schema";
 import type { Config } from "./config-type";
 import type { ErrorReporterParser } from "./error-reporter-parser-type";
 import type { ErrorStackParser } from "./error-stack-parser-type";
 import { importModule } from "./import-module";
-import path from "./path";
 
 class ConfigFacade {
   private defaults: Config = {
@@ -21,14 +21,22 @@ class ConfigFacade {
     reporters: ["default"],
   };
 
+  private overrides: Partial<Config> = {};
+
   constructor(private config: Config) {}
+
+  override<K extends keyof Config>(key: K, value: Config[K]) {
+    this.overrides[key] = value;
+  }
 
   isSet(key: keyof Config) {
     return key in this.config && this.config[key] != null;
   }
 
   get<K extends keyof Config>(key: K): Config[K] {
-    return this.config[key] ?? this.defaults[key];
+    return (
+      this.overrides[key] ?? this.config[key] ?? this.defaults[key]
+    );
   }
 
   get srcDir() {
@@ -61,6 +69,10 @@ class ConfigFacade {
 
   get introspectedLibVersion() {
     return this.get("introspectedLibVersion");
+  }
+
+  get multiprocessing() {
+    return this.get("multiprocessing")!;
   }
 
   get errorReporterParser() {
