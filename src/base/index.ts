@@ -230,9 +230,14 @@ try {
 
   Output.setDefaultPrintMethod(print);
 
-  Mainloop.start().then((exitCode) => {
-    system.exit(exitCode);
-  });
+  Mainloop.start()
+    .then((exitCode) => {
+      system.exit(exitCode);
+    })
+    .catch((e) => {
+      print(String(e));
+      system.exit(1);
+    });
 
   main();
 } catch (e) {
