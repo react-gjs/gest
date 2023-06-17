@@ -78,7 +78,7 @@ export class ProgressTracker {
     suite.addUnitUpdate(progressUpdate);
   }
 
-  finish(suite: symbol) {
+  finish(suite: symbol, duration?: number) {
     const s = this.getSuite(suite);
 
     this.outputFlushOps.push(
@@ -86,7 +86,7 @@ export class ProgressTracker {
         s.emitter.on("finished", () => {
           p.resolve();
         });
-        s.finish().catch((e) => {
+        s.finish(duration).catch((e) => {
           e.mapFile = s.map;
           p.reject(e);
         });

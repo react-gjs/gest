@@ -11,6 +11,7 @@ import { TestRunner } from "./test-runner";
 import { _getArgValue } from "./utils/args";
 import { loadConfig } from "./utils/config";
 import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
+import { currentMicrosecond } from "./utils/current-microsecond";
 import {
   _getErrorMessage,
   _getErrorStack,
@@ -37,7 +38,7 @@ let exitCode = 0;
 
 async function main() {
   try {
-    const startTime = GLib.get_monotonic_time();
+    const startTime = currentMicrosecond();
 
     const pargs = imports.system.programArgs;
 
@@ -200,8 +201,8 @@ async function main() {
 
     await progressTracker.flush();
 
-    const endTime = GLib.get_monotonic_time();
-    const totalDuration = (endTime - startTime) / 1000; // in milliseconds
+    const endTime = currentMicrosecond();
+    const totalDuration = endTime - startTime; // in microseconds
 
     if (!silenceLogs) {
       ConsoleInterceptor.printCollectedLogs(consoleInterceptor);
