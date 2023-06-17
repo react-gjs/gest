@@ -14,6 +14,13 @@ export type SummaryInfo = {
 MarkupFormatter.defineColor("customBlack", "#1b1c26");
 MarkupFormatter.defineColor("customGrey", "#3d3d3d");
 
+const time = {
+  hour: 3600000000n,
+  minute: 60000000n,
+  second: 1000000n,
+  millisecond: 1000n,
+} as const;
+
 export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {
     return raw(
@@ -80,21 +87,26 @@ export class ReportsFormatter {
     );
   }
 
-  private static formatDuration(duration: number) {
-    const hours = Math.floor(duration / 3600000);
-    const minutes = Math.floor((duration % 3600000) / 60000);
-    const seconds = Math.floor((duration % 60000) / 1000);
-    const milliseconds = Math.floor(duration % 1000);
+  private static formatDuration(_microseconds: number) {
+    const microseconds = BigInt(Math.round(_microseconds));
 
-    // ms number as a 3 digit long string
-    const ms = milliseconds.toString().slice(0, 3).padEnd(3, "0");
+    const hours = Number(microseconds / time.hour);
+    const minutes = Number((microseconds % time.hour) / time.minute);
+    const seconds = Number((microseconds % time.minute) / time.second);
+    const milliseconds = Number(
+      (microseconds % time.second) / time.millisecond
+    );
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}.${ms}s`;
+      return `${hours}h ${minutes}m ${seconds}s`;
     } else if (minutes > 0) {
-      return `${minutes}m ${seconds}.${ms}s`;
+      return `${minutes}m ${seconds}s`;
+    } else if (seconds > 0) {
+      return `${seconds}s ${milliseconds}ms`;
+    } else if (milliseconds > 0) {
+      return `${milliseconds}ms`;
     } else {
-      return `${seconds}.${ms}s`;
+      return `${microseconds}μs`;
     }
   }
 
@@ -124,13 +136,13 @@ export class ReportsFormatter {
      * @example
      *   [✓] MonitorMessages > info > unitPassed (123 microseconds)
      */
-    unitPassed(unitName: string[], duration: number | string): string {
+    unitPassed(unitName: string[], duration: number): string {
       const symbol = ReportsFormatter.symbol.Success;
       const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">
         ${symbol}<s />${name}<s />
-        <span dim>${duration} microseconds</span>
+        <span dim>${ReportsFormatter.formatDuration(duration)}</span>
       </pad>`;
     },
     /**
@@ -167,15 +179,13 @@ export class ReportsFormatter {
         ${symbol}
         <s />
         <span bold color="yellow">${filepath}</span>
-        <s />
-        <span bold color="customGrey" bg="lightYellow">SKIPPED</span>
       </span>`;
     },
     /**
      * @example
      *   [✓] __tests__/base/progress/monitor.test.ts PASSED
      */
-    suitePassed(filepath: string): string {
+    suitePassed(filepath: string, duration: number): string {
       const symbol = ReportsFormatter.symbol.Success;
 
       return html`<span>
@@ -183,7 +193,7 @@ export class ReportsFormatter {
         <s />
         <span bold color="green">${filepath}</span>
         <s />
-        <span bold color="customGrey" bg="lightGreen">PASSED</span>
+        <span>(${ReportsFormatter.formatDuration(duration)})</span>
       </span>`;
     },
     /**
@@ -197,8 +207,6 @@ export class ReportsFormatter {
         ${symbol}
         <s />
         <span bold color="red">${filepath}</span>
-        <s />
-        <span bold color="customGrey" bg="lightRed">FAILED</span>
       </span>`;
     },
     summary(info: SummaryInfo): string {
