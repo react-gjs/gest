@@ -30,6 +30,7 @@ export interface SuiteUpdateParams {
 
 export interface SuiteFinishState {
   testFilepath: string;
+  duration: number;
   errors: ProgressErrorReportParsed[];
   skipped?: boolean;
 }
@@ -112,7 +113,7 @@ export class SuiteProgress {
     }
   }
 
-  async finish() {
+  async finish(duration?: number) {
     const sourceMap = await SourceMapReader.newFromMapFile(this.map);
 
     this.state.finished = true;
@@ -123,6 +124,7 @@ export class SuiteProgress {
         errors: this.parseErrors(sourceMap),
         testFilepath: this.getSuiteFilepath(),
         skipped: this.state.skipped,
+        duration: duration ?? 0,
       },
       this.unitUpdates.map((u) => u.getFinishState(sourceMap))
     );

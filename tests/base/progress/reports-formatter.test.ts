@@ -77,7 +77,7 @@ export default describe("ReportsFormatter", () => {
       });
 
       it("suitePassed", () => {
-        const markup = ReportsFormatter.info.suitePassed("/home/owner/bar");
+        const markup = ReportsFormatter.info.suitePassed("/home/owner/bar", 31);
 
         const formatted = MarkupFormatter.format(markup);
 

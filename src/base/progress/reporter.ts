@@ -36,7 +36,9 @@ export class DefaultReporter extends BaseReporter {
     } else if (hasAnyUnitFailed) {
       this.output.print(ReportsFormatter.info.suiteFailed(filepath));
     } else {
-      this.output.print(ReportsFormatter.info.suitePassed(filepath));
+      this.output.print(
+        ReportsFormatter.info.suitePassed(filepath, suiteState.duration)
+      );
     }
   }
 
@@ -49,7 +51,7 @@ export class DefaultReporter extends BaseReporter {
       this.output.print(
         ReportsFormatter.info.unitPassed(
           unitState.unitName,
-          unitState.duration ?? "?"
+          unitState.duration ?? 0
         )
       );
     }

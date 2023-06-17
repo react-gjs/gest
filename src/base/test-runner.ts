@@ -1,4 +1,3 @@
-import GLib from "gi://GLib?version=2.0";
 import { OutputBuffer } from "termx-markup";
 import type { Describe, Test, TestHook } from "../user-land/test-collector";
 import { _buildFile } from "./builder/build-file";
@@ -6,6 +5,7 @@ import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
 import { _async } from "./utils/async";
 import type { ConfigFacade } from "./utils/config";
+import { currentMicrosecond } from "./utils/current-microsecond";
 import { _isExpectError } from "./utils/errors/error-handling";
 import { GestError } from "./utils/errors/gest-error";
 import { NoLogError } from "./utils/errors/no-log-err";
@@ -43,11 +43,6 @@ type SuiteRunnerOptions = TestRunnerOptions & {
 function _isTest(t: any): t is Describe {
   return t && typeof t === "object" && t.name && t.line !== undefined;
 }
-
-const currentMicrosecond = () => {
-  const now = GLib.DateTime.new_now_local();
-  return now.to_unix() * 1000000 + now.get_microsecond();
-};
 
 class UnitRunner {
   readonly unitName: string[];
@@ -352,11 +347,15 @@ export class TestRunner {
                 suiteID
               );
 
+              const startTime = currentMicrosecond();
+
               const passed = await suiteRunner.runSuite(test);
+
+              const endTime = currentMicrosecond();
 
               if (!passed) this.success = false;
 
-              this.tracker.finish(suiteID);
+              this.tracker.finish(suiteID, endTime - startTime);
 
               p.resolve();
             } else {
