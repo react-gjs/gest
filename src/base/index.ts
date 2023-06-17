@@ -1,9 +1,9 @@
 import Fs from "fs-gjs";
 import GLib from "gi://GLib?version=2.0";
-import Gtk from "gi://Gtk?version=3.0";
 import system from "system";
 import { html, Output } from "termx-markup";
 import { Global } from "./globals";
+import { Mainloop } from "./mainloop";
 import { ProgressTracker } from "./progress/progress";
 import { ProgressReporter } from "./progress/reporter";
 import type { TestRunnerOptions, TestSuite } from "./test-runner";
@@ -32,8 +32,6 @@ globalThis.__gest_ = {
     );
   },
 };
-
-let exitCode = 0;
 
 async function main() {
   try {
@@ -109,8 +107,7 @@ async function main() {
     const config = await loadConfig(pargs, options);
 
     if (!config) {
-      exitCode = 1;
-      return;
+      return Mainloop.exit(1);
     }
 
     const testsDir = path.resolve(Global.getCwd(), config.testDir);
@@ -213,17 +210,18 @@ async function main() {
     monitor.printSummary(totalDuration);
 
     if (testRunners.some((runner) => !runner.success)) {
-      exitCode = 1;
+      return Mainloop.exit(1);
     }
+
+    Mainloop.exit();
   } catch (e) {
     Output.print(
       html`<pre color="red">${_getErrorMessage(e)}</pre>
         <br /><br />
         <pre>${_getErrorStack(e, undefined)}</pre>`
     );
-    exitCode = 1;
-  } finally {
-    Gtk.main_quit();
+
+    Mainloop.exit(1);
   }
 }
 
@@ -232,11 +230,11 @@ try {
 
   Output.setDefaultPrintMethod(print);
 
-  setTimeout(() => main());
+  Mainloop.start().then((exitCode) => {
+    system.exit(exitCode);
+  });
 
-  Gtk.main();
-
-  system.exit(exitCode);
+  main();
 } catch (e) {
   print(String(e));
   system.exit(1);
