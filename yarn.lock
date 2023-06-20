@@ -252,8 +252,8 @@ __metadata:
   linkType: hard
 
 "@ncpa0cpl/nodepack@npm:^2.1.2":
-  version: 2.2.0
-  resolution: "@ncpa0cpl/nodepack@npm:2.2.0"
+  version: 2.2.1
+  resolution: "@ncpa0cpl/nodepack@npm:2.2.1"
   dependencies:
     "@ncpa0cpl/node-worker-bridge": ^0.0.3
     "@ts-morph/bootstrap": ^0.19.0
@@ -267,7 +267,7 @@ __metadata:
   dependenciesMeta:
     json-to-ts:
       optional: true
-  checksum: adf00c49dce49e2687cff6889e097510700cba07cbab9330930c27a9ab2a8ad69bba270c9542685f94d64497783d932cc2f0f3ec71e26d5760058d2111e6e1bc
+  checksum: 31bf3564037b4971ee425e6c41616f12bd9fe3aad225b7f09cfdffdadcde3d306111cf7a0b9127834239416444d9370e64cf70ba1f92799a58cba81778232375
   languageName: node
   linkType: hard
 
