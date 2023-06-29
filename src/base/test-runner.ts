@@ -66,6 +66,10 @@ class UnitRunner {
     }
   }
 
+  get fullTitle() {
+    return this.unitName.join(" > ");
+  }
+
   private testNameMatches(unitName: string[]) {
     const { testNamePattern } = this.suite.options;
     if (!testNamePattern) return true;
@@ -115,9 +119,28 @@ class UnitRunner {
   async run() {
     if (this.isSkipped) return false;
 
+    const reportError = (e: any) => {
+      this.suite.tracker.unitProgress({
+        suite: this.suite.suiteID,
+        unitName: this.unitName,
+        error: {
+          origin: "test",
+          thrown: e,
+        },
+        unit: this.unit,
+      });
+    };
+
     try {
       const duration = await this.measureRun(() =>
-        this.runWithTimeout(this.unit.callback, this.suite.options.timeout)
+        this.runWithTimeout(
+          () =>
+            this.unit.callback({
+              fullTitle: this.fullTitle,
+              reportError,
+            }),
+          this.suite.options.timeout
+        )
       );
 
       this.suite.tracker.unitProgress({
@@ -129,15 +152,7 @@ class UnitRunner {
 
       return true;
     } catch (e) {
-      this.suite.tracker.unitProgress({
-        suite: this.suite.suiteID,
-        unitName: this.unitName,
-        error: {
-          origin: "test",
-          thrown: e,
-        },
-        unit: this.unit,
-      });
+      reportError(e);
 
       if (_isExpectError(e)) {
         e.handle();

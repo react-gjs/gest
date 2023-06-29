@@ -1,3 +1,4 @@
+import type { FileLocation } from "./utils/errors";
 import { FunctionMock } from "./utils/function-mocks";
 import { diff } from "./utils/json-diff";
 import { _getLineFromError } from "./utils/parse-error";
@@ -187,21 +188,16 @@ export type Matcher = (
   matcherArgs: any[]
 ) => MatcherResult | Promise<MatcherResult>;
 
-export type CalledFrom = {
-  line: number;
-  column: number;
-};
-
 export type MatcherResultHandlers = {
   sync: (
     result: MatcherResult,
     negate: boolean,
-    celledFrom: CalledFrom
+    celledFrom: FileLocation
   ) => void;
   async: (
     result: Promise<MatcherResult>,
     negate: boolean,
-    celledFrom: CalledFrom
+    celledFrom: FileLocation
   ) => Promise<void>;
 };
 
@@ -239,7 +235,7 @@ export class Matchers {
 
           return (...args: any[]) => {
             // Get line where this function was called
-            const [line, column] = _getLineFromError(new Error());
+            const { column, line } = _getLineFromError(new Error());
 
             const calledFrom = {
               line,

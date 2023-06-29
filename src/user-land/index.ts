@@ -1,27 +1,30 @@
 import type { FakeTimers as FT } from "../base/builder/injects";
-import type { CalledFrom, Matcher, MatcherResultHandlers } from "./matchers";
+import type { Matcher, MatcherResultHandlers } from "./matchers";
 import { Matchers } from "./matchers";
 import type { Describe } from "./test-collector";
 import { TestCollector } from "./test-collector";
+import type { TestContext } from "./test-context";
+import { testCallback } from "./test-context";
+import { ExpectError } from "./utils/errors";
 import { FunctionMockRegistry, createMock } from "./utils/function-mocks";
 import { _getLineFromError } from "./utils/parse-error";
 
 export const describe = (name: string, fn: () => void): Describe => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   return TestCollector.collectDescribes(name, line, column, fn);
 };
 
-export const it = (name: string, fn: () => any) => {
+export const it = (name: string, fn: (context: TestContext) => any) => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   TestCollector.addIt({
     name,
     line,
     column,
-    callback: fn,
+    callback: testCallback(name, fn),
   });
 };
 
@@ -39,7 +42,7 @@ export const skip = (name: string, fn: () => any) => {
 
 export const beforeAll = (fn: () => void) => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   TestCollector.addBeforeAll({
     callback: fn,
@@ -50,7 +53,7 @@ export const beforeAll = (fn: () => void) => {
 
 export const afterAll = (fn: () => void) => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   TestCollector.addAfterAll({
     callback: fn,
@@ -61,7 +64,7 @@ export const afterAll = (fn: () => void) => {
 
 export const beforeEach = (fn: () => void) => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   TestCollector.addBeforeEach({
     callback: fn,
@@ -72,7 +75,7 @@ export const beforeEach = (fn: () => void) => {
 
 export const afterEach = (fn: () => void) => {
   // Get line where this function was called
-  const [line, column] = _getLineFromError(new Error());
+  const { column, line } = _getLineFromError(new Error());
 
   TestCollector.addAfterEach({
     callback: fn,
@@ -80,39 +83,6 @@ export const afterEach = (fn: () => void) => {
     column,
   });
 };
-
-export class ExpectError extends Error {
-  private timeoutId?: NodeJS.Timeout;
-  line: number;
-  column: number;
-
-  constructor(
-    message: string,
-    public readonly expected: string | undefined,
-    public readonly received: string | undefined,
-    public readonly diff: string | undefined,
-    calledFrom: CalledFrom
-  ) {
-    super(message);
-    this.name = "ExpectError";
-    this.line = calledFrom.line;
-    this.column = calledFrom.column;
-    this.detectUnhandled();
-  }
-
-  private detectUnhandled() {
-    this.timeoutId = FakeTimers.originalSetTimeout(() => {
-      // TODO: communicate with the monitor
-      console.error(
-        `An expect error was not handled. This is most likely due to an async matcher not being awaited.\n\nError: ${this.message}`
-      );
-    }, 100);
-  }
-
-  handle() {
-    clearTimeout(this.timeoutId);
-  }
-}
 
 export const expect = (value: any) => {
   const handlers: MatcherResultHandlers = {

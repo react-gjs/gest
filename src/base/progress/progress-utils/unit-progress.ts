@@ -5,7 +5,9 @@ import type { ConfigFacade } from "../../utils/config";
 import {
   _getErrorMessage,
   _getErrorStack,
+  _isDeferedError,
   _isExpectError,
+  _isGestTestError,
 } from "../../utils/errors/error-handling";
 import type {
   ProgressErrorReport,
@@ -25,7 +27,12 @@ export interface UnitProgressInitParams {
 }
 
 export type UnitErrorReport = ProgressErrorReportParsed & {
-  expectLink?: string;
+  /**
+   * Link to the `gest` statement within which the error was
+   * thrown. This most most of the time will be an `expect`
+   * statement.
+   */
+  link?: string;
   isExpectError: boolean;
 };
 
@@ -34,7 +41,7 @@ export interface UnitFinishState {
   unitName: string[];
   /** In microseconds */
   duration?: number;
-  error?: UnitErrorReport;
+  errors?: UnitErrorReport[];
   timedOut?: boolean;
   skipped?: boolean;
   unitLink?: string;
@@ -73,36 +80,88 @@ export class UnitProgress {
     return `${suiteFilepath}:${unitLocation.line}:${unitLocation.column}`;
   }
 
-  private createExpectLink(sourceMap: SourceMapReader): string | undefined {
-    if (this.error == null) return undefined;
+  private linkFrom(
+    sourceMap: SourceMapReader,
+    location: { file: string; line: number; column: number }
+  ) {
+    const expectLocation = sourceMap.getOriginalPosition(
+      location.line - Global.getSourceMapLineOffset(),
+      location.column
+    );
+
+    if (!expectLocation) return location.file;
+
+    return `${location.file}:${expectLocation.line}:${expectLocation.column}`;
+  }
+
+  private createLink(
+    sourceMap: SourceMapReader,
+    error: unknown,
+    fallbackLocation?: { line: number; column: number }
+  ): string | undefined {
+    if (error == null) return undefined;
 
     const suiteFilepath = this.parent.getSuiteFilepath();
 
-    if (!_isExpectError(this.error.thrown)) return suiteFilepath;
+    if (_isDeferedError(error)) {
+      const err1 = error.errors[0]!;
 
-    const expectLocation = sourceMap.getOriginalPosition(
-      this.error.thrown.line - Global.getSourceMapLineOffset(),
-      this.error.thrown.column
-    );
-
-    if (!expectLocation) return suiteFilepath;
-
-    return `${suiteFilepath}:${expectLocation.line}:${expectLocation.column}`;
+      return this.linkFrom(sourceMap, {
+        file: suiteFilepath,
+        line: err1.line,
+        column: err1.column,
+      });
+    } else if (_isGestTestError(error)) {
+      return this.linkFrom(sourceMap, {
+        file: suiteFilepath,
+        line: error.line,
+        column: error.column,
+      });
+    } else if (fallbackLocation) {
+      return this.linkFrom(sourceMap, {
+        file: suiteFilepath,
+        line: fallbackLocation.line,
+        column: fallbackLocation.column,
+      });
+    } else {
+      return undefined;
+    }
   }
 
-  private parseError(sourceMap?: SourceMapReader): UnitErrorReport | undefined {
-    if (this.error) {
-      const message = _getErrorMessage(this.error.thrown);
-      const stack = _getErrorStack(this.error.thrown, sourceMap, this.config);
+  private parseSingleError(
+    thrown: unknown,
+    origin: ProgressErrorReport["origin"],
+    sourceMap?: SourceMapReader,
+    fallbackLocation?: { line: number; column: number }
+  ): UnitErrorReport {
+    const message = _getErrorMessage(thrown);
+    const stack = _getErrorStack(thrown, sourceMap, this.config);
 
-      return {
-        thrown: this.error.thrown,
-        origin: this.error.origin,
-        message: message,
-        stack: stack,
-        expectLink: sourceMap ? this.createExpectLink(sourceMap) : undefined,
-        isExpectError: _isExpectError(this.error.thrown),
-      };
+    return {
+      thrown,
+      origin,
+      message: message,
+      stack: stack,
+      link: sourceMap
+        ? this.createLink(sourceMap, thrown, fallbackLocation)
+        : undefined,
+      isExpectError: _isExpectError(thrown),
+    };
+  }
+
+  private parseErrors(
+    sourceMap?: SourceMapReader
+  ): UnitErrorReport[] | undefined {
+    if (this.error) {
+      if (_isDeferedError(this.error.thrown)) {
+        return this.error.thrown.errors.map((err) =>
+          this.parseSingleError(err.thrown, this.error!.origin, sourceMap, err)
+        );
+      }
+
+      return [
+        this.parseSingleError(this.error.thrown, this.error.origin, sourceMap),
+      ];
     }
 
     return undefined;
@@ -117,7 +176,7 @@ export class UnitProgress {
       suite: this.suite,
       unitName: this.unitName,
       duration: this.duration,
-      error: this.parseError(sourceMap),
+      errors: this.parseErrors(sourceMap),
       skipped: this.skipped,
       timedOut: this.timedOut,
       unitLink: this.createUnitLink(sourceMap),

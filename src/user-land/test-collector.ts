@@ -1,9 +1,14 @@
+export type InternalTestContext = {
+  fullTitle: string;
+  reportError: (err: any) => void;
+};
+
 export type Test = {
   name: string;
   line: number;
   column: number;
   skip?: boolean;
-  callback: () => any;
+  callback: (info: InternalTestContext) => any;
 };
 
 export type TestHook = {
