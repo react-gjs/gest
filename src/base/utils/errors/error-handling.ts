@@ -1,12 +1,24 @@
-import type { ExpectError } from "../../../user-land";
+import type {
+  DeferedTaskError,
+  ExpectError,
+  GestTestError,
+} from "../../../user-land/utils/errors";
 import { Global } from "../../globals";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../config";
 import type { ParsedStack } from "../error-stack-parser-type";
 import { parseErrorStack } from "./stack-parser";
 
+export function _isGestTestError(e: any): e is GestTestError {
+  return e && typeof e === "object" && "_isGestError" in e;
+}
+
 export function _isExpectError(e: any): e is ExpectError {
   return e && typeof e === "object" && e.name === "ExpectError";
+}
+
+export function _isDeferedError(e: any): e is DeferedTaskError {
+  return e && typeof e === "object" && e.name === "DeferedTaskError";
 }
 
 export function _getErrorMessage(e: unknown) {

@@ -1,3 +1,5 @@
+import type { FileLocation } from "./errors";
+
 export const _toNumber = (value: string | number | undefined, def: number) => {
   if (value === undefined) {
     return def;
@@ -14,9 +16,12 @@ export const _toNumber = (value: string | number | undefined, def: number) => {
   }
 };
 
-export const _getLineFromError = (error: Error): [number, number] => {
+export const _getLineFromError = (error: Error): FileLocation => {
   const stack = error.stack;
   const secondLine = stack?.split("\n")[1];
   const [line, column] = secondLine?.split(":").splice(-2) ?? [];
-  return [_toNumber(line, 0), _toNumber(column, 0)];
+  return {
+    line: _toNumber(line, 0),
+    column: _toNumber(column, 0),
+  };
 };
