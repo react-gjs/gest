@@ -192,8 +192,6 @@ export class FakeTimerRegistry {
     ms: number | undefined,
     args: any[]
   ) {
-    const currentMillisecond = this.now();
-
     const interval = new Interval(
       this,
       this.generateID(),
