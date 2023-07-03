@@ -1,5 +1,4 @@
 import type { Test } from "../../../user-land/test-collector";
-import { Global } from "../../globals";
 import type { SourceMapReader } from "../../sourcemaps/reader";
 import type { ConfigFacade } from "../../utils/config";
 import {
@@ -69,7 +68,7 @@ export class UnitProgress {
     if (this.unit == null || !sourceMap) return undefined;
 
     const unitLocation = sourceMap.getOriginalPosition(
-      this.unit.line - Global.getSourceMapLineOffset(),
+      this.unit.line,
       this.unit.column
     );
 
@@ -85,7 +84,7 @@ export class UnitProgress {
     location: { file: string; line: number; column: number }
   ) {
     const expectLocation = sourceMap.getOriginalPosition(
-      location.line - Global.getSourceMapLineOffset(),
+      location.line,
       location.column
     );
 
