@@ -43,9 +43,17 @@ export async function _buildFile(params: {
         kind: "identifier",
         value: "__gest_timers.setTimeout",
       },
+      clearTimeout: {
+        kind: "identifier",
+        value: "__gest_timers.clearTimeout",
+      },
       setInterval: {
         kind: "identifier",
         value: "__gest_timers.setInterval",
+      },
+      clearInterval: {
+        kind: "identifier",
+        value: "__gest_timers.clearInterval",
       },
       console: {
         kind: "identifier",

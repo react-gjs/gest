@@ -6,6 +6,11 @@ const noop = (...args: any[]) => {};
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+setInterval(() => {}, 1000);
+
+clearInterval(1);
+clearTimeout(1);
+
 export default describe("FakeTimers", () => {
   const timers = {
     setTimeout: noop as any as typeof setTimeout,
