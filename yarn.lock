@@ -460,14 +460,12 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@reactgjs/gest@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@reactgjs/gest/-/gest-0.1.1.tgz#e0c88271323d470572a9e76cb9679a20ecfd494d"
-  integrity sha512-O8JO56QBP9a4eQ5s0xOkFv7w3mt/Mmh/0MY9JtMMhL/BlNdxVni9DVW8Tcfw19pQ2EVQyt5bYzqB2uGJ/z3DOg==
+"@reactgjs/gest@0.3.2":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@reactgjs/gest/-/gest-0.3.2.tgz#15bdb1b4d521fb06623fb1ef653a6451e8c5f711"
+  integrity sha512-q/L5OcFHyQ1LdRLr702dL4pPkxcHfC1LQ+cqV4fvVU/yqkjsL3lCVcDjHC14/3dK8pAENRpD09bXi/ZwRi2DWQ==
   dependencies:
-    dilswer "^2.0.2"
     esbuild "^0.17.17"
-    termx-markup "^1.1.0"
 
 "@ts-morph/bootstrap@^0.20.0":
   version "0.20.0"
@@ -789,7 +787,7 @@ clify.js@ncpa0cpl/clify.js:
   dependencies:
     chalk "^4.1.2"
 
-"clify@github:ncpa0cpl/clify.js#0.0.4":
+clify@ncpa0cpl/clify.js#0.0.4:
   version "1.0.3"
   resolved "https://codeload.github.com/ncpa0cpl/clify.js/tar.gz/fe91dede1322b302fbc7ca8f5695ce37ccfb8bf4"
   dependencies:
@@ -2508,6 +2506,7 @@ string-at@^1.0.1:
     es-abstract "^1.17.0-next.1"
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
