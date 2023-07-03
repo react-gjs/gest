@@ -196,6 +196,11 @@ async function main() {
       await loadSetup(msg.setup.secondary);
     }
 
+    const fileBanner = await fs.readFile(
+      path.join(__dirname, "injects.mjs"),
+      "utf-8"
+    );
+
     await esbuild.build({
       target: "es2022",
       entryPoints: [msg.input],
@@ -206,6 +211,9 @@ async function main() {
       minify: false,
       keepNames: true,
       sourcemap: true,
+      banner: {
+        js: fileBanner,
+      },
       plugins: [
         {
           name: "gest-import-replacer",
@@ -231,14 +239,6 @@ async function main() {
         },
       ],
     });
-
-    const out = await fs.readFile(msg.output, "utf-8");
-    const injects = await fs.readFile(
-      path.join(__dirname, "injects.mjs"),
-      "utf-8"
-    );
-
-    await fs.writeFile(msg.output, injects + "\n" + out, "utf-8");
   } catch (e) {
     console.error(e);
     process.exit(1);

@@ -1,7 +1,6 @@
 export class Global {
   private static cwd?: string;
   private static tmpDir?: string;
-  private static sourceMapLineOffset?: number;
 
   public static getCwd(): string {
     if (!this.cwd) {
@@ -25,17 +24,5 @@ export class Global {
 
   public static setTmpDir(tmpDir: string): void {
     this.tmpDir = tmpDir;
-  }
-
-  public static getSourceMapLineOffset(): number {
-    if (!this.sourceMapLineOffset) {
-      throw new Error("Source map offset not set.");
-    }
-
-    return this.sourceMapLineOffset;
-  }
-
-  public static setSourceMapLineOffset(offset: number): void {
-    this.sourceMapLineOffset = offset;
   }
 }

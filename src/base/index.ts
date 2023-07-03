@@ -75,12 +75,6 @@ async function main() {
 
     const _dirname = getDirname(import.meta.url);
 
-    const injectsFilepath = path.resolve(_dirname, "./builder/injects.mjs");
-    const injectsFile = await Fs.readTextFile(injectsFilepath);
-    const injectsLines = injectsFile.split("\n");
-
-    Global.setSourceMapLineOffset(injectsLines.length);
-
     let tmpDir = path.join(_dirname, "_tmp");
     if (tmpDir.includes("/node_modules/")) {
       while (true) {
