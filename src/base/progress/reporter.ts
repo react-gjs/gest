@@ -1,5 +1,5 @@
 import { Output, OutputBuffer } from "termx-markup";
-import type { ExpectError } from "../../user-land";
+import type { ExpectError } from "../../user-land/utils/errors";
 import type { ConfigFacade } from "../utils/config";
 import { BaseReporter } from "./base-reporter";
 import type { ProgressTracker } from "./progress";
@@ -29,7 +29,7 @@ export class DefaultReporter extends BaseReporter {
     const filepath = suiteState.testFilepath;
     const hasAnyUnitFailed =
       suiteState.errors.length > 0 ||
-      unitResults.some((u) => u.error || u.timedOut);
+      unitResults.some((u) => u.errors || u.timedOut);
 
     if (suiteState.skipped) {
       this.output.print(ReportsFormatter.info.suiteSkipped(filepath));
@@ -45,7 +45,7 @@ export class DefaultReporter extends BaseReporter {
   override reportUnitState(unitState: UnitFinishState) {
     if (unitState.skipped) {
       this.output.print(ReportsFormatter.info.unitSkipped(unitState.unitName));
-    } else if (unitState.error) {
+    } else if (unitState.errors) {
       this.output.print(ReportsFormatter.info.unitFailed(unitState.unitName));
     } else {
       this.output.print(
@@ -101,7 +101,7 @@ export class DefaultReporter extends BaseReporter {
       this.printErr(
         ReportsFormatter.error.expectError(
           update.unitName,
-          errReport.expectLink ?? "",
+          errReport.link ?? update.unitLink ?? "",
           this.parseError(err, errReport),
           err.expected,
           err.received,
@@ -112,7 +112,7 @@ export class DefaultReporter extends BaseReporter {
       this.printErr(
         ReportsFormatter.error.unknownUnitError(
           update.unitName,
-          update.unitLink ?? "",
+          errReport.link ?? update.unitLink ?? "",
           this.parseError(errReport.thrown, errReport),
           errReport.stack ?? ""
         )
@@ -211,8 +211,10 @@ export class ProgressReporter {
         suiteReporter.printStateReports();
 
         for (const update of unitResults) {
-          if (update.error) {
-            suiteReporter.reportUnitError(update.error, update);
+          if (update.errors) {
+            for (const error of update.errors) {
+              suiteReporter.reportUnitError(error, update);
+            }
           }
         }
 
@@ -233,7 +235,7 @@ export class ProgressReporter {
       this.summaryInfo.skippedSuites++;
     } else if (
       suiteState.errors.length > 0 ||
-      unitResults.some((u) => u.error || u.timedOut)
+      unitResults.some((u) => u.errors || u.timedOut)
     ) {
       this.summaryInfo.failedSuites++;
     } else {
@@ -243,7 +245,7 @@ export class ProgressReporter {
     for (const unit of unitResults) {
       if (unit.skipped) {
         this.summaryInfo.skippedUnits++;
-      } else if (unit.error || unit.timedOut) {
+      } else if (unit.errors || unit.timedOut) {
         this.summaryInfo.failedUnits++;
       } else {
         this.summaryInfo.passedUnits++;
