@@ -10,10 +10,10 @@ const __noop = (...args: any[]) => {};
 
 const __gest_timers = {
   setTimeout: __noop as any as typeof setTimeout,
+  clearTimeout: __noop as any as typeof clearTimeout,
   setInterval: __noop as any as typeof setInterval,
-  useFakeTimers: false,
+  clearInterval: __noop as any as typeof clearInterval,
   timeoutRegistry: null as FakeTimerRegistry | null,
-  intervalRegistry: null as FakeTimerRegistry | null,
 };
 
 (() => {
@@ -24,21 +24,31 @@ const __gest_timers = {
       ? __gest_originalSetTimeout
       : global.setTimeout.bind(null);
 
+  __gest_timers.clearTimeout =
+    typeof __gest_originalClearTimeout !== "undefined"
+      ? __gest_originalClearTimeout
+      : global.clearTimeout.bind(null);
+
   __gest_timers.setInterval =
     typeof __gest_originalSetInterval !== "undefined"
       ? __gest_originalSetInterval
       : global.setInterval.bind(null);
+
+  __gest_timers.clearInterval =
+    typeof __gest_originalClearInterval !== "undefined"
+      ? __gest_originalClearInterval
+      : global.clearInterval.bind(null);
 })();
 
-if (typeof __gest_getSetTimeout !== "undefined") {
-  __gest_getSetTimeout(__gest_timers);
-}
-
-if (typeof __gest_getSetInterval !== "undefined") {
-  __gest_getSetInterval(__gest_timers);
+if (typeof __gest_setupFakeTimers !== "undefined") {
+  __gest_setupFakeTimers(__gest_timers);
 }
 
 class FakeTimers {
+  /**
+   * Returns the original setTimeout function. Fake timers will
+   * not affect this function.
+   */
   static get originalSetTimeout() {
     const global = globalThis;
     return (
@@ -48,21 +58,84 @@ class FakeTimers {
     ).bind(null);
   }
 
+  /**
+   * Returns the original clearTimeout function. Fake timers will
+   * not affect this function.
+   */
+  static get originalClearTimeout() {
+    const global = globalThis;
+    return (
+      typeof __gest_originalClearTimeout !== "undefined"
+        ? __gest_originalClearTimeout
+        : global.clearTimeout
+    ).bind(null);
+  }
+
+  /**
+   * Returns the original setInterval function. Fake timers will
+   * not affect this function.
+   */
+  static get originalSetInterval() {
+    const global = globalThis;
+    return (
+      typeof __gest_originalSetInterval !== "undefined"
+        ? __gest_originalSetInterval
+        : global.setInterval
+    ).bind(null);
+  }
+
+  /**
+   * Returns the original clearInterval function. Fake timers
+   * will not affect this function.
+   */
+  static get originalClearInterval() {
+    const global = globalThis;
+    return (
+      typeof __gest_originalClearInterval !== "undefined"
+        ? __gest_originalClearInterval
+        : global.clearInterval
+    ).bind(null);
+  }
+
+  /**
+   * Enables fake timers. After this method is called, all calls
+   * to the global setTimeout, clearTimeout, setInterval,
+   * clearInterval will be intercepted by the fake timers.
+   */
   static enable() {
-    __gest_timers.useFakeTimers = true;
+    __gest_timers.timeoutRegistry?.enable();
   }
 
+  /**
+   * Disables fake timers. After this method is called, all calls
+   * to the global setTimeout, clearTimeout, setInterval,
+   * clearInterval will be passed through to the original
+   * functions.
+   */
   static disable() {
-    __gest_timers.useFakeTimers = false;
     __gest_timers.timeoutRegistry?.clear();
+    __gest_timers.timeoutRegistry?.disable();
   }
 
+  /** Run all pending timeouts and intervals. */
   static runAll() {
     __gest_timers.timeoutRegistry?.runAll();
   }
 
+  /**
+   * Run the next pending timeout or interval. Optionally pass
+   * arguments to the callback function.
+   */
   static runNext(args?: any[]): any {
     return __gest_timers.timeoutRegistry?.runNext(args);
+  }
+
+  /**
+   * Advance the fake timers by the specified number of
+   * milliseconds.
+   */
+  static advance(ms: number) {
+    __gest_timers.timeoutRegistry?.advanceBy(ms);
   }
 
   /**
