@@ -31,6 +31,8 @@ export function deepEqual(a: any, b: any): EqualityCheck {
 
   if (Array.isArray(a) && Array.isArray(b)) {
     const lastAIndex = a.length - 1;
+    const lastBIndex = b.length - 1;
+
     for (const bIndex of b.keys()) {
       if (bIndex > lastAIndex) {
         return {
@@ -48,6 +50,22 @@ export function deepEqual(a: any, b: any): EqualityCheck {
       if (!result.isEqual) {
         return result;
       }
+    }
+
+    if (lastAIndex > lastBIndex) {
+      return {
+        isEqual: false,
+        expected: undefined,
+        received: a[lastBIndex + 1],
+      };
+    }
+
+    if (a.length !== b.length) {
+      return {
+        isEqual: false,
+        expected: b,
+        received: a,
+      };
     }
 
     return {
