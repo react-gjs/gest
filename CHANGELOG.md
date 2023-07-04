@@ -1,3 +1,54 @@
+## 0.4.0 (July 4, 2023)
+
+### Features
+
+- #### feat: extended support for fake timers ([#95](https://github.com/react-gjs/gest/pull/95))
+
+  FakeTimers although present in the previous version, were incomplete. Only the `setTimeout` was being mocked when using them, and it was impossible to clear fake timeouts, advancing the timers by an arbitrary amount was also not possible.
+  
+  All that has changed, `setInterval` is now also mocked when using FakeTimers, clearing the mocked timers should also work, and a new method has been added to the FakeTimers api: `advance()` which will run all pending timers that would have been scheduled within the timeframe of when they were initiated and N milliseconds after that, whereas N is provided to the advance function.
+
+- #### feat: test context ([#93](https://github.com/react-gjs/gest/pull/93))
+
+  Added a context object that is available to all unit tests, to access it simply add an argument to the function passed to the `it`. At this moment context will give access to the title of the test, and two helper methods: `defer()` - which can be used to add teardown logic to the test and `logError()` which will log errors similarly to how it's done with the errors thrown from the `it` blocks.
+  
+  ### Example
+  
+  ```ts
+  export default describe("myTest", () => {
+    it("this is how you use context", (ctx) => {
+      ctx.title; // "this is how you use context"
+      ctx.fullTitle; // "myTest > this is how you use context"
+      ctx.defer(() => {/* cleanup */});
+      ctx.logError(new Error("oh no!"));
+    })
+  })
+  ``` 
+
+- #### feat: added duration for suites logs ([#78](https://github.com/react-gjs/gest/pull/78))
+
+  Each test Suite in the output logs will now display the total duration it took to run it. Additionally the time formatting was slightly changed.
+
+- #### feat: use the MainLoop's `runAsync` instead of the Gtk's `main` ([#77](https://github.com/react-gjs/gest/pull/77))
+
+### Bug Fixes
+
+- #### fix: toEqual bug with arrays ([#96](https://github.com/react-gjs/gest/pull/96))
+
+  Fixed a bug in the comparison algorithm used in the `expect.toEqual()` and `match.equal()` functions. The bug was causing the assertion to pass in situations where the expected array was shorter than the tested array. That was not intentional since the equalision comparison is supposed to assert objects to be strictly equal to each other.
+  
+  ### Example
+  
+  ```ts
+  // old behavior
+  expect([1, 2, 3]).toEqual([]); // passes
+  
+  // new, fixed behavior
+  expect([1, 2, 3]).toEqual([]); // fails with: "ExpectError: Deep equality test has failed. Expected: undefined Received: 1"
+  ```
+
+- #### fix: added a catch to the mainloop start ([#79](https://github.com/react-gjs/gest/pull/79))
+
 ## 0.3.2 (May 22, 2023)
 
 ### Features
