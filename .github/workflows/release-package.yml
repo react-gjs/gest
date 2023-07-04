@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 18
       - name: Installing dependencies
-        run: ./.yarn/yarn.cjs install
+        run: ./.yarn/yarn.cjs install --frozen-lockfile
       - name: Validating syntax
         run: ./.yarn/yarn.cjs test:tsc
       - name: Linting
