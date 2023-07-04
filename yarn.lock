@@ -8,9 +8,9 @@
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
 "@babel/runtime@^7.21.0":
-  version "7.22.5"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.5.tgz#8564dd588182ce0047d55d7a75e93921107b57ec"
-  integrity sha512-ecjvYlnAaZ/KVneE/OdKYBYfgXV3Ptu6zQWmgEF7vwKhQnvVS6bjMD2XYgj+SNvQ1GfK/pjgokfPkC/2CO8CuA==
+  version "7.22.6"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.6.tgz#57d64b9ae3cff1d67eb067ae117dac087f5bd438"
+  integrity sha512-wDb5pWm4WDdF6LFUde3Jl8WzPA+3ZbxYqkC6xAXuD3irdEHN1k0NfTRrJD8ZD378SJ61miMLCqIOXYhd8x+AJQ==
   dependencies:
     regenerator-runtime "^0.13.11"
 
@@ -787,7 +787,7 @@ clify.js@ncpa0cpl/clify.js:
   dependencies:
     chalk "^4.1.2"
 
-clify@ncpa0cpl/clify.js#0.0.4:
+"clify@github:ncpa0cpl/clify.js#0.0.4":
   version "1.0.3"
   resolved "https://codeload.github.com/ncpa0cpl/clify.js/tar.gz/fe91dede1322b302fbc7ca8f5695ce37ccfb8bf4"
   dependencies:
@@ -2298,9 +2298,9 @@ pluralize@^3.1.0:
   integrity sha512-2wcybwjwXOzGI1rlxWtlcs0/nSYK0OzNPqsg35TKxJFQlGhFu3cZ1x7EHS4r4bubQlhzyF4YxxlJqQnIhkUQCw==
 
 pr-changelog-gen@^1.1.0:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/pr-changelog-gen/-/pr-changelog-gen-1.1.1.tgz#6a3b8201d8d499877fd20eccbce1f71ca9965d80"
-  integrity sha512-xIJ1pTqjRvh2KuPv1CqhscyJrGQCGAnMnMWsg8ugQkZSmTzRLp3NeUj0R/p7pF9q4QIxE91W9I0JdARSApx9UQ==
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/pr-changelog-gen/-/pr-changelog-gen-1.1.3.tgz#a760226b2195235f0e1c25ceaad732f3ceb36e1e"
+  integrity sha512-+C/tNtrZSJ+sUSo9EDh8rRbHRKUSL7fll9rXTWEeeXc1KnImTJX5NkFf1GX8B4iKPk9MeTis55GLju6ul2fw/g==
   dependencies:
     "@octokit/rest" "^19.0.11"
     clify ncpa0cpl/clify.js#0.0.4
