@@ -1,3 +1,11 @@
+## 0.4.1 (July 10, 2023)
+
+### Bug Fixes
+
+- #### fix: polyfill the runAsync if it is not available on GMainLoop ([#99](https://github.com/react-gjs/gest/pull/99))
+
+  The `GLib.MainLoop.runAsync` method is used by Gest to initiate a new event loop of the program, however in the older versions of `gjs` that method is not available. To ensure compatibility with these older versions, Gest will polyfill that method if it doesn't exist.
+
 ## 0.4.0 (July 4, 2023)
 
 ### Features
