@@ -6,7 +6,10 @@ import { TestCollector } from "./test-collector";
 import type { TestContext } from "./test-context";
 import { testCallback } from "./test-context";
 import { ExpectError } from "./utils/errors";
-import { FunctionMockRegistry, createMock } from "./utils/function-mocks";
+import {
+  FunctionMockRegistry,
+  createMock,
+} from "./utils/function-mocks";
 import { _getLineFromError } from "./utils/parse-error";
 
 export const describe = (name: string, fn: () => void): Describe => {
@@ -16,7 +19,10 @@ export const describe = (name: string, fn: () => void): Describe => {
   return TestCollector.collectDescribes(name, line, column, fn);
 };
 
-export const it = (name: string, fn: (context: TestContext) => any) => {
+export const it = (
+  name: string,
+  fn: (context: TestContext) => any,
+) => {
   // Get line where this function was called
   const { column, line } = _getLineFromError(new Error());
 
@@ -93,7 +99,7 @@ export const expect = (value: any) => {
           result.expected,
           result.received,
           result.diff,
-          calledFrom
+          calledFrom,
         );
       } else if (!result.failed && negate) {
         throw new ExpectError(
@@ -101,7 +107,7 @@ export const expect = (value: any) => {
           undefined,
           undefined,
           undefined,
-          calledFrom
+          calledFrom,
         );
       }
     },
@@ -114,7 +120,10 @@ export const expect = (value: any) => {
   return Matchers.proxy(value, handlers);
 };
 
-export const defineMatcher = (matcherName: string, matcher: Matcher) => {
+export const defineMatcher = (
+  matcherName: string,
+  matcher: Matcher,
+) => {
   Matchers.add(matcherName, matcher);
 };
 

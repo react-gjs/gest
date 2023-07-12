@@ -15,28 +15,35 @@ export type TestContext = {
   fullTitle: string;
   /**
    * Defer is where you can put the teardown logic for your test.
-   * Every deferred function will run after the test has
-   * finished, regardless of whether it has passed or failed.
+   * Every deferred function will run after the test has finished,
+   * regardless of whether it has passed or failed.
    *
    * If a deferred function fails, the test will fail as well.
    */
   defer(task: () => any): void;
   /**
-   * Logs an error to the console with a mapped stack trace.
-   * Logging an error will cause the test to fail.
+   * Logs an error to the console with a mapped stack trace. Logging
+   * an error will cause the test to fail.
    */
   logError(err: any): void;
 };
 
-type DeferredTask = { action: () => any; line: number; column: number };
+type DeferredTask = {
+  action: () => any;
+  line: number;
+  column: number;
+};
 
 export const testCallback = (
   title: string,
-  fn: (context: TestContext) => any
+  fn: (context: TestContext) => any,
 ) => {
   const deferredTasks: Array<DeferredTask> = [];
 
-  const runDeferred = async (err: unknown, _context: InternalTestContext) => {
+  const runDeferred = async (
+    err: unknown,
+    _context: InternalTestContext,
+  ) => {
     const errors: {
       line: number;
       column: number;

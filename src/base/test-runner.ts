@@ -1,5 +1,9 @@
 import { OutputBuffer } from "termx-markup";
-import type { Describe, Test, TestHook } from "../user-land/test-collector";
+import type {
+  Describe,
+  Test,
+  TestHook,
+} from "../user-land/test-collector";
 import { _buildFile } from "./builder/build-file";
 import { Global } from "./globals";
 import type { ProgressTracker } from "./progress/progress";
@@ -51,7 +55,7 @@ class UnitRunner {
   constructor(
     public readonly unit: Test,
     parentName: string[],
-    public readonly suite: SuiteRunner
+    public readonly suite: SuiteRunner,
   ) {
     this.unitName = [...parentName, unit.name];
 
@@ -79,7 +83,7 @@ class UnitRunner {
 
   private async runWithTimeout(
     action: () => void | Promise<void>,
-    time: number
+    time: number,
   ) {
     const r = action();
 
@@ -88,8 +92,8 @@ class UnitRunner {
         const t = setTimeout(() => {
           reject(
             new Error(
-              `Unit tests has not finished within the given time (${time}ms)`
-            )
+              `Unit tests has not finished within the given time (${time}ms)`,
+            ),
           );
         }, time);
 
@@ -106,7 +110,7 @@ class UnitRunner {
   }
 
   private async measureRun(
-    action: () => void | Promise<void>
+    action: () => void | Promise<void>,
   ): Promise<number> {
     const start = currentMicrosecond();
     await action();
@@ -139,8 +143,8 @@ class UnitRunner {
               fullTitle: this.fullTitle,
               reportError,
             }),
-          this.suite.options.timeout
-        )
+          this.suite.options.timeout,
+        ),
       );
 
       this.suite.tracker.unitProgress({
@@ -167,7 +171,7 @@ class SuiteRunner {
   constructor(
     public readonly options: SuiteRunnerOptions,
     public readonly tracker: ProgressTracker,
-    public readonly suiteID: symbol
+    public readonly suiteID: symbol,
   ) {}
 
   private markAsSkipped(units: Test[], parentName: string[]) {
@@ -200,7 +204,10 @@ class SuiteRunner {
     }
   }
 
-  async runSuite(test: Describe, parentName: string[] = []): Promise<boolean> {
+  async runSuite(
+    test: Describe,
+    parentName: string[] = [],
+  ): Promise<boolean> {
     let passed = true;
 
     const unitName = [...parentName, test.name];
@@ -250,7 +257,7 @@ class SuiteRunner {
             beforeEach: [...test.beforeEach, ...subTest.beforeEach],
             afterEach: [...test.afterEach, ...subTest.afterEach],
           },
-          unitName
+          unitName,
         );
         passed &&= result;
       }
@@ -290,7 +297,7 @@ export class TestRunner {
     private testFileQueue: TestSuite[],
     private config: ConfigFacade,
     private tracker: ProgressTracker,
-    private options: TestRunnerOptions = {}
+    private options: TestRunnerOptions = {},
   ) {}
 
   private testFileMatches(name: string) {
@@ -307,7 +314,7 @@ export class TestRunner {
     const outputFile =
       path.resolve(
         Global.getTmpDir(),
-        path.relative(Global.getCwd(), testUnit.testFile)
+        path.relative(Global.getCwd(), testUnit.testFile),
       ) + ".bundled.js";
     const mapFile = outputFile + ".map";
     const isOutputAbsolute = outputFile.startsWith("/");
@@ -340,7 +347,10 @@ export class TestRunner {
         fileSetup: testUnit.setupFile,
         mainSetup: this.config.setup,
         globals: this.config.globals,
-        projectSrcDir: path.resolve(Global.getCwd(), this.config.srcDir),
+        projectSrcDir: path.resolve(
+          Global.getCwd(),
+          this.config.srcDir,
+        ),
       });
 
       this.tmpFiles.push(outputFile, mapFile);
@@ -359,7 +369,7 @@ export class TestRunner {
               const suiteRunner = new SuiteRunner(
                 { ...this.options, timeout },
                 this.tracker,
-                suiteID
+                suiteID,
               );
 
               const startTime = currentMicrosecond();
@@ -375,7 +385,7 @@ export class TestRunner {
               p.resolve();
             } else {
               const err = new GestError(
-                `Not a test: ${testUnit.testFile}\nMake sure the to add a default export to your test file.`
+                `Not a test: ${testUnit.testFile}\nMake sure the to add a default export to your test file.`,
               );
 
               this.tracker.suiteProgress({

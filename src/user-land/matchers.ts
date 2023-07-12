@@ -10,8 +10,7 @@ import { deepEqual, matchValues } from "./utils/validators";
 
 export interface ExpectMatchers {
   /**
-   * Negates the matcher. The test will pass if expectation
-   * fails.
+   * Negates the matcher. The test will pass if expectation fails.
    */
   not: Omit<ExpectMatchers, "not">;
   /**
@@ -20,18 +19,16 @@ export interface ExpectMatchers {
    */
   toBe(expected: any): void;
   /**
-   * Check if the tested value is an instance of the specified
-   * class.
+   * Check if the tested value is an instance of the specified class.
    */
   toBeInstanceOf(expected: any): void;
   /**
-   * Compares the tested value to the expected value using strict
-   * deep equality.
+   * Compares the tested value to the expected value using strict deep
+   * equality.
    */
   toEqual(expected: any): void;
   /**
-   * Check if the tested value is specifically `null` or
-   * `undefined`.
+   * Check if the tested value is specifically `null` or `undefined`.
    */
   toBeUndefined(): void;
   /**
@@ -39,67 +36,65 @@ export interface ExpectMatchers {
    * values will fail this expectation.
    */
   toBeDefined(): void;
-  /** Check if the tested value is of the specified type. */
+  /**
+   * Check if the tested value is of the specified type.
+   */
   toBeOfType(expected: string): void;
   /**
-   * Check if the tested value matches with the specified value,
-   * the specified values can be a custom match (for example
+   * Check if the tested value matches with the specified value, the
+   * specified values can be a custom match (for example
    * `match.anything()`).
    *
-   * Matching also does not care about additional properties on
-   * the tested objects.
+   * Matching also does not care about additional properties on the
+   * tested objects.
    *
    * Matching is deep, so it will work even with nested objects.
    */
   toMatch(expected: any): void;
   /**
-   * Check if the tested value is a string that matches the
-   * specified regular expression.
+   * Check if the tested value is a string that matches the specified
+   * regular expression.
    */
   toMatchRegex(expected: RegExp): void;
   /**
-   * Check if the tested value is an array that contains the
-   * specified values. Each value must be strictly equal to the
-   * tested value.
+   * Check if the tested value is an array that contains the specified
+   * values. Each value must be strictly equal to the tested value.
    */
   toContain(...expected: any[]): void;
   /**
-   * Check if the tested value is an array that contains the
-   * specified values. Each value is deeply compared to the
-   * tested value.
+   * Check if the tested value is an array that contains the specified
+   * values. Each value is deeply compared to the tested value.
    */
   toContainEqual(...expected: any[]): void;
   /**
-   * Check if the tested value is an array that contains the
-   * specified values. Each value is matched with the tested
-   * value.
+   * Check if the tested value is an array that contains the specified
+   * values. Each value is matched with the tested value.
    */
   toContainMatch(...expected: any[]): void;
   /**
    * Check if the tested value is an array contains the specified
-   * values, and only those values. Each value must be strictly
-   * equal to the tested value.
+   * values, and only those values. Each value must be strictly equal
+   * to the tested value.
    */
   toContainOnly(...expected: any[]): void;
   /**
    * Check if the tested value is an array contains the specified
-   * values, and only those values. Each value is deeply compared
-   * to the tested value.
+   * values, and only those values. Each value is deeply compared to
+   * the tested value.
    */
   toContainOnlyEqual(...expected: any[]): void;
   /**
    * Check if the tested value is an array contains the specified
-   * values, and only those values. Each value is matched with
-   * the tested value.
+   * values, and only those values. Each value is matched with the
+   * tested value.
    */
   toContainOnlyMatch(...expected: any[]): void;
   /**
-   * Check if the tested value is a function that throws when
-   * called.
+   * Check if the tested value is a function that throws when called.
    *
-   * By default test will pass if the function throws anything,
-   * if a parameter is specified, the test will pass only if the
-   * thrown value is strictly equal to the specified value.
+   * By default test will pass if the function throws anything, if a
+   * parameter is specified, the test will pass only if the thrown
+   * value is strictly equal to the specified value.
    *
    * If the tested function is async, this matcher will return a
    * promise that should be awaited.
@@ -117,9 +112,8 @@ export interface ExpectMatchers {
    * Check if the tested value is a promise that rejects.
    *
    * If no value is specified, the test will pass if the promise
-   * rejects to any value, otherwise the test will pass only if
-   * the rejected value is strictly equal to the specified
-   * value.
+   * rejects to any value, otherwise the test will pass only if the
+   * rejected value is strictly equal to the specified value.
    *
    * This matcher should always be awaited.
    */
@@ -133,20 +127,20 @@ export interface ExpectMatchers {
   toRejectMatch(expected: any): Promise<void>;
   /**
    * Check if the given Function Mock has been invoked, or if the
-   * `times` parameter is specified, check if the function has
-   * been invoked the specified number of times.
+   * `times` parameter is specified, check if the function has been
+   * invoked the specified number of times.
    */
   toHaveBeenCalled(time?: number): void;
   /**
-   * Check if the given Function Mock has been invoked with
-   * matching arguments. Arguments are compared using deep
-   * equality similar to `toMatch`.
+   * Check if the given Function Mock has been invoked with matching
+   * arguments. Arguments are compared using deep equality similar to
+   * `toMatch`.
    */
   toHaveBeenCalledWith(...args: any[]): void;
   /**
    * Check if the last call to the given Function Mock has been
-   * invoked with matching arguments. Arguments are compared
-   * using deep equality similar to `toMatch`.
+   * invoked with matching arguments. Arguments are compared using
+   * deep equality similar to `toMatch`.
    */
   toHaveBeenCalledWithLast(...args: any[]): void;
   /**
@@ -155,8 +149,8 @@ export interface ExpectMatchers {
    */
   toHaveReturnedWithLast(expected: any): void;
   /**
-   * Check if the given Function Mock has been invoked and has
-   * thrown the specified value.
+   * Check if the given Function Mock has been invoked and has thrown
+   * the specified value.
    */
   toHaveThrownWithLast(expected: any): void;
   /**
@@ -185,19 +179,19 @@ export type MatcherResult =
 
 export type Matcher = (
   testedValue: any,
-  matcherArgs: any[]
+  matcherArgs: any[],
 ) => MatcherResult | Promise<MatcherResult>;
 
 export type MatcherResultHandlers = {
   sync: (
     result: MatcherResult,
     negate: boolean,
-    celledFrom: FileLocation
+    celledFrom: FileLocation,
   ) => void;
   async: (
     result: Promise<MatcherResult>,
     negate: boolean,
-    celledFrom: FileLocation
+    celledFrom: FileLocation,
   ) => Promise<void>;
 };
 
@@ -221,14 +215,18 @@ export class Matchers {
   static proxy(
     testedValue: any,
     handleMatcherResult: MatcherResultHandlers,
-    negate = false
+    negate = false,
   ): ExpectMatchers {
     return new Proxy(
       {},
       {
         get(_, matcherName) {
           if (matcherName === "not") {
-            return Matchers.proxy(testedValue, handleMatcherResult, true);
+            return Matchers.proxy(
+              testedValue,
+              handleMatcherResult,
+              true,
+            );
           }
 
           const matcher = Matchers.get(matcherName as string);
@@ -256,7 +254,7 @@ export class Matchers {
         ownKeys() {
           return [...Matchers.matchers.keys()];
         },
-      }
+      },
     ) as any;
   }
 }
@@ -270,7 +268,9 @@ export abstract class CustomMatcher {
     );
   }
 
-  /** Check if the value matches this custom matcher. */
+  /**
+   * Check if the value matches this custom matcher.
+   */
   abstract check(value: any): boolean;
 
   /**
@@ -357,37 +357,40 @@ Matchers.add("toBe", (testedValue, [expectedValue]) => {
   };
 });
 
-Matchers.add("toBeInstanceOf", (testedValue, [expectedClassProto]) => {
-  if (typeof testedValue !== "object" || testedValue === null) {
-    return {
-      failed: true,
-      reason: "Expected value to be an object.",
-      received: getPresentationForValue(testedValue),
-      expected: `instanceof ${
-        expectedClassProto.name ??
-        expectedClassProto.constructor.name ??
-        "UnknownClass"
-      }`,
-    };
-  }
+Matchers.add(
+  "toBeInstanceOf",
+  (testedValue, [expectedClassProto]) => {
+    if (typeof testedValue !== "object" || testedValue === null) {
+      return {
+        failed: true,
+        reason: "Expected value to be an object.",
+        received: getPresentationForValue(testedValue),
+        expected: `instanceof ${
+          expectedClassProto.name ??
+          expectedClassProto.constructor.name ??
+          "UnknownClass"
+        }`,
+      };
+    }
 
-  if (!(testedValue instanceof expectedClassProto)) {
-    return {
-      failed: true,
-      reason: "Expected value to be an instance of a class.",
-      received: getPresentationForValue(testedValue),
-      expected: `instanceof ${
-        expectedClassProto.name ??
-        expectedClassProto.constructor.name ??
-        "UnknownClass"
-      }`,
-    };
-  }
+    if (!(testedValue instanceof expectedClassProto)) {
+      return {
+        failed: true,
+        reason: "Expected value to be an instance of a class.",
+        received: getPresentationForValue(testedValue),
+        expected: `instanceof ${
+          expectedClassProto.name ??
+          expectedClassProto.constructor.name ??
+          "UnknownClass"
+        }`,
+      };
+    }
 
-  return {
-    failed: false,
-  };
-});
+    return {
+      failed: false,
+    };
+  },
+);
 
 Matchers.add("toEqual", (testedValue, [expectedValue]) => {
   const result = deepEqual(testedValue, expectedValue);
@@ -509,7 +512,9 @@ Matchers.add("toContain", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: "array containing: " + getPresentationForValue(requiredValue),
+        expected:
+          "array containing: " +
+          getPresentationForValue(requiredValue),
       };
     }
   }
@@ -530,16 +535,23 @@ Matchers.add("toContainEqual", (testedValues, requiredValues) => {
   }
 
   for (const requiredValue of requiredValues) {
-    const match = testedValues.find((v) => deepEqual(v, requiredValue).isEqual);
+    const match = testedValues.find(
+      (v) => deepEqual(v, requiredValue).isEqual,
+    );
 
     if (!match) {
       return {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: "array containing: " + getPresentationForValue(requiredValue),
+        expected:
+          "array containing: " +
+          getPresentationForValue(requiredValue),
         diff: testedValues
-          .map((v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`)
+          .map(
+            (v, i) =>
+              `${i}: ${diff(v, requiredValue, "equal").stringify()}`,
+          )
           .join("\n"),
       };
     }
@@ -562,7 +574,7 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
 
   for (const requiredValue of requiredValues) {
     const match = testedValues.find(
-      (v) => matchValues(v, requiredValue).isEqual
+      (v) => matchValues(v, requiredValue).isEqual,
     );
 
     if (!match) {
@@ -570,9 +582,14 @@ Matchers.add("toContainMatch", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: "array containing: " + getPresentationForValue(requiredValue),
+        expected:
+          "array containing: " +
+          getPresentationForValue(requiredValue),
         diff: testedValues
-          .map((v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`)
+          .map(
+            (v, i) =>
+              `${i}: ${diff(v, requiredValue, "match").stringify()}`,
+          )
           .join("\n"),
       };
     }
@@ -599,7 +616,9 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
         failed: true,
         reason: "Expected array to contain a certain value.",
         received: getPresentationForArray(testedValues),
-        expected: "array containing: " + getPresentationForValue(requiredValue),
+        expected:
+          "array containing: " +
+          getPresentationForValue(requiredValue),
       };
     }
   }
@@ -609,9 +628,11 @@ Matchers.add("toContainOnly", (testedValues, requiredValues) => {
     if (!match) {
       return {
         failed: true,
-        reason: "Expected array to not contain anything but a certain value.",
+        reason:
+          "Expected array to not contain anything but a certain value.",
         received: getPresentationForValue(value),
-        expected: "one of: " + getPresentationForArray(requiredValues),
+        expected:
+          "one of: " + getPresentationForArray(requiredValues),
       };
     }
   }
@@ -634,16 +655,24 @@ Matchers.add(
     }
 
     for (const requiredValue of requiredValues) {
-      if (!testedValues.some((v) => deepEqual(v, requiredValue).isEqual)) {
+      if (
+        !testedValues.some((v) => deepEqual(v, requiredValue).isEqual)
+      ) {
         return {
           failed: true,
           reason: "Expected array to contain certain value.",
           received: getPresentationForArray(testedValues),
           expected:
-            "array containing: " + getPresentationForValue(requiredValue),
+            "array containing: " +
+            getPresentationForValue(requiredValue),
           diff: testedValues
             .map(
-              (v, i) => `${i}: ${diff(v, requiredValue, "equal").stringify()}`
+              (v, i) =>
+                `${i}: ${diff(
+                  v,
+                  requiredValue,
+                  "equal",
+                ).stringify()}`,
             )
             .join("\n"),
         };
@@ -656,9 +685,13 @@ Matchers.add(
           failed: true,
           reason: "Expected array to contain only certain values.",
           received: getPresentationForValue(value),
-          expected: "one of: " + getPresentationForArray(requiredValues),
+          expected:
+            "one of: " + getPresentationForArray(requiredValues),
           diff: requiredValues
-            .map((req, i) => `${i}: ${diff(value, req, "equal").stringify()}`)
+            .map(
+              (req, i) =>
+                `${i}: ${diff(value, req, "equal").stringify()}`,
+            )
             .join("\n"),
         };
       }
@@ -667,7 +700,7 @@ Matchers.add(
     return {
       failed: false,
     };
-  }
+  },
 );
 
 Matchers.add(
@@ -683,16 +716,26 @@ Matchers.add(
     }
 
     for (const requiredValue of requiredValues) {
-      if (!testedValues.some((v) => matchValues(v, requiredValue).isEqual)) {
+      if (
+        !testedValues.some(
+          (v) => matchValues(v, requiredValue).isEqual,
+        )
+      ) {
         return {
           failed: true,
           reason: "Expected array to contain certain value.",
           received: getPresentationForArray(testedValues),
           expected:
-            "array containing: " + getPresentationForValue(requiredValue),
+            "array containing: " +
+            getPresentationForValue(requiredValue),
           diff: testedValues
             .map(
-              (v, i) => `${i}: ${diff(v, requiredValue, "match").stringify()}`
+              (v, i) =>
+                `${i}: ${diff(
+                  v,
+                  requiredValue,
+                  "match",
+                ).stringify()}`,
             )
             .join("\n"),
         };
@@ -700,14 +743,20 @@ Matchers.add(
     }
 
     for (const value of testedValues) {
-      if (!requiredValues.some((v) => matchValues(value, v).isEqual)) {
+      if (
+        !requiredValues.some((v) => matchValues(value, v).isEqual)
+      ) {
         return {
           failed: true,
           reason: "Expected array to contain only certain values.",
           received: getPresentationForValue(value),
-          expected: "one of: " + getPresentationForArray(requiredValues),
+          expected:
+            "one of: " + getPresentationForArray(requiredValues),
           diff: requiredValues
-            .map((req, i) => `${i}: ${diff(value, req, "match").stringify()}`)
+            .map(
+              (req, i) =>
+                `${i}: ${diff(value, req, "match").stringify()}`,
+            )
             .join("\n"),
         };
       }
@@ -716,7 +765,7 @@ Matchers.add(
     return {
       failed: false,
     };
-  }
+  },
 );
 
 Matchers.add("toThrow", (fn, args) => {
@@ -756,7 +805,7 @@ Matchers.add("toThrow", (fn, args) => {
           (): MatcherResult => ({
             failed: true,
             reason: "Expected function to throw.",
-          })
+          }),
         )
         .catch(onErr);
     }
@@ -806,7 +855,7 @@ Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
           (): MatcherResult => ({
             failed: true,
             reason: "Expected function to throw.",
-          })
+          }),
         )
         .catch(onErr);
     }
@@ -821,7 +870,11 @@ Matchers.add("toThrowMatch", (fn, [shouldBeThrown]) => {
 });
 
 Matchers.add("toReject", async (fn, args) => {
-  if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
+  if (
+    typeof fn !== "object" ||
+    fn === null ||
+    !(fn instanceof Promise)
+  ) {
     return {
       failed: true,
       reason: "Expected value to be a promise.",
@@ -858,7 +911,11 @@ Matchers.add("toReject", async (fn, args) => {
 });
 
 Matchers.add("toRejectMatch", async (fn, [shouldBeThrown]) => {
-  if (typeof fn !== "object" || fn === null || !(fn instanceof Promise)) {
+  if (
+    typeof fn !== "object" ||
+    fn === null ||
+    !(fn instanceof Promise)
+  ) {
     return {
       failed: true,
       reason: "Expected value to be a promise.",
@@ -924,7 +981,8 @@ Matchers.add("toHaveBeenCalled", (mock, [times]) => {
   if (times != null && mock.tracker.callCount !== times) {
     return {
       failed: true,
-      reason: "Expected mock to have been called a specific number of times.",
+      reason:
+        "Expected mock to have been called a specific number of times.",
       received: getPresentationForValue(mock.tracker.callCount),
       expected: getPresentationForValue(times),
     };
@@ -954,14 +1012,16 @@ Matchers.add("toHaveBeenCalledWith", (mock, args: any[]) => {
 
   const matchingCall = mock.tracker.calls.find((call) => {
     return (
-      call.args.length === args.length && matchValues(call.args, args).isEqual
+      call.args.length === args.length &&
+      matchValues(call.args, args).isEqual
     );
   });
 
   if (!matchingCall) {
     return {
       failed: true,
-      reason: "Expected mock to have been called with specific arguments.",
+      reason:
+        "Expected mock to have been called with specific arguments.",
       expected: getPresentationForArray(args),
     };
   }
@@ -993,19 +1053,27 @@ Matchers.add("toHaveBeenCalledWithLast", (mock, args: any[]) => {
   if (!match.isEqual) {
     return {
       failed: true,
-      reason: "Expected mock to have been called with specific arguments.",
+      reason:
+        "Expected mock to have been called with specific arguments.",
       expected: getPresentationForValue(match.expected),
       received: getPresentationForValue(match.received),
-      diff: diff(mock.tracker.latestCall?.args, args, "match").stringify(),
+      diff: diff(
+        mock.tracker.latestCall?.args,
+        args,
+        "match",
+      ).stringify(),
     };
   }
 
   if (mock.tracker.latestCall.args.length !== args.length) {
     return {
       failed: true,
-      reason: "Expected mock to have been called with specific arguments.",
+      reason:
+        "Expected mock to have been called with specific arguments.",
       expected: getPresentationForArray(args),
-      received: getPresentationForArray(mock.tracker.latestCall.args as any),
+      received: getPresentationForArray(
+        mock.tracker.latestCall.args as any,
+      ),
     };
   }
 
@@ -1062,7 +1130,11 @@ Matchers.add("toHaveReturnedWithLast", (mock, args) => {
       reason: "Expected mock to have returned a specific value.",
       expected: getPresentationForValue(match.expected),
       received: getPresentationForValue(match.received),
-      diff: diff(mock.tracker.latestCall.result, args[0], "match").stringify(),
+      diff: diff(
+        mock.tracker.latestCall.result,
+        args[0],
+        "match",
+      ).stringify(),
     };
   }
 
@@ -1119,7 +1191,11 @@ Matchers.add("toHaveThrownWithLast", (mock, args) => {
       reason: "Expected mock to have throw a specific exception.",
       expected: getPresentationForValue(match.expected),
       received: getPresentationForValue(match.received),
-      diff: diff(mock.tracker.latestCall.error, args[0], "match").stringify(),
+      diff: diff(
+        mock.tracker.latestCall.error,
+        args[0],
+        "match",
+      ).stringify(),
     };
   }
 
@@ -1176,7 +1252,11 @@ Matchers.add("toHaveResolvedWithLast", (mock, args) => {
       reason: "Expected mock to have resolved with a specific value.",
       expected: getPresentationForValue(match.expected),
       received: getPresentationForValue(match.received),
-      diff: diff(mock.tracker.latestCall.result, args[0], "match").stringify(),
+      diff: diff(
+        mock.tracker.latestCall.result,
+        args[0],
+        "match",
+      ).stringify(),
     };
   }
 
@@ -1229,10 +1309,15 @@ Matchers.add("toHaveRejectedWithLast", (mock, args) => {
   if (!match.isEqual) {
     return {
       failed: true,
-      reason: "Expected mock to have rejected with a specific exception.",
+      reason:
+        "Expected mock to have rejected with a specific exception.",
       expected: getPresentationForValue(match.expected),
       received: getPresentationForValue(match.received),
-      diff: diff(mock.tracker.latestCall.error, args[0], "match").stringify(),
+      diff: diff(
+        mock.tracker.latestCall.error,
+        args[0],
+        "match",
+      ).stringify(),
     };
   }
 
@@ -1245,9 +1330,8 @@ Matchers.add("toHaveRejectedWithLast", (mock, args) => {
  * Creates a special object that will be treated differently when
  * parsing with `stringifyJson`.
  *
- * The value provided as the argument should end up being
- * inserted into the JSON string without quotes like a regular
- * value would.
+ * The value provided as the argument should end up being inserted
+ * into the JSON string without quotes like a regular value would.
  */
 const withoutQuotes = (s: string) => ({
   [PresentableObjectIdentifier]: true,
@@ -1258,7 +1342,9 @@ const withoutQuotes = (s: string) => ({
 });
 
 export const match = {
-  /** Matches any non-nullish value. */
+  /**
+   * Matches any non-nullish value.
+   */
   anything(): CustomMatcher {
     class AnythingMatcher extends CustomMatcher {
       check(value: any) {
@@ -1280,7 +1366,9 @@ export const match = {
 
     return new AnythingMatcher();
   },
-  /** Matches any value of the specified type. */
+  /**
+   * Matches any value of the specified type.
+   */
   type(expectedType: string): CustomMatcher {
     class TypeMatcher extends CustomMatcher {
       check(value: any) {
@@ -1302,7 +1390,9 @@ export const match = {
 
     return new TypeMatcher();
   },
-  /** Matches any value that's an instance of the specified class. */
+  /**
+   * Matches any value that's an instance of the specified class.
+   */
   instanceOf(expectedClass: any): CustomMatcher {
     class InstanceOfMatcher extends CustomMatcher {
       check(value: any) {
@@ -1333,11 +1423,15 @@ export const match = {
 
     return new InstanceOfMatcher();
   },
-  /** Matches any string that contains the specified substring. */
+  /**
+   * Matches any string that contains the specified substring.
+   */
   stringContaining(expectedString: string): CustomMatcher {
     class StringContainingMatcher extends CustomMatcher {
       check(value: any) {
-        return typeof value === "string" && value.includes(expectedString);
+        return (
+          typeof value === "string" && value.includes(expectedString)
+        );
       }
 
       diffAgainst(key: string, v: any): Record<string, any> {
@@ -1356,8 +1450,7 @@ export const match = {
     return new StringContainingMatcher();
   },
   /**
-   * Matches any string that matches specified regular
-   * expression.
+   * Matches any string that matches specified regular expression.
    */
   stringMatchingRegex(expectedRegex: RegExp): CustomMatcher {
     class StringMatchingRegexMatcher extends CustomMatcher {
@@ -1381,8 +1474,8 @@ export const match = {
     return new StringMatchingRegexMatcher();
   },
   /**
-   * Matches any value that is strictly equal to the specified
-   * value. (equivalent to `toBe()`)
+   * Matches any value that is strictly equal to the specified value.
+   * (equivalent to `toBe()`)
    */
   is(expectedValue: any): CustomMatcher {
     class IsMatcher extends CustomMatcher {
@@ -1391,7 +1484,8 @@ export const match = {
       }
 
       diffAgainst(key: string, v: any): Record<string, any> {
-        return diff({ [key]: v }, { [key]: expectedValue }, "equal").diffStruct;
+        return diff({ [key]: v }, { [key]: expectedValue }, "equal")
+          .diffStruct;
       }
 
       toPresentation(): string {
@@ -1402,8 +1496,8 @@ export const match = {
     return new IsMatcher();
   },
   /**
-   * Matches any value that is equal to the specified value,
-   * using deep comparison. (equivalent to `toEqual()`)
+   * Matches any value that is equal to the specified value, using
+   * deep comparison. (equivalent to `toEqual()`)
    */
   equal(expectedValue: any): CustomMatcher {
     class EqualToMatcher extends CustomMatcher {
@@ -1412,7 +1506,8 @@ export const match = {
       }
 
       diffAgainst(key: string, v: any): Record<string, any> {
-        return diff({ [key]: v }, { [key]: expectedValue }, "equal").diffStruct;
+        return diff({ [key]: v }, { [key]: expectedValue }, "equal")
+          .diffStruct;
       }
 
       toPresentation(): string {
@@ -1448,8 +1543,8 @@ export const match = {
     return new ArrayContainingMatcher();
   },
   /**
-   * Matches any array that contains the specified values, using
-   * deep comparison.
+   * Matches any array that contains the specified values, using deep
+   * comparison.
    *
    * Equivalent to expect's `toContainEqual()`
    */
@@ -1459,7 +1554,7 @@ export const match = {
         if (!Array.isArray(value)) return false;
         if (value.length < requiredValues.length) return false;
         return requiredValues.every((v) =>
-          value.some((i) => deepEqual(i, v).isEqual)
+          value.some((i) => deepEqual(i, v).isEqual),
         );
       }
 
@@ -1476,8 +1571,7 @@ export const match = {
     return new ArrayContainingEqualMatcher();
   },
   /**
-   * Matches any array that contains only the exact specified
-   * values.
+   * Matches any array that contains only the exact specified values.
    *
    * Equivalent to expect's `toContainOnly()`
    */
@@ -1509,8 +1603,8 @@ export const match = {
     return new ArrayContainingOnlyMatcher();
   },
   /**
-   * Matches any array that contains all the specified values,
-   * using deep comparison, and only those.
+   * Matches any array that contains all the specified values, using
+   * deep comparison, and only those.
    *
    * Equivalent to expect's `toContainOnlyEqual()`
    */
@@ -1521,10 +1615,10 @@ export const match = {
         if (value.length < requiredValues.length) return false;
         return (
           requiredValues.every((v) =>
-            value.some((i) => deepEqual(i, v).isEqual)
+            value.some((i) => deepEqual(i, v).isEqual),
           ) &&
           value.every((v) =>
-            requiredValues.some((i) => deepEqual(v, i).isEqual)
+            requiredValues.some((i) => deepEqual(v, i).isEqual),
           )
         );
       }
@@ -1581,8 +1675,8 @@ export const match = {
    *       {
    *         message: "Hello",
    *       },
-   *       match.instanceOf(Error)
-   *     )
+   *       match.instanceOf(Error),
+   *     ),
    *   );
    */
   allOf(...matchers: any[]): CustomMatcher {
@@ -1605,14 +1699,19 @@ export const match = {
 
       diffAgainst(key: string, value: any): Record<string, any> {
         // find matcher that does not match
-        const mismatch = matchers.find((m) => !this.checkWith(m, value));
+        const mismatch = matchers.find(
+          (m) => !this.checkWith(m, value),
+        );
 
         if (mismatch) {
           if (CustomMatcher.isCustomMatch(mismatch)) {
             return mismatch.diffAgainst(key, value);
           } else {
-            return diff({ [key]: value }, { [key]: mismatch }, "match")
-              .diffStruct;
+            return diff(
+              { [key]: value },
+              { [key]: mismatch },
+              "match",
+            ).diffStruct;
           }
         }
 
@@ -1620,22 +1719,21 @@ export const match = {
       }
 
       toPresentation(): string {
-        return matchers.map((m) => getPresentationForValue(m)).join(" &&\n");
+        return matchers
+          .map((m) => getPresentationForValue(m))
+          .join(" &&\n");
       }
     }
 
     return new AllOfMatcher();
   },
   /**
-   * Matches any value that is matching any of the given values
-   * or Matchers.
+   * Matches any value that is matching any of the given values or
+   * Matchers.
    *
    * @example
    *   expect(123).toMatch(
-   *     match.anyOf(
-   *       match.type("number"),
-   *       match.type("string")
-   *     )
+   *     match.anyOf(match.type("number"), match.type("string")),
    *   );
    */
   anyOf(...matchers: any[]): CustomMatcher {
@@ -1669,7 +1767,7 @@ export const match = {
               diffResults[index] = diff(
                 { [key]: value },
                 { [key]: mismatch },
-                "match"
+                "match",
               ).diffStruct;
             }
           }
@@ -1679,7 +1777,9 @@ export const match = {
       }
 
       toPresentation(): string {
-        return matchers.map((m) => getPresentationForValue(m)).join(" ||\n");
+        return matchers
+          .map((m) => getPresentationForValue(m))
+          .join(" ||\n");
       }
     }
 
