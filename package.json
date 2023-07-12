@@ -35,9 +35,9 @@
   },
   "scripts": {
     "fix:lint": "eslint --fix .",
-    "fix:prettier": "prettier -w ./src .",
+    "fix:prettier": "prettier -w ./src/**/*.ts",
     "test:lint": "eslint .",
-    "test:prettier": "prettier -c ./src",
+    "test:prettier": "prettier -c ./src/**/*.ts",
     "test:tsc": "tsc --noEmit",
     "test:unit": "yarn g",
     "build": "./scripts/build.mjs",
@@ -66,8 +66,8 @@
     "gjs-esm-types": "^0.0.4",
     "husky": "^8.0.3",
     "pr-changelog-gen": "^1.1.0",
-    "prettier": "^2.8.7",
-    "prettier-plugin-jsdoc": "^0.4.2",
+    "prettier": "^3.0.0",
+    "prettier-plugin-jsdoc": "^1.0.1",
     "rimraf": "^5.0.0",
     "termx-markup": "^1.1.0",
     "typescript": "^5.0.4"

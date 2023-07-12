@@ -56,7 +56,7 @@ export class TestCollector {
     name: string,
     line: number,
     column: number,
-    fn: () => void
+    fn: () => void,
   ) {
     const parentTest = TestCollector.current;
 

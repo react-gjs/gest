@@ -29,7 +29,7 @@ declare global {
 globalThis.__gest_ = {
   get imports() {
     throw new Error(
-      "Usage of `imports` in tests is not allowed, please use ECMAScript modules import instead."
+      "Usage of `imports` in tests is not allowed, please use ECMAScript modules import instead.",
     );
   },
 };
@@ -63,9 +63,18 @@ async function main() {
     }
 
     const fileArg = _getArgValue(pargs, "-f", "--file");
-    const testNamePattern = _getArgValue(pargs, "-t", "--testNamePattern");
-    const testFilePattern = _getArgValue(pargs, "-p", "--testPathPattern");
-    const silenceLogs = pargs.includes("-s") || pargs.includes("--silenceLogs");
+    const testNamePattern = _getArgValue(
+      pargs,
+      "-t",
+      "--testNamePattern",
+    );
+    const testFilePattern = _getArgValue(
+      pargs,
+      "-p",
+      "--testPathPattern",
+    );
+    const silenceLogs =
+      pargs.includes("-s") || pargs.includes("--silenceLogs");
 
     const options: TestRunnerOptions = {
       verbose: pargs.includes("--verbose") || pargs.includes("-v"),
@@ -120,21 +129,22 @@ async function main() {
         testFiles.push({
           dirname: path.dirname(fullPath),
           filename: filename,
-          basename: filename.replace(/\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/, ""),
+          basename: filename.replace(
+            /\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/,
+            "",
+          ),
           testFile: fullPath,
         });
       }
     } else {
       if (!(await Fs.fileExists(testsDir))) {
-        Output.print(
-          html`
-            <span color="yellow">
-              Given test directory does not exist (
-              <span color="white"> ${testsDir} </span>
-              )
-            </span>
-          `
-        );
+        Output.print(html`
+          <span color="yellow">
+            Given test directory does not exist (
+            <span color="white"> ${testsDir} </span>
+            )
+          </span>
+        `);
         return;
       }
 
@@ -143,7 +153,10 @@ async function main() {
           testFiles.push({
             dirname: root,
             filename: name,
-            basename: name.replace(/\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/, ""),
+            basename: name.replace(
+              /\.test\.(m|c){0,1}(ts|js|tsx|jsx)$/,
+              "",
+            ),
             testFile: path.join(root, name),
           });
         }
@@ -151,7 +164,9 @@ async function main() {
     }
 
     if (testFiles.length === 0) {
-      Output.print(html`<span color="yellow">No test files found.</span>`);
+      Output.print(
+        html`<span color="yellow">No test files found.</span>`,
+      );
       return;
     }
 
@@ -159,10 +174,11 @@ async function main() {
       if (setupFileMatcher.test(name)) {
         const basename = name.replace(
           /\.setup\.(m|c){0,1}(ts|js|tsx|jsx)$/,
-          ""
+          "",
         );
         const unit = testFiles.find(
-          (unit) => unit.basename === basename && unit.dirname === root
+          (unit) =>
+            unit.basename === basename && unit.dirname === root,
         );
 
         if (unit) {
@@ -178,14 +194,15 @@ async function main() {
     const monitor = new ProgressReporter(
       progressTracker,
       !!options.verbose,
-      config
+      config,
     );
 
     initFakeTimers(consoleInterceptor);
 
     const testRunners = Array.from(
       { length: parallel },
-      () => new TestRunner(testFiles, config, progressTracker, options)
+      () =>
+        new TestRunner(testFiles, config, progressTracker, options),
     );
 
     await Promise.all(testRunners.map((runner) => runner.start()));
@@ -213,7 +230,7 @@ async function main() {
     Output.print(
       html`<pre color="red">${_getErrorMessage(e)}</pre>
         <br /><br />
-        <pre>${_getErrorStack(e, undefined)}</pre>`
+        <pre>${_getErrorStack(e, undefined)}</pre>`,
     );
 
     Mainloop.exit(1);
