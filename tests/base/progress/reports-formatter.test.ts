@@ -36,7 +36,7 @@ export default describe("ReportsFormatter", () => {
       it("unitPassed", () => {
         const markup = ReportsFormatter.info.unitPassed(
           ["some", "test", "bar"],
-          69
+          69,
         );
 
         const formatted = MarkupFormatter.format(markup);
@@ -69,7 +69,8 @@ export default describe("ReportsFormatter", () => {
       });
 
       it("suiteSkipped", () => {
-        const markup = ReportsFormatter.info.suiteSkipped("/home/owner/foo");
+        const markup =
+          ReportsFormatter.info.suiteSkipped("/home/owner/foo");
 
         const formatted = MarkupFormatter.format(markup);
 
@@ -77,7 +78,10 @@ export default describe("ReportsFormatter", () => {
       });
 
       it("suitePassed", () => {
-        const markup = ReportsFormatter.info.suitePassed("/home/owner/bar", 31);
+        const markup = ReportsFormatter.info.suitePassed(
+          "/home/owner/bar",
+          31,
+        );
 
         const formatted = MarkupFormatter.format(markup);
 
@@ -85,7 +89,8 @@ export default describe("ReportsFormatter", () => {
       });
 
       it("suiteFailed", () => {
-        const markup = ReportsFormatter.info.suiteFailed("/home/owner/baz");
+        const markup =
+          ReportsFormatter.info.suiteFailed("/home/owner/baz");
 
         const formatted = MarkupFormatter.format(markup);
 
@@ -100,7 +105,7 @@ export default describe("ReportsFormatter", () => {
           "/project/path/__test__/foo.test.ts",
           "Expect failed.",
           "1",
-          "2"
+          "2",
         );
 
         const formatted = MarkupFormatter.format(markup);
@@ -112,19 +117,23 @@ export default describe("ReportsFormatter", () => {
         const markup = ReportsFormatter.error.unableToStartSuite(
           "/foo/bar/__test__/foo.test.ts",
           "Failed to start suite.",
-          "at anonymous (/foo/bar/__test__/foo.test.ts:1:2)"
+          "at anonymous (/foo/bar/__test__/foo.test.ts:1:2)",
         );
 
         const formatted = MarkupFormatter.format(markup);
 
-        console.info("error.unableToStartSuite():\n", formatted, "\n");
+        console.info(
+          "error.unableToStartSuite():\n",
+          formatted,
+          "\n",
+        );
       });
 
       it("lifecycleHook", () => {
         const markup = ReportsFormatter.error.lifecycleHook(
           "/foo/bar/__test__/foo.test.ts:5:2",
           "Failed to run hook.",
-          "at anonymous (/foo/bar/__test__/foo.test.ts:5:2)"
+          "at anonymous (/foo/bar/__test__/foo.test.ts:5:2)",
         );
 
         const formatted = MarkupFormatter.format(markup);
@@ -137,7 +146,7 @@ export default describe("ReportsFormatter", () => {
           ["some", "test", "foo"],
           "/project/path/__test__/foo.test.ts:15:4",
           "Failed to run unit.",
-          "at anonymous (/project/path/__test__/foo.test.ts:30:4)\nat anonymous (/project/path/__test__/foo.test.ts:15:4)"
+          "at anonymous (/project/path/__test__/foo.test.ts:30:4)\nat anonymous (/project/path/__test__/foo.test.ts:15:4)",
         );
 
         const formatted = MarkupFormatter.format(markup);
@@ -149,7 +158,7 @@ export default describe("ReportsFormatter", () => {
         const markup = ReportsFormatter.error.unknownSuiteError(
           "/project/path/__test__/foo.test.ts",
           "Failed to run suite.",
-          "at anonymous (/project/path/__test__/foo.test.ts:30:4)\nat anonymous (/project/path/__test__/foo.test.ts:15:4)"
+          "at anonymous (/project/path/__test__/foo.test.ts:30:4)\nat anonymous (/project/path/__test__/foo.test.ts:15:4)",
         );
 
         const formatted = MarkupFormatter.format(markup);
