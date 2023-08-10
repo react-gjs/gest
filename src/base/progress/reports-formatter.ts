@@ -24,20 +24,33 @@ const time = {
 
 export class ReportsFormatter {
   private static formatUnitName(unitName: string[]) {
-    return raw(
-      "<span>" +
-        unitName
-          .map(strForPresentation)
-          .join(html`<pre bold color="cyan">${" > "}</pre>`) +
-        "</span>"
-    );
+    return raw(html`
+      <span>
+        ${raw(
+          unitName
+            .map(strForPresentation)
+            .map((n) => html` <span>${n}</span> `)
+            .join(html`
+              <span
+                color="cyan"
+                bold
+              >
+                ${">"}
+              </span>
+            `),
+        )}
+      </span>
+    `);
   }
 
   private static formatError(message: string, stack?: string) {
     const stackf = stack
       ? raw(html`
-          <br />
-          <line color="magenta" bold><pad size="2">Stack:</pad></line>
+          <line
+            color="magenta"
+            bold
+            ><pad size="2">Stack:</pad></line
+          >
           <pad size="4">
             <pre>${strForPresentation(stack.trim())}</pre>
           </pad>
@@ -45,7 +58,10 @@ export class ReportsFormatter {
       : "";
 
     return raw(html`
-      <line color="magenta" bold>
+      <line
+        color="magenta"
+        bold
+      >
         <pad size="2"> Message: </pad>
       </line>
       <pad size="4">
@@ -57,7 +73,9 @@ export class ReportsFormatter {
   }
 
   private static formatLink(link: string) {
-    return raw(html`<line color="#91e5ff">${strForPresentation(link)}</line>`);
+    return raw(
+      html`<line color="#91e5ff">${strForPresentation(link)}</line>`,
+    );
   }
 
   private static formatReceived(received?: string) {
@@ -66,13 +84,12 @@ export class ReportsFormatter {
     const label = "Received:";
     const text = _leftPad(received, label.length + 1).trimStart();
 
-    return raw(
-      html` <br />
-        <pad size="6">
-          <span bold>${label}</span>
-          <pre color="lightRed"> ${text}</pre>
-        </pad>`
-    );
+    return raw(html`
+      <pad size="6">
+        <span bold>${label}</span>
+        <pre color="lightRed"> ${text}</pre>
+      </pad>
+    `);
   }
 
   private static formatExpected(expected?: string) {
@@ -81,13 +98,12 @@ export class ReportsFormatter {
     const label = "Expected:";
     const text = _leftPad(expected, label.length + 1).trimStart();
 
-    return raw(
-      html` <br />
-        <pad size="6">
-          <span bold>${label}</span>
-          <pre color="lightGreen"> ${text}</pre>
-        </pad>`
-    );
+    return raw(html`
+      <pad size="6">
+        <span bold>${label}</span>
+        <pre color="lightGreen"> ${text}</pre>
+      </pad>
+    `);
   }
 
   private static formatDuration(_microseconds: number) {
@@ -95,9 +111,11 @@ export class ReportsFormatter {
 
     const hours = Number(microseconds / time.hour);
     const minutes = Number((microseconds % time.hour) / time.minute);
-    const seconds = Number((microseconds % time.minute) / time.second);
+    const seconds = Number(
+      (microseconds % time.minute) / time.second,
+    );
     const milliseconds = Number(
-      (microseconds % time.second) / time.millisecond
+      (microseconds % time.second) / time.millisecond,
     );
 
     if (hours > 0) {
@@ -114,14 +132,24 @@ export class ReportsFormatter {
   }
 
   static symbol = {
-    /** Preview: [✓] */
+    /**
+     * Preview: [✓]
+     */
     Success: raw(html`<span>[<span color="green">✓</span>]</span>`),
-    /** Preview: [✗] */
+    /**
+     * Preview: [✗]
+     */
     Failure: raw(html`<span>[<span color="red">✗</span>]</span>`),
-    /** Preview: [-] */
+    /**
+     * Preview: [-]
+     */
     Skipped: raw(html`<span>[<span color="yellow">-</span>]</span>`),
-    /** Preview: [!] */
-    Timeout: raw(html`<span>[<span color="lightRed">!</span>]</span>`),
+    /**
+     * Preview: [!]
+     */
+    Timeout: raw(
+      html`<span>[<span color="lightRed">!</span>]</span>`,
+    ),
   };
 
   static info = {
@@ -133,7 +161,7 @@ export class ReportsFormatter {
       const symbol = ReportsFormatter.symbol.Skipped;
       const name = ReportsFormatter.formatUnitName(unitName);
 
-      return html`<pad size="4">${symbol}<s />${name}</pad>`;
+      return html`<pad size="4">${symbol} ${name}</pad>`;
     },
     /**
      * @example
@@ -144,7 +172,7 @@ export class ReportsFormatter {
       const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">
-        ${symbol}<s />${name}<s />
+        ${symbol} ${name}
         <span dim>${ReportsFormatter.formatDuration(duration)}</span>
       </pad>`;
     },
@@ -156,7 +184,7 @@ export class ReportsFormatter {
       const symbol = ReportsFormatter.symbol.Failure;
       const name = ReportsFormatter.formatUnitName(unitName);
 
-      return html`<pad size="4"> ${symbol}<s />${name}<s /> </pad>`;
+      return html` <pad size="4"> ${symbol} ${name} </pad> `;
     },
     /**
      * @example
@@ -167,7 +195,7 @@ export class ReportsFormatter {
       const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`<pad size="4">
-        ${symbol}<s />${name}<s />
+        ${symbol} ${name}
         <span dim>(timed-out)</span>
       </pad>`;
     },
@@ -180,8 +208,12 @@ export class ReportsFormatter {
 
       return html`<span>
         ${symbol}
-        <s />
-        <span bold color="yellow">${strForPresentation(filepath)}</span>
+        <span
+          bold
+          color="yellow"
+        >
+          ${strForPresentation(filepath)}
+        </span>
       </span>`;
     },
     /**
@@ -193,9 +225,11 @@ export class ReportsFormatter {
 
       return html`<span>
         ${symbol}
-        <s />
-        <span bold color="green">${strForPresentation(filepath)}</span>
-        <s />
+        <span
+          bold
+          color="green"
+          >${strForPresentation(filepath)}</span
+        >
         <span>(${ReportsFormatter.formatDuration(duration)})</span>
       </span>`;
     },
@@ -208,8 +242,11 @@ export class ReportsFormatter {
 
       return html`<span>
         ${symbol}
-        <s />
-        <span bold color="red">${strForPresentation(filepath)}</span>
+        <span
+          bold
+          color="red"
+          >${strForPresentation(filepath)}</span
+        >
       </span>`;
     },
     summary(info: SummaryInfo): string {
@@ -218,31 +255,34 @@ export class ReportsFormatter {
           <line bold>Test Suites:</line>
           <pad size="3">
             <line>
-              Passed:
-              <s /><s />
+              <pre>Passed: </pre>
               <span
                 bold
-                color="${info.passedSuites > 0 ? "lightGreen" : "white"}"
+                color="${info.passedSuites > 0
+                  ? "lightGreen"
+                  : "white"}"
               >
                 ${info.passedSuites}
               </span>
             </line>
             <line>
-              Failed:
-              <s /><s />
+              <pre>Failed: </pre>
               <span
                 bold
-                color="${info.failedSuites > 0 ? "lightRed" : "white"}"
+                color="${info.failedSuites > 0
+                  ? "lightRed"
+                  : "white"}"
               >
                 ${info.failedSuites}
               </span>
             </line>
             <span>
               Skipped:
-              <s />
               <span
                 bold
-                color="${info.skippedSuites > 0 ? "lightYellow" : "white"}"
+                color="${info.skippedSuites > 0
+                  ? "lightYellow"
+                  : "white"}"
               >
                 ${info.skippedSuites}
               </span>
@@ -252,28 +292,32 @@ export class ReportsFormatter {
           <line bold>Test Units: </line>
           <pad size="3">
             <line>
-              Passed:
-              <s /><s />
+              <pre>Passed: </pre>
               <span
                 bold
-                color="${info.passedUnits > 0 ? "lightGreen" : "white"}"
+                color="${info.passedUnits > 0
+                  ? "lightGreen"
+                  : "white"}"
               >
                 ${info.passedUnits}
               </span>
             </line>
             <line>
-              Failed:
-              <s /><s />
-              <span bold color="${info.failedUnits > 0 ? "lightRed" : "white"}">
+              <pre>Failed: </pre>
+              <span
+                bold
+                color="${info.failedUnits > 0 ? "lightRed" : "white"}"
+              >
                 ${info.failedUnits}
               </span>
             </line>
             <span>
               Skipped:
-              <s />
               <span
                 bold
-                color="${info.skippedUnits > 0 ? "lightYellow" : "white"}"
+                color="${info.skippedUnits > 0
+                  ? "lightYellow"
+                  : "white"}"
               >
                 ${info.skippedUnits}
               </span>
@@ -282,18 +326,23 @@ export class ReportsFormatter {
           <br />
           <br />
           ${info.failedSuites === 0 && info.failedUnits === 0
-            ? raw(
-                html`
-                  <line bold color="lightGreen">All tests have passed.</line>
-                `
-              )
-            : raw(
-                html`
-                  <line bold color="lightRed">Some tests have failed.</line>
-                `
-              )}
+            ? raw(html`
+                <line
+                  bold
+                  color="lightGreen"
+                  >All tests have passed.</line
+                >
+              `)
+            : raw(html`
+                <line
+                  bold
+                  color="lightRed"
+                  >Some tests have failed.</line
+                >
+              `)}
           <span dim>
-            Done in ${ReportsFormatter.formatDuration(info.totalDuration)}
+            <span>Done in</span>
+            ${ReportsFormatter.formatDuration(info.totalDuration)}
           </span>
         </span>
       `;
@@ -307,14 +356,19 @@ export class ReportsFormatter {
       errMessage: string,
       expected?: string,
       received?: string,
-      diff?: string
+      diff?: string,
     ): string {
       const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`
         <br />
         <span>
-          <line bold color="red">${name}</line>
+          <line
+            bold
+            color="red"
+          >
+            ${name}
+          </line>
           ${ReportsFormatter.formatLink(link)}
           <pad size="4">
             <pre>${strForPresentation(errMessage)}</pre>
@@ -335,7 +389,7 @@ export class ReportsFormatter {
     unableToStartSuite(
       filepath: string,
       errMessage: string,
-      stack: string
+      stack: string,
     ): string {
       return html`
         <br />
@@ -346,11 +400,18 @@ export class ReportsFormatter {
         </span>
       `;
     },
-    lifecycleHook(link: string, errMessage: string, stack: string): string {
+    lifecycleHook(
+      link: string,
+      errMessage: string,
+      stack: string,
+    ): string {
       return html`
         <br />
         <span>
-          <line bold color="red">
+          <line
+            bold
+            color="red"
+          >
             An error occurred when running a lifecycle hook:
           </line>
           ${ReportsFormatter.formatLink(link)}
@@ -362,14 +423,18 @@ export class ReportsFormatter {
       unitName: string[],
       link: string,
       errMessage: string,
-      stack: string
+      stack: string,
     ): string {
       const name = ReportsFormatter.formatUnitName(unitName);
 
       return html`
         <br />
         <span>
-          <line bold color="red">${name}</line>
+          <line
+            bold
+            color="red"
+            >${name}</line
+          >
           ${ReportsFormatter.formatLink(link)}
           ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
@@ -378,12 +443,17 @@ export class ReportsFormatter {
     unknownSuiteError(
       filepath: string,
       errMessage: string,
-      stack: string
+      stack: string,
     ): string {
       return html`
         <br />
         <span>
-          <line bold color="red"> An error occurred when running a test: </line>
+          <line
+            bold
+            color="red"
+          >
+            An error occurred when running a test:
+          </line>
           ${ReportsFormatter.formatLink(filepath)}
           ${ReportsFormatter.formatError(errMessage, stack)}
         </span>
