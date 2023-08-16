@@ -59,7 +59,7 @@
     "axios": "~1.4.0",
     "dilswer": "~2.1.1",
     "eslint": "~8.47.0",
-    "eslint-config-prettier": "~8.8.0",
+    "eslint-config-prettier": "~9.0.0",
     "eslint-plugin-prettier": "~5.0.0",
     "fs-gjs": "~1.0.1",
     "git-hook-tasks": "ncpa0cpl/git-hook-tasks",
