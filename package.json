@@ -51,7 +51,7 @@
     "fs-gjs"
   ],
   "devDependencies": {
-    "@ncpa0cpl/nodepack": "~2.2.2",
+    "@ncpa0cpl/nodepack": "~2.3.0",
     "@reactgjs/gest": "~0.4.1",
     "@types/node": "~18.17.5",
     "@typescript-eslint/eslint-plugin": "~5.62.0",

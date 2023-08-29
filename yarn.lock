@@ -309,10 +309,10 @@
   dependencies:
     uuid "^9.0.0"
 
-"@ncpa0cpl/nodepack@~2.2.2":
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/@ncpa0cpl/nodepack/-/nodepack-2.2.2.tgz#1e518023f1b8c967d4f8905bbe768402ebab804c"
-  integrity sha512-HGQyoksTzrSHBoiniJajNtTG84vOLInJw7YLTAyvx47phntEQ9oComq8K1j5OtFQsVfOG6EVkjN7OT5xUosYvw==
+"@ncpa0cpl/nodepack@~2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@ncpa0cpl/nodepack/-/nodepack-2.3.0.tgz#58f1d4a4eef1ce0f9f534875cbf238465f7457d4"
+  integrity sha512-RXHmyylBsCA4AVLd8HHjls69oHP3LSz546nGS1CJnwzszXiIaMGIxQtP0EZsvNnnyCKSh4NgD7XIiJKC4r2VSQ==
   dependencies:
     "@ncpa0cpl/node-worker-bridge" "^0.0.3"
     "@ts-morph/bootstrap" "^0.20.0"
