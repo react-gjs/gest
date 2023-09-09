@@ -2845,10 +2845,15 @@ synckit@^0.8.5:
     "@pkgr/utils" "^2.3.1"
     tslib "^2.5.0"
 
-termx-markup@^1.1.0, termx-markup@~1.1.1:
+termx-markup@^1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/termx-markup/-/termx-markup-1.1.1.tgz#d5363446fbcee2d96914f41b555dc45f45048bf4"
   integrity sha512-sN2nudHVEHZi0YDuDmFNUu/A2V/uMHLvk4Verg19dSy4sdJqI8dp4MhcjNDIZpvu7iyeLYDOZeX9OdvBubbH6g==
+
+termx-markup@~2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/termx-markup/-/termx-markup-2.0.2.tgz#5cea4b231882cf1992b7f5b22f7155fae16df280"
+  integrity sha512-Xhavy2KCEgTOvBUwbLexSiCEDBVK6WN7hkbgbCnY/bboI+BsBizRPbCQY0wBUYzDRSCNyVHcNEY6YglQQ4QTSg==
 
 text-table@^0.2.0:
   version "0.2.0"
