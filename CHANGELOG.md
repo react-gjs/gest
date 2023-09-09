@@ -1,3 +1,11 @@
+## 0.5.0 (September 9, 2023)
+
+### Features
+
+- #### feat: config option for specifying gi libs versions ([#134](https://github.com/react-gjs/gest/pull/134))
+
+  Added a new config option `introspectedLibVersion`. This option can accept version numbers for libraries like `Gdk`, `Atk`, etc. All tests will be ran in environment with these libraries with that version loaded.
+
 ## 0.4.1 (July 10, 2023)
 
 ### Bug Fixes
