@@ -19,6 +19,7 @@ import {
 import { walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
 import path from "./utils/path";
+import { preloadGiLibs } from "./utils/preload-gi-libs";
 import { initFakeTimers } from "./utils/timers";
 
 declare global {
@@ -113,6 +114,8 @@ async function main() {
     if (!config) {
       return Mainloop.exit(1);
     }
+
+    await preloadGiLibs(config);
 
     const testsDir = path.resolve(Global.getCwd(), config.testDir);
     const parallel = config.parallel;
