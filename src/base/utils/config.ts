@@ -56,15 +56,23 @@ class ConfigFacade {
   }
 
   get setup() {
-    return this.config.setup;
+    return this.get("setup");
+  }
+
+  get introspectedLibVersion() {
+    return this.get("introspectedLibVersion");
   }
 
   get errorReporterParser() {
-    return this.get("errorReporterParser") as ErrorReporterParser | undefined;
+    return this.get("errorReporterParser") as
+      | ErrorReporterParser
+      | undefined;
   }
 
   get errorStackParser() {
-    return this.get("errorStackParser") as ErrorStackParser | undefined;
+    return this.get("errorStackParser") as
+      | ErrorStackParser
+      | undefined;
   }
 }
 
@@ -76,13 +84,18 @@ export type ConfigContext = {
   importModule: <T>(module: string) => Promise<T>;
 };
 
-export type ConfigGetter = (context: ConfigContext) => Promise<Config> | Config;
+export type ConfigGetter = (
+  context: ConfigContext,
+) => Promise<Config> | Config;
 
-export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
+export async function loadConfig(
+  vargs: string[],
+  options: TestRunnerOptions,
+) {
   const files = await Fs.listFilenames(Global.getCwd());
 
   const jsTypeConfig = files.find((filename) =>
-    /gest\.config\.(js|mjs)$/i.test(filename)
+    /gest\.config\.(js|mjs)$/i.test(filename),
   );
 
   if (jsTypeConfig) {
@@ -105,20 +118,22 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
       return new ConfigFacade(config);
     } catch (e) {
       if (!configLoaded) {
-        Output.print(
-          html`
-            <line color="yellow">
-              Unable to get the config. Error ocurred in:
-            </line>
-            <line color="cyan">${configFilePath}</line>
-            <pad size="2"><pre>${String(e)}</pre></pad>
-          `
-        );
+        Output.print(html`
+          <line color="yellow">
+            Unable to get the config. Error ocurred in:
+          </line>
+          <line color="cyan">${configFilePath}</line>
+          <pad size="2"><pre>${String(e)}</pre></pad>
+        `);
       } else {
-        Output.print(html`<span color="yellow"> Invalid config file. </span>`);
+        Output.print(
+          html`<span color="yellow"> Invalid config file. </span>`,
+        );
 
         if (ValidationError.isValidationError(e)) {
-          Output.print(html`<pre>  Invalid value at: ${e.fieldPath}</pre>`);
+          Output.print(
+            html`<pre>  Invalid value at: ${e.fieldPath}</pre>`,
+          );
         }
       }
 
@@ -130,7 +145,7 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
 
   if (files.includes("gest.config.json")) {
     const configText = await Fs.readTextFile(
-      path.join(Global.getCwd(), "gest.config.json")
+      path.join(Global.getCwd(), "gest.config.json"),
     );
     const config = JSON.parse(configText);
 
@@ -138,10 +153,14 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
       assertDataType(ConfigSchema, config);
       return new ConfigFacade(config);
     } catch (e) {
-      Output.print(html`<span color="yellow"> Invalid config file. </span>`);
+      Output.print(
+        html`<span color="yellow"> Invalid config file. </span>`,
+      );
 
       if (ValidationError.isValidationError(e)) {
-        Output.print(html`<pre>  Invalid value at: ${e.fieldPath}</pre>`);
+        Output.print(
+          html`<pre>  Invalid value at: ${e.fieldPath}</pre>`,
+        );
       }
 
       Output.print("");
@@ -153,7 +172,7 @@ export async function loadConfig(vargs: string[], options: TestRunnerOptions) {
   Output.print(
     html`<span color="yellow">
       Config file not found. Using default config instead.
-    </span>`
+    </span>`,
   );
   return new ConfigFacade({});
 }
