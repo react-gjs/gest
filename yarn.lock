@@ -812,9 +812,10 @@ character-entities@^2.0.0:
   resolved "https://registry.yarnpkg.com/character-entities/-/character-entities-2.0.2.tgz#2d09c2e72cd9523076ccb21157dff66ad43fcc22"
   integrity sha512-shx7oQ0Awen/BRIdkjkvz54PnEEI/EjwXDSIZp86/KKdbafHh1Df/RYGBhn4hbe2+uKC9FnT5UCEdyPz3ai9hQ==
 
-clify.js@ncpa0cpl/clify.js:
+clify.js@ncpa0cpl/clify.js#0.0.5:
   version "1.0.3"
-  resolved "https://codeload.github.com/ncpa0cpl/clify.js/tar.gz/82a13db0a86157bfe426c6f19d09e1d7373033b2"
+  uid "63c08dd0ad286d9416f89a34da6014f204258b38"
+  resolved "https://codeload.github.com/ncpa0cpl/clify.js/tar.gz/63c08dd0ad286d9416f89a34da6014f204258b38"
   dependencies:
     chalk "^4.1.2"
 
@@ -1488,11 +1489,12 @@ get-symbol-description@^1.0.0:
 
 git-hook-tasks@ncpa0cpl/git-hook-tasks:
   version "1.0.0"
-  resolved "https://codeload.github.com/ncpa0cpl/git-hook-tasks/tar.gz/475046a2550d299c6e807dad502a83dbbc25a0d6"
+  uid "98d2b72c63ed154d281bcf116e622f2177055fc1"
+  resolved "https://codeload.github.com/ncpa0cpl/git-hook-tasks/tar.gz/98d2b72c63ed154d281bcf116e622f2177055fc1"
   dependencies:
     async-await-queue "^1.2.1"
     chalk "^4.0.0"
-    clify.js ncpa0cpl/clify.js
+    clify.js ncpa0cpl/clify.js#0.0.5
     dilswer "^1.2.0"
     node-os-walk "^1.0.0"
     strip-ansi "^6.0.1"
