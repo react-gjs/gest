@@ -23,6 +23,7 @@ export const ConfigSchema = Type.RecordOf({
   srcDir: OptionalField(Type.String),
   testDir: OptionalField(Type.String),
   parallel: OptionalField(Type.Number),
+  multiprocessing: OptionalField(Type.Boolean),
   setup: OptionalField(Type.String),
   defaultTimeoutThreshold: OptionalField(Type.Number),
   globals: OptionalField(

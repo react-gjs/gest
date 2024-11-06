@@ -82,12 +82,12 @@ export class ReportsFormatter {
     if (!received) return "";
 
     const label = "Received:";
-    const text = _leftPad(received, label.length + 1).trimStart();
+    const text = received;
 
     return raw(html`
       <pad size="6">
         <span bold>${label}</span>
-        <pre color="lightRed"> ${text}</pre>
+        <pre color="lightRed">${text}</pre>
       </pad>
     `);
   }
@@ -96,12 +96,12 @@ export class ReportsFormatter {
     if (!expected) return "";
 
     const label = "Expected:";
-    const text = _leftPad(expected, label.length + 1).trimStart();
+    const text = expected;
 
     return raw(html`
       <pad size="6">
         <span bold>${label}</span>
-        <pre color="lightGreen"> ${text}</pre>
+        <pre color="lightGreen">${text}</pre>
       </pad>
     `);
   }
@@ -324,7 +324,6 @@ export class ReportsFormatter {
             </span>
           </pad>
           <br />
-          <br />
           ${info.failedSuites === 0 && info.failedUnits === 0
             ? raw(html`
                 <line
@@ -378,8 +377,10 @@ export class ReportsFormatter {
           ${diff
             ? raw(html`
                 <br />
-                <pad size="8">
-                  <pre>${strForPresentation(diff)}</pre>
+                <pad size="6">
+                  <span bold>Diff:</span>
+                  <br />
+                  <pre>${diff}</pre>
                 </pad>
               `)
             : ""}

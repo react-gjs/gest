@@ -1,8 +1,8 @@
+import path from "path-gjsify";
 import { Command } from "../command/command";
 import { btoa } from "../utils/base64";
 import type { ConfigFacade } from "../utils/config";
 import { getDirname } from "../utils/get-dirname";
-import path from "../utils/path";
 import type {
   BSMJsonValue,
   BSMValue,

@@ -1,13 +1,15 @@
 import Fs from "fs-gjs";
 import GLib from "gi://GLib?version=2.0";
+import path from "path-gjsify";
 import system from "system";
 import { html, Output } from "termx-markup";
 import { Global } from "./globals";
 import { Mainloop } from "./mainloop";
 import { ProgressTracker } from "./progress/progress";
 import { ProgressReporter } from "./progress/reporter";
-import type { TestRunnerOptions, TestSuite } from "./test-runner";
-import { TestRunner } from "./test-runner";
+import { MainRunner } from "./runner/main-runner";
+import { Multiprocessing } from "./runner/subprocess/server";
+import type { TestRunnerOptions, TestSuite } from "./runner/types";
 import { _getArgValue } from "./utils/args";
 import { loadConfig } from "./utils/config";
 import { ConsoleInterceptor } from "./utils/console-interceptor/console-interceptor";
@@ -18,7 +20,6 @@ import {
 } from "./utils/errors/error-handling";
 import { walkFiles } from "./utils/filesystem";
 import { getDirname } from "./utils/get-dirname";
-import path from "./utils/path";
 import { preloadGiLibs } from "./utils/preload-gi-libs";
 import { initFakeTimers } from "./utils/timers";
 
@@ -36,6 +37,7 @@ globalThis.__gest_ = {
 };
 
 async function main() {
+  let failed = false;
   try {
     const startTime = currentMicrosecond();
 
@@ -51,12 +53,13 @@ async function main() {
         <br />
         <line>Options:</line>
         <pad size="2">
-          <line>-h, --help</line>
-          <line>-v, --verbose</line>
-          <line>-f, --file [path]</line>
-          <line>-t, --testNamePattern [regex]</line>
-          <line>-p, --testPathPattern [regex]</line>
-          <line>-s, --silenceLogs</line>
+          <line>-h, --help                    Show this message.</line>
+          <line>-v, --verbose                 Show detailed info on each test pass.</line>
+          <line>-f, --file [path]             Provide a specific test file to run.</line>
+          <line>-t, --testNamePattern [regex] Pattern to match test names.</line>
+          <line>-p, --testPathPattern [regex] Pattern to match test file names.</line>
+          <line>-s, --silenceLogs             Silence all logs from within tests.</line>
+          <line>-m, --multiprocessing         Disable or enable multiprocessing.</line>
         </pad>
       `);
 
@@ -76,6 +79,11 @@ async function main() {
     );
     const silenceLogs =
       pargs.includes("-s") || pargs.includes("--silenceLogs");
+    const multiprocessing = _getArgValue(
+      pargs,
+      "-m",
+      "--multiprocessing",
+    );
 
     const options: TestRunnerOptions = {
       verbose: pargs.includes("--verbose") || pargs.includes("-v"),
@@ -116,6 +124,13 @@ async function main() {
     }
 
     await preloadGiLibs(config);
+
+    if (multiprocessing != null) {
+      config.override(
+        "multiprocessing",
+        ["false", "0"].includes(multiprocessing) ? false : true,
+      );
+    }
 
     const testsDir = path.resolve(Global.getCwd(), config.testDir);
     const parallel = config.parallel;
@@ -190,7 +205,7 @@ async function main() {
       }
     });
 
-    const consoleInterceptor = ConsoleInterceptor.init();
+    const consoleInterceptor = ConsoleInterceptor.getInterceptor();
 
     const progressTracker = new ProgressTracker(config);
 
@@ -205,7 +220,7 @@ async function main() {
     const testRunners = Array.from(
       { length: parallel },
       () =>
-        new TestRunner(testFiles, config, progressTracker, options),
+        new MainRunner(testFiles, config, progressTracker, options),
     );
 
     await Promise.all(testRunners.map((runner) => runner.start()));
@@ -235,8 +250,10 @@ async function main() {
         <br /><br />
         <pre>${_getErrorStack(e, undefined)}</pre>`,
     );
-
-    Mainloop.exit(1);
+    failed = true;
+  } finally {
+    await Multiprocessing.close().catch(() => {});
+    Mainloop.exit(failed ? 1 : undefined);
   }
 }
 
