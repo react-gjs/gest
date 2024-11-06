@@ -44,16 +44,17 @@
     "email": "szymonb21@gmail.com"
   },
   "scripts": {
-    "fix:lint": "eslint --fix .",
+    "fix:lint": "oxlint --fix .",
     "fix:prettier": "prettier -w ./src/**/*.ts",
-    "test:lint": "eslint .",
+    "test:lint": "oxlint .",
     "test:prettier": "prettier -c ./src/**/*.ts",
     "test:tsc": "tsc --noEmit",
     "test:unit": "yarn g",
     "build": "./scripts/build.mjs",
     "auto-bump": "./scripts/auto-bump.mjs",
     "publish:npm": "yarn build --clean && npm publish --access public",
-    "g": "./node_modules/.bin/gest"
+    "g": "./node_modules/.bin/gest",
+    "prepare": "husky install"
   },
   "_bundledDependencies": [
     "dilswer",
@@ -67,9 +68,10 @@
     "axios": "~1.5.0",
     "dilswer": "~2.1.1",
     "fs-gjs": "~1.0.1",
-    "git-hook-tasks": "git+https://github.com/ncpa0cpl/git-hook-tasks#2.0.0",
+    "git-hook-tasks": "git+https://github.com/ncpa0cpl/git-hook-tasks#4215793",
     "gjs-esm-types": "~0.0.4",
     "husky": "~8.0.3",
+    "oxlint": "^0.11.0",
     "pr-changelog-gen": "~1.1.3",
     "prettier": "~3.0.0",
     "prettier-plugin-jsdoc": "~1.0.1",
