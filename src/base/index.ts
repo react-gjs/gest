@@ -60,7 +60,7 @@ async function main() {
         </pad>
       `);
 
-      return;
+      return Mainloop.exit();
     }
 
     const fileArg = _getArgValue(pargs, "-f", "--file");
@@ -148,7 +148,7 @@ async function main() {
             )
           </span>
         `);
-        return;
+        return Mainloop.exit(1);
       }
 
       await walkFiles(testsDir, (root, name) => {
@@ -170,7 +170,7 @@ async function main() {
       Output.print(
         html`<span color="yellow">No test files found.</span>`,
       );
-      return;
+      return Mainloop.exit(1);
     }
 
     await walkFiles(testsDir, (root, name) => {
