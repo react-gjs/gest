@@ -5,16 +5,26 @@
   "types": "./dist/types/user-land/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/esm/user-land/index.mjs",
-      "types": "./dist/types/user-land/index.d.ts"
+      "types": "./dist/types/user-land/index.d.ts",
+      "default": "./dist/esm/user-land/index.mjs"
     },
     "./base-reporter": {
-      "default": "./dist/esm/base/progress/base-reporter.mjs",
-      "types": "./dist/types/base/progress/base-reporter.d.ts"
+      "types": "./dist/types/base/progress/base-reporter.d.ts",
+      "default": "./dist/esm/base/progress/base-reporter.mjs"
     },
     "./config": "./config.ts"
   },
   "bin": "./bin/gest.cjs",
+  "files": [
+    "bin",
+    "dist",
+    "base-reporter.ts",
+    "CHANGELOG.md",
+    "config.ts",
+    "LICENSE",
+    "package.json",
+    "README.md"
+  ],
   "packageManager": "yarn@1.22.19",
   "keywords": [
     "test",
