@@ -11,6 +11,7 @@ import { Multiprocessing } from "./subprocess/server";
 import { SuiteRunner } from "./suite-runner";
 import type { TestRunnerOptions, TestSuite } from "./types";
 import { currentMicrosecond } from "../utils/current-microsecond";
+import { readStream } from "../utils/read-stream";
 
 export type TestFilepaths = {
   srcFile: string;
@@ -147,7 +148,10 @@ export class MainRunner {
     );
 
     return new Promise<void>(async (resolve, reject) => {
+      let complete = false;
+
       this.workerApi.onNextFinish = (e) => {
+        complete = true;
         if (e) reject(e);
         else resolve();
       };
@@ -159,6 +163,25 @@ export class MainRunner {
           this.config.defaultTimeoutThreshold,
         )
         .catch(reject);
+
+      worker.onExit((ecode, _, stderr) => {
+        if (complete) return;
+
+        readStream(stderr)
+          .catch(() =>
+            new TextEncoder().encode(
+              "Unable to read the subprocess stderr stream",
+            ),
+          )
+          .then((stderr) => {
+            reject(
+              new Error(
+                "Test subprocess exites unexpectedly with: " +
+                  new TextDecoder().decode(stderr),
+              ),
+            );
+          });
+      });
     });
   }
 

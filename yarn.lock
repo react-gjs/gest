@@ -1210,10 +1210,10 @@ gjs-esm-types@~0.0.4:
   resolved "https://registry.yarnpkg.com/gjs-esm-types/-/gjs-esm-types-0.0.4.tgz#60329a81d99c0252ae7c71c927ae0f2ef956465f"
   integrity sha512-5w9Y7etV9HorOVUswpMAM+tq5GpwLHKSqGREF392bjar6qzN2TwyCOfhnjoPbIfW9Kb1655bys54znMFfvc7ZQ==
 
-gjs-multiprocess@0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/gjs-multiprocess/-/gjs-multiprocess-0.0.4.tgz#84dbbd6ca4b3ed3f690eaf3a7788c47e6b846432"
-  integrity sha512-ibftHr33P4fBBfAGDK/1lTMfHOTaRzd0fK6kps01Of7z+lcNZTYIRGunCC7trbIFAHheJMbtai7IudxYFh8tNg==
+gjs-multiprocess@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/gjs-multiprocess/-/gjs-multiprocess-0.0.5.tgz#0d9677ce6fbe891a238117936457d85a7ad8bd4c"
+  integrity sha512-6/JSz9Ig4xAl6BH2OJQrTM45JVW48cJIVJ/abaZMZnnSciAYXO3LyBkLZ6e09ptn6ZJYrqFre/DatlTBnyyjDw==
 
 glob-parent@^5.1.2, glob-parent@~5.1.2:
   version "5.1.2"
