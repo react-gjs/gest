@@ -85,7 +85,7 @@
   "dependencies": {
     "@ncpa0cpl/mutex.js": "^1.0.1",
     "esbuild": "~0.24.0",
-    "gjs-multiprocess": "0.0.1-alpha.4",
+    "gjs-multiprocess": "0.0.1",
     "path-gjsify": "^1.0.0"
   },
   "resolutions": {
