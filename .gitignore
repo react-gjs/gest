@@ -4,3 +4,4 @@ dist
 yarn-error.log
 /@types
 /.yarn/install-state.gz
+.npmrc
