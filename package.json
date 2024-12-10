@@ -1,6 +1,6 @@
 {
   "name": "@reactgjs/gest",
-  "version": "0.6.0-beta.3",
+  "version": "0.6.0",
   "main": "./dist/esm/user-land/index.mjs",
   "types": "./dist/types/user-land/index.d.ts",
   "exports": {
