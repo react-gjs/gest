@@ -1210,10 +1210,10 @@ gjs-esm-types@~0.0.4:
   resolved "https://registry.yarnpkg.com/gjs-esm-types/-/gjs-esm-types-0.0.4.tgz#60329a81d99c0252ae7c71c927ae0f2ef956465f"
   integrity sha512-5w9Y7etV9HorOVUswpMAM+tq5GpwLHKSqGREF392bjar6qzN2TwyCOfhnjoPbIfW9Kb1655bys54znMFfvc7ZQ==
 
-gjs-multiprocess@0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/gjs-multiprocess/-/gjs-multiprocess-0.0.1.tgz#41f8c8642ed1a85300b9a53272be970eb2285dd9"
-  integrity sha512-Qhoz4Om+Wo2XoHmtPLnM17egHW9+Ggl27FD48XmdjdR5JdCBFbV+3ClXQXevbi1wXV54aG/OhJDT5gHaEmxaRw==
+gjs-multiprocess@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/gjs-multiprocess/-/gjs-multiprocess-0.0.4.tgz#84dbbd6ca4b3ed3f690eaf3a7788c47e6b846432"
+  integrity sha512-ibftHr33P4fBBfAGDK/1lTMfHOTaRzd0fK6kps01Of7z+lcNZTYIRGunCC7trbIFAHheJMbtai7IudxYFh8tNg==
 
 glob-parent@^5.1.2, glob-parent@~5.1.2:
   version "5.1.2"
@@ -2156,6 +2156,7 @@ string-at@^1.0.1:
     es-abstract "^1.17.0-next.1"
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
