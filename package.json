@@ -68,7 +68,7 @@
     "@ncpa0cpl/nodepack": "~2.3.3",
     "@reactgjs/gest": "~0.4.1",
     "@types/node": "~18.17.5",
-    "axios": "~1.5.0",
+    "axios": "~1.12.0",
     "dilswer": "~2.1.1",
     "fs-gjs": "~1.0.1",
     "git-hook-tasks": "git+https://github.com/ncpa0cpl/git-hook-tasks#4215793",
